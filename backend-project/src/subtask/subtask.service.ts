@@ -7,9 +7,9 @@ import { Subtask } from './subtask.entity';
 
 @Injectable()
 export class SubtaskService {
-  constructor( 
+  constructor(
     @InjectRepository(Subtask)
-    private subtaskRepository: Repository<Subtask>
+    private subtaskRepository: Repository<Subtask>,
   ) {}
 
   async create(createSubtaskDto: CreateSubtaskDto): Promise<Subtask> {
@@ -24,7 +24,10 @@ export class SubtaskService {
     return this.subtaskRepository.findOne({ where: { id } });
   }
 
-  async update(id: number, updateSubtaskDto: UpdateSubtaskDto): Promise<Subtask | null>  {
+  async update(
+    id: number,
+    updateSubtaskDto: UpdateSubtaskDto,
+  ): Promise<Subtask | null> {
     await this.subtaskRepository.update(id, updateSubtaskDto);
     return this.findOne(id);
   }

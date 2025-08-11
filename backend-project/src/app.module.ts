@@ -30,7 +30,7 @@ import { MemberModule } from './member/member.module';
     AuthModule,
     SubtaskModule,
     NotificationModule,
-    MemberModule
+    MemberModule,
   ],
   controllers: [AppController],
   providers: [AppService],

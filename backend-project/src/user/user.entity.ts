@@ -44,12 +44,12 @@ export class User {
   @OneToMany(() => Project, (project) => project.user)
   projects: Project[];
 
-    @OneToMany(() => Task, (task) => task.user)
-    tasks: Task[];
+  @OneToMany(() => Task, (task) => task.user)
+  tasks: Task[];
 
-    @OneToMany(() => Notification, (notification) => notification.user)
-    notifications: Notification[];
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[];
 
-    @OneToMany(() => Member, (member) => member.user)
-    members: Member[];
+  @OneToMany(() => Member, (member) => member.user)
+  members: Member[];
 }

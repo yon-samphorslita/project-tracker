@@ -7,12 +7,14 @@ import { Notification } from './notification.entity';
 
 @Injectable()
 export class NotificationService {
-  constructor( 
+  constructor(
     @InjectRepository(Notification)
-    private notificationRepository: Repository<Notification>
+    private notificationRepository: Repository<Notification>,
   ) {}
 
-  async create(createNotificationDto: CreateNotificationDto): Promise<Notification>  {
+  async create(
+    createNotificationDto: CreateNotificationDto,
+  ): Promise<Notification> {
     return this.notificationRepository.save(createNotificationDto);
   }
 
@@ -21,10 +23,13 @@ export class NotificationService {
   }
 
   async findOne(id: number): Promise<Notification | null> {
-    return this.notificationRepository.findOne({ where: { id } });  
+    return this.notificationRepository.findOne({ where: { id } });
   }
 
-  async update(id: number, updateNotificationDto: UpdateNotificationDto) : Promise<Notification | null> {
+  async update(
+    id: number,
+    updateNotificationDto: UpdateNotificationDto,
+  ): Promise<Notification | null> {
     await this.notificationRepository.update(id, updateNotificationDto);
     return this.findOne(id);
   }

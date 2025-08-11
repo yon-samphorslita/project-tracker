@@ -9,9 +9,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 export class MemberService {
   constructor(
     @InjectRepository(Member)
-    private memberRepository: Repository<Member>) {}
-  
-  async create(createMemberDto: CreateMemberDto): Promise<Member>  {
+    private memberRepository: Repository<Member>,
+  ) {}
+
+  async create(createMemberDto: CreateMemberDto): Promise<Member> {
     return this.memberRepository.save(createMemberDto);
   }
 
@@ -23,7 +24,10 @@ export class MemberService {
     return this.memberRepository.findOne({ where: { id } });
   }
 
-  async update(id: number, updateMemberDto: UpdateMemberDto): Promise<Member | null> {
+  async update(
+    id: number,
+    updateMemberDto: UpdateMemberDto,
+  ): Promise<Member | null> {
     await this.memberRepository.update(id, updateMemberDto);
     return this.findOne(id);
   }

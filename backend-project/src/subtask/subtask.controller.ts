@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { SubtaskService } from './subtask.service';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
@@ -14,7 +22,7 @@ export class SubtaskController {
     return this.subtaskService.create(createSubtaskDto);
   }
 
-  // Retrieve all subtasks 
+  // Retrieve all subtasks
   @Get()
   findAll(): Promise<Subtask[]> {
     return this.subtaskService.findAll();
@@ -22,13 +30,16 @@ export class SubtaskController {
 
   // Retrieve a specific subtask by ID
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Subtask | null>  {
+  findOne(@Param('id') id: string): Promise<Subtask | null> {
     return this.subtaskService.findOne(+id);
   }
 
   // Update a specific subtask by ID
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSubtaskDto: UpdateSubtaskDto): Promise<Subtask | null> {
+  update(
+    @Param('id') id: string,
+    @Body() updateSubtaskDto: UpdateSubtaskDto,
+  ): Promise<Subtask | null> {
     return this.subtaskService.update(+id, updateSubtaskDto);
   }
 

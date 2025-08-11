@@ -46,12 +46,12 @@ export class Task {
   @CreateDateColumn()
   created_at: Date;
 
-    @ManyToOne((type) => Project, (project) => project.tasks)
-    project: Project;
-    
-    @ManyToOne((type) => User, (user) => user.tasks, { nullable: true })
-    user: User;
-    
-    @OneToMany(() => Subtask, (subtask) => subtask.task)
-    subtasks: Subtask[];
+  @ManyToOne((type) => Project, (project) => project.tasks)
+  project: Project;
+
+  @ManyToOne((type) => User, (user) => user.tasks, { nullable: true })
+  user: User;
+
+  @OneToMany(() => Subtask, (subtask) => subtask.task)
+  subtasks: Subtask[];
 }
