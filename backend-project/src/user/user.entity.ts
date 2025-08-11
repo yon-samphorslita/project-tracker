@@ -9,6 +9,8 @@ import {
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
 import { Role } from '../enums/role.enum';
+import { Notification } from '../notification/notification.entity';
+import { Member } from 'src/member/member.entity';
 @Entity('users')
 @Unique(['email']) // Ensures that email is unique across users
 export class User {
@@ -42,12 +44,12 @@ export class User {
   @OneToMany(() => Project, (project) => project.user)
   projects: Project[];
 
-  @OneToMany(() => Task, (task) => task.user)
-  tasks: Task[];
+    @OneToMany(() => Task, (task) => task.user)
+    tasks: Task[];
 
-  // @OneToMany(() => Member, (member) => member.user)
-  // members: Member[];
+    @OneToMany(() => Notification, (notification) => notification.user)
+    notifications: Notification[];
 
-  // @OneToMany(() => Notification, (notification) => notification.user)
-  // notifications: Notification[];
+    @OneToMany(() => Member, (member) => member.user)
+    members: Member[];
 }

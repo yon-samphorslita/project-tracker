@@ -10,7 +10,8 @@ import { Status } from '../enums/status.enum';
 import { Priority } from '../enums/priority.enum';
 import { Project } from 'src/project/project.entity';
 import { User } from 'src/user/user.entity';
-// import { Subtask } from 'src/subtask/subtask.entity';
+import { Subtask } from 'src/subtask/subtask.entity';
+
 @Entity('tasks')
 export class Task {
   @PrimaryGeneratedColumn()
@@ -45,12 +46,12 @@ export class Task {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne((type) => Project, (project) => project.tasks)
-  project: Project;
-
-  @ManyToOne((type) => User, (user) => user.tasks, { nullable: true })
-  user: User;
-
-  // @OneToMany((type) => Subtask, (subtask) => subtask.project)
-  // subtask: Subtask[];
+    @ManyToOne((type) => Project, (project) => project.tasks)
+    project: Project;
+    
+    @ManyToOne((type) => User, (user) => user.tasks, { nullable: true })
+    user: User;
+    
+    @OneToMany(() => Subtask, (subtask) => subtask.task)
+    subtasks: Subtask[];
 }

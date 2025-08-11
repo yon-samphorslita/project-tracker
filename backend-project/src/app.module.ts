@@ -8,6 +8,9 @@ import { TaskModule } from './task/task.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 
+import { SubtaskModule } from './subtask/subtask.module';
+import { NotificationModule } from './notification/notification.module';
+import { MemberModule } from './member/member.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }), // <-- here, top-level module import
@@ -25,6 +28,9 @@ import { AuthModule } from './auth/auth.module';
     TaskModule,
     UserModule,
     AuthModule,
+    SubtaskModule,
+    NotificationModule,
+    MemberModule
   ],
   controllers: [AppController],
   providers: [AppService],
