@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { Status } from '../enums/status.enum';
 import { Priority } from '../enums/priority.enum';
 import { Task } from 'src/task/task.entity';
@@ -31,7 +38,7 @@ export class Project {
   @Column({ nullable: true })
   start_date: Date;
 
-  @Column( { nullable: true })
+  @Column({ nullable: true })
   due_date: Date;
 
   @CreateDateColumn()

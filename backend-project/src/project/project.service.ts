@@ -13,7 +13,10 @@ export class ProjectService {
   ) {}
 
   async createProject(createProjectDto: CreateProjectDto): Promise<Project> {
-    const project = this.projectRepository.create({...createProjectDto, created_at: new Date()});
+    const project = this.projectRepository.create({
+      ...createProjectDto,
+      created_at: new Date(),
+    });
     return this.projectRepository.save(project);
   }
 
