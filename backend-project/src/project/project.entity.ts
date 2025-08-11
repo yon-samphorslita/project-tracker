@@ -3,6 +3,7 @@ import { Status } from '../enums/status.enum';
 import { Priority } from '../enums/priority.enum';
 import { Task } from 'src/task/task.entity';
 import { User } from 'src/user/user.entity';
+import { Member } from 'src/member/member.entity';
 @Entity('projects')
 export class Project {
   @PrimaryGeneratedColumn()
@@ -43,6 +44,6 @@ export class Project {
   @OneToMany((type) => Task, (task) => task.project)
   tasks: Task[];
 
-  // @OneToMany((type) => Member, (member) => member.project)
-  // members: Member[];
+  @OneToMany((type) => Member, (member) => member.project)
+  members: Member[];
 }

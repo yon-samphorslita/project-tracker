@@ -2,6 +2,8 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
 import { Role } from '../enums/role.enum';
+import { Notification } from '../notification/notification.entity';
+import { Member } from 'src/member/member.entity';
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn()
@@ -33,4 +35,10 @@ export class User {
 
     @OneToMany(() => Task, (task) => task.user)
     tasks: Task[];
+
+    @OneToMany(() => Notification, (notification) => notification.user)
+    notifications: Notification[];
+
+    @OneToMany(() => Member, (member) => member.user)
+    members: Member[];
 }
