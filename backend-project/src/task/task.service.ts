@@ -27,6 +27,12 @@ export class TaskService {
   async findOne(id: number): Promise<Task | null> {
     return this.taskRepository.findOneBy({ id });
   }
+  async findByProject(projectId: number): Promise<Task[]> {
+    return this.taskRepository.find({
+      where: { project: { id: projectId } },
+      relations: ['project'],
+    });
+  }
 
   async update(id: number, updateTaskDto: UpdateTaskDto): Promise<Task | null> {
     await this.taskRepository.update(id, updateTaskDto);

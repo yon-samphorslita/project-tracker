@@ -1,0 +1,252 @@
+<template>
+  <div class="calendar-frame">
+    <div class="vue-calendar">
+      <!-- Header -->
+      <header class="vc-header" v-if="showHeader">
+        <button class="vc-btn prev" @click="changeMonth(-1)">‹</button>
+        <div class="vc-title-bg">
+          <span class="vc-title">{{ monthName }} {{ displayYear }}</span>
+        </div>
+        <button class="vc-btn next" @click="changeMonth(1)">›</button>
+      </header>
+
+      <!-- Weekdays -->
+      <div class="vc-weekdays-row">
+        <div v-for="d in weekdayNames" :key="d" class="vc-weekday">{{ d }}</div>
+      </div>
+
+      <!-- Calendar Rows -->
+      <div class="vc-rows">
+        <div v-for="(week, wIdx) in weeks" :key="wIdx" class="vc-row">
+          <!-- background layer with opacity -->
+          <div
+            class="vc-row-bg"
+            :style="{ backgroundColor: '#C6E7FF', opacity: 1 - wIdx * 0.1 }"
+          ></div>
+
+          <!-- days -->
+          <div
+            v-for="cell in week"
+            :key="cell.key"
+            class="vc-day"
+            :class="{
+              'vc-day--other': cell.otherMonth,
+              'vc-day--today': cell.isToday,
+            }"
+          >
+            <div class="vc-day-num">{{ cell.date.getDate() }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch } from 'vue'
+
+const props = defineProps({
+  modelValue: { type: Date, default: () => new Date() },
+  events: { type: Array, default: () => [] },
+  startWeekOnMonday: { type: Boolean, default: false },
+  locale: { type: String, default: navigator.language || 'en-US' },
+  showHeader: { type: Boolean, default: true },
+  maxEventDots: { type: Number, default: 3 },
+})
+
+const emit = defineEmits(['update:modelValue', 'date-click', 'month-change'])
+
+const internalValue = ref(new Date(props.modelValue))
+watch(
+  () => props.modelValue,
+  (v) => (internalValue.value = new Date(v)),
+)
+
+const displayDate = ref(
+  new Date(internalValue.value.getFullYear(), internalValue.value.getMonth(), 1),
+)
+watch(internalValue, (v) => {
+  displayDate.value = new Date(v.getFullYear(), v.getMonth(), 1)
+})
+
+const monthName = computed(() => displayDate.value.toLocaleString(props.locale, { month: 'long' }))
+const displayYear = computed(() => displayDate.value.getFullYear())
+
+function changeMonth(delta) {
+  displayDate.value = new Date(
+    displayDate.value.getFullYear(),
+    displayDate.value.getMonth() + delta,
+    1,
+  )
+  emit('month-change', {
+    year: displayDate.value.getFullYear(),
+    month: displayDate.value.getMonth() + 1,
+  })
+}
+
+const weekdayNames = computed(() => {
+  const base = new Date(1970, 0, 4) // Sunday Jan 4 1970
+  return Array.from({ length: 7 }).map((_, i) =>
+    new Date(base.getTime() + i * 86400000).toLocaleString(props.locale, {
+      weekday: 'short',
+    }),
+  )
+})
+
+function firstDayOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+function lastDayOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+function isSameDay(a, b) {
+  return (
+    a &&
+    b &&
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
+const calendarCells = computed(() => {
+  const first = firstDayOfMonth(displayDate.value)
+  const last = lastDayOfMonth(displayDate.value)
+
+  const startIdx = first.getDay()
+  const daysBefore = startIdx
+  const totalDays = daysBefore + last.getDate()
+  const rows = Math.ceil(totalDays / 7)
+  const cellCount = rows * 7
+
+  return Array.from({ length: cellCount }).map((_, i) => {
+    const dayNumber = i - daysBefore + 1
+    const date = new Date(displayDate.value.getFullYear(), displayDate.value.getMonth(), dayNumber)
+    return {
+      key: date.toISOString(),
+      date,
+      otherMonth: date.getMonth() !== displayDate.value.getMonth(),
+      isToday: isSameDay(date, new Date()),
+    }
+  })
+})
+
+const weeks = computed(() => {
+  const arr = []
+  for (let i = 0; i < calendarCells.value.length; i += 7) {
+    arr.push(calendarCells.value.slice(i, i + 7))
+  }
+  return arr
+})
+</script>
+
+<style scoped>
+.calendar-frame {
+  max-width: 420px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e6e6e6;
+  overflow-x: auto;
+}
+
+.vue-calendar {
+  border-radius: 10px;
+  padding-bottom: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.vc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 12px 0;
+}
+.vc-title-bg {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+.vc-title {
+  background: #c6e7ff;
+  border-radius: 8px;
+  padding: 8px 0;
+  width: 90%;
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+.vc-btn {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  width: 40px;
+  color: #222;
+}
+
+.vc-weekdays-row {
+  display: flex;
+  background: #c6e7ff;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+.vc-weekday {
+  flex: 1;
+  text-align: center;
+  font-size: 15px;
+  color: #222;
+  padding: 8px 0;
+  font-weight: 500;
+}
+
+.vc-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vc-row {
+  display: flex;
+  gap: 10px;
+  position: relative;
+  border-radius: 5px;
+}
+.vc-row-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  z-index: 0;
+}
+.vc-day {
+  flex: 1;
+  height: 32px;
+  min-width: 34px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: default;
+  z-index: 1;
+}
+.vc-day--other {
+  opacity: 0.45;
+}
+.vc-day--today .vc-day-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+.vc-day-num {
+  font-size: 15px;
+  font-weight: 500;
+}
+</style>

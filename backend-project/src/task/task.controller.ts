@@ -26,6 +26,10 @@ export class TaskController {
     return this.taskService.findOne(id);
   }
 
+  @Get('/project/:projectId')
+  findByProject(@Param('projectId') projectId: number): Promise<Task[]> {
+    return this.taskService.findByProject(projectId);
+  }
   @Post()
   create(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
     return this.taskService.create(createTaskDto);
