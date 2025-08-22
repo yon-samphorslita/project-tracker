@@ -39,9 +39,8 @@ export class SubtaskService {
     }
   }
   async findByTaskId(taskId: number): Promise<Subtask[]> {
-  return this.subtaskRepository.find({
-    where: { task: { id: taskId } },
-  });
-}
-
+    return this.subtaskRepository.find({
+      where: { task: { id: taskId } },
+    });
+  }
 }

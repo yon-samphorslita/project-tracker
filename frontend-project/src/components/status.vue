@@ -1,5 +1,8 @@
 <template>
-  <span :class="badgeClass" class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize">
+  <span
+    :class="badgeClass"
+    class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize"
+  >
     {{ value }}
   </span>
 </template>
@@ -31,11 +34,11 @@ const badgeClass = computed(() => {
   } else if (props.priority) {
     switch (props.priority.toLowerCase()) {
       case 'high':
-        return 'bg-[rgb(199,7,7,0.3)] text-[#c70707]' 
+        return 'bg-[rgb(199,7,7,0.3)] text-[#c70707]'
       case 'medium':
-        return 'bg-[rgb(250,192,54,0.3)] text-[#fac036]' 
+        return 'bg-[rgb(250,192,54,0.3)] text-[#fac036]'
       case 'low':
-        return 'bg-[rgb(7,199,14,0.3)] text-[#07c70e]' 
+        return 'bg-[rgb(7,199,14,0.3)] text-[#07c70e]'
       default:
         return 'bg-[#9e9e9e]'
     }

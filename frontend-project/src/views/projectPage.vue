@@ -2,11 +2,14 @@
   <ProjectLayout>
     <div v-if="project" class="container flex flex-col gap-4">
       <!-- Project Title & Description -->
-<div class="flex gap-4">
+      <div class="flex gap-4">
         <h1 class="text-2xl font-bold">{{ project.p_name }}</h1>
-<img src="../assets/icons/edit.svg
-"></img>
-</div>      <p class="text-gray-600">{{ project.p_description }}</p>
+        <img
+          src="../assets/icons/edit.svg
+"
+        />
+      </div>
+      <p class="text-gray-600">{{ project.p_description }}</p>
 
       <!-- Timeline & Status -->
       <div class="row flex items-center justify-between mt-4 w-3/4">
@@ -94,10 +97,13 @@ onMounted(async () => {
 })
 
 // Watch route changes
-watch(() => route.params.id, async () => setCurrentProject())
+watch(
+  () => route.params.id,
+  async () => setCurrentProject(),
+)
 
 async function setCurrentProject() {
-  const selectedProject = projectStore.projects.find(p => p.id === Number(route.params.id))
+  const selectedProject = projectStore.projects.find((p) => p.id === Number(route.params.id))
   projectStore.setCurrent(selectedProject)
   if (selectedProject) await fetchProjectTasks(selectedProject.id)
 }
@@ -110,7 +116,7 @@ async function fetchProjectTasks(projectId) {
 
     // Fetch subtasks for each task for Gantt view
     tasks.value = await Promise.all(
-      fetchedTasks.map(async task => {
+      fetchedTasks.map(async (task) => {
         const subtaskResponse = await axios.get(`${API_BASE_URL}/subtask/task/${task.id}`)
         return {
           taskname: task.t_name,
@@ -120,16 +126,24 @@ async function fetchProjectTasks(projectId) {
           user: task.user_avatar || null,
           start_date: task.start_date,
           due_date: task.due_date,
-          subtasks: subtaskResponse.data.map(st => ({
+          subtasks: subtaskResponse.data.map((st) => ({
             name: st.name,
-            start: st.start_date ? new Date(st.start_date) : task.start_date ? new Date(task.start_date) : new Date(),
-            end: st.due_date ? new Date(st.due_date) : task.due_date ? new Date(task.due_date) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            start: st.start_date
+              ? new Date(st.start_date)
+              : task.start_date
+                ? new Date(task.start_date)
+                : new Date(),
+            end: st.due_date
+              ? new Date(st.due_date)
+              : task.due_date
+                ? new Date(task.due_date)
+                : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             status: st.status,
             color: getSubtaskColor(st.status),
-            icon: st.user_avatar || null
-          }))
+            icon: st.user_avatar || null,
+          })),
         }
-      })
+      }),
     )
   } catch (error) {
     console.error('Failed to fetch project tasks or subtasks:', error)
@@ -137,20 +151,20 @@ async function fetchProjectTasks(projectId) {
 }
 
 const notStartedTasks = computed(() =>
-  tasks.value.filter(t => (t.status || '').toLowerCase() === 'not started')
+  tasks.value.filter((t) => (t.status || '').toLowerCase() === 'not started'),
 )
 const inProgressTasks = computed(() =>
-  tasks.value.filter(t => (t.status || '').toLowerCase() === 'in progress')
+  tasks.value.filter((t) => (t.status || '').toLowerCase() === 'in progress'),
 )
 const completedTasks = computed(() =>
-  tasks.value.filter(t => (t.status || '').toLowerCase() === 'completed')
+  tasks.value.filter((t) => (t.status || '').toLowerCase() === 'completed'),
 )
 
 const rows = computed(() =>
-  tasks.value.map(task => ({
+  tasks.value.map((task) => ({
     label: task.taskname,
-    tasks: task.subtasks
-  }))
+    tasks: task.subtasks,
+  })),
 )
 
 const tableColumns = ref([
@@ -160,24 +174,28 @@ const tableColumns = ref([
   { key: 'status', label: 'Status' },
   { key: 'start_date', label: 'Start Date' },
   { key: 'due_date', label: 'Due Date' },
-  { key: 'icon', label: 'Assignee' }
+  { key: 'icon', label: 'Assignee' },
 ])
 
 const mappedTasks = computed(() =>
-  tasks.value.map(task => ({
+  tasks.value.map((task) => ({
     name: task.taskname,
     description: task.description,
     priority: task.taskpriority,
     status: task.status,
     start_date: task.start_date,
     due_date: task.due_date,
-    icon: task.user
-  }))
+    icon: task.user,
+  })),
 )
 
 function formatDate(dateStr) {
   if (!dateStr) return 'TBD'
-  return new Date(dateStr).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 function getSubtaskColor(status) {

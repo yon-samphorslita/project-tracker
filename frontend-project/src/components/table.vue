@@ -3,8 +3,12 @@
     <table class="w-full border-collapse">
       <thead>
         <tr>
-          <th v-for="col in columns" :key="col.key" @click="sortBy(col.key)"
-              class="bg-[#C6E7FF] cursor-pointer select-none px-4 py-2 text-left border-t border-b border-gray-200">
+          <th
+            v-for="col in columns"
+            :key="col.key"
+            @click="sortBy(col.key)"
+            class="bg-[#C6E7FF] cursor-pointer select-none px-4 py-2 text-left border-t border-b border-gray-200"
+          >
             {{ col.label }}
             <span v-if="sortColumn === col.key">
               {{ sortDirection === 'asc' ? '▲' : '▼' }}
@@ -15,7 +19,11 @@
 
       <tbody>
         <tr v-for="(row, rowIndex) in filteredData" :key="rowIndex">
-          <td v-for="col in columns" :key="col.key" class="px-4 py-2 text-left border-t border-b border-gray-200">
+          <td
+            v-for="col in columns"
+            :key="col.key"
+            class="px-4 py-2 text-left border-t border-b border-gray-200"
+          >
             <!-- Priority -->
             <template v-if="col.key === 'priority'">
               <Status :priority="row[col.key]" />
@@ -29,8 +37,16 @@
             <!-- Assignee / Avatar -->
             <template v-else-if="col.key === 'icon'">
               <div class="flex items-center">
-                <img v-if="row[col.key]" :src="row[col.key]" alt="assignee" class="w-8 h-8 rounded-full object-cover border-2 border-gray-300" />
-                <div v-else class="w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center font-semibold text-sm">
+                <img
+                  v-if="row[col.key]"
+                  :src="row[col.key]"
+                  alt="assignee"
+                  class="w-8 h-8 rounded-full object-cover border-2 border-gray-300"
+                />
+                <div
+                  v-else
+                  class="w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center font-semibold text-sm"
+                >
                   {{ getInitials(row.name) }}
                 </div>
               </div>
@@ -52,9 +68,7 @@
       </tbody>
     </table>
 
-    <div v-if="!filteredData.length" class="text-center text-gray-500 mt-2">
-      No data found
-    </div>
+    <div v-if="!filteredData.length" class="text-center text-gray-500 mt-2">No data found</div>
   </div>
 </template>
 

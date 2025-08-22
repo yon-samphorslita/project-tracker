@@ -14,7 +14,9 @@
           class="w-6 h-6"
         />
         <div
-          :class="activeOption === option.name ? 'opacity-100 text-black' : 'opacity-80 text-gray-600'"
+          :class="
+            activeOption === option.name ? 'opacity-100 text-black' : 'opacity-80 text-gray-600'
+          "
         >
           {{ option.name }}
         </div>
@@ -53,7 +55,7 @@ const activeOption = ref(props.activeOption)
 // Watch prop changes from parent
 watch(
   () => props.activeOption,
-  (val) => (activeOption.value = val)
+  (val) => (activeOption.value = val),
 )
 
 // Handle tab click
