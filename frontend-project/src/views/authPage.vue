@@ -3,7 +3,7 @@
     <div class="bg-white rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
       <!-- Image Section -->
       <div class="flex-1 min-w-[300px] flex justify-center items-center p-6">
-        <img src="/assets/images/auth.png" alt="Logo" class="max-w-full h-auto" />
+        <img src="../assets/images/auth.png" alt="Logo" class="max-w-full h-auto" />
       </div>
 
       <!-- Form Section -->
@@ -62,7 +62,7 @@
           </button>
 
           <p class="text-center cursor-pointer mt-2" @click="mode = 'login'">
-            Already have an account? <span class="text-[#20A1FF]"> Login </span>
+            Already have an account? <span class="text-[#20A1FF]">Login</span>
           </p>
         </form>
 
@@ -100,7 +100,7 @@
           </button>
 
           <p class="text-center cursor-pointer mt-2" @click="mode = 'signup'">
-            Don't have an account? <span class="text-[#20A1FF]"> Sign Up </span>
+            Don't have an account? <span class="text-[#20A1FF]">Sign Up</span>
           </p>
         </form>
       </div>
@@ -110,13 +110,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const router = useRouter()
-const route = useRoute()
 
-// Start in signup mode
+// Mode state
 const mode = ref('signup')
 
 // Forms
@@ -137,9 +136,16 @@ const loginForm = ref({
 // Signup handler
 async function handleSignup() {
   try {
-    await axios.post('http://localhost:3000/auth/signup', signupForm.value)
-    alert('Signup successful! You can now login.')
-    mode.value = 'login'
+    const res = await axios.post('http://localhost:3000/auth/signup', signupForm.value)
+
+    localStorage.setItem('token', res.data.accessToken)
+    localStorage.setItem('role', res.data.user.role)
+
+    if (res.data.user.role === 'project_manager') router.push('/projects')
+    else if (res.data.user.role === 'member') router.push('/member-dashboard')
+    else router.push('/home')
+
+    alert('Signup successful! You are now logged in.')
   } catch (err) {
     console.error(err)
     alert(err.response?.data?.message || 'Signup failed')
@@ -150,18 +156,13 @@ async function handleSignup() {
 async function handleLogin() {
   try {
     const res = await axios.post('http://localhost:3000/auth/login', loginForm.value)
-    const userRole = res.data.user.role // role returned from backend
-    localStorage.setItem('token', res.data.token)
-    localStorage.setItem('role', userRole) // store actual role
 
-    // Redirect based on role
-    if (userRole === 'project_manager') {
-      router.push('/pm-dashboard')
-    } else if (userRole === 'member') {
-      router.push('/member-dashboard')
-    } else {
-      router.push('/home')
-    }
+    localStorage.setItem('token', res.data.accessToken)
+    localStorage.setItem('role', res.data.user.role)
+
+    if (res.data.user.role === 'project_manager') router.push('/projects')
+    else if (res.data.user.role === 'member') router.push('/member-dashboard')
+    else router.push('/home')
 
     alert('Login successful!')
   } catch (err) {

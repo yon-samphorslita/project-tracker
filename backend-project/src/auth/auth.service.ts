@@ -22,10 +22,12 @@ export class AuthService {
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    return this.userService.createUser({
+    const user = await this.userService.createUser({
       ...createUserDto,
       password: hashedPassword,
     });
+
+    return user; // must include id, email, role
   }
 
   async login(user: User): Promise<{ accessToken: string }> {

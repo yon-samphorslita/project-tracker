@@ -1,6 +1,14 @@
 <template>
   <div class="container">
-    <!-- Filters (unchanged) -->
+    <!-- Role Selection -->
+    <div class="role-selection flex gap-4 mb-4">
+      <button @click="selectRole('project_manager')" class="btn btn-green">
+        Join as Project Manager
+      </button>
+      <button @click="selectRole('member')" class="btn btn-blue">Join as Team Member</button>
+    </div>
+
+    <!-- Filters -->
     <Filter
       title="Sort by"
       :options="[
@@ -29,7 +37,7 @@
       @update="applyTaskFilters"
     />
 
-    <!-- Table -->
+    <!-- Task Table -->
     <Table :data="mappedTasks" :columns="tableColumns" :format-date="formatDate" />
 
     <!-- Calendar -->
@@ -37,14 +45,15 @@
       v-model="calendarDate"
       :events="rows.flatMap((r) => r.tasks.map((t) => ({ date: t.start, title: t.name })))"
       :start-week-on-monday="true"
-      :locale="'en-US'"
+      locale="en-US"
       show-header
       show-footer
       max-event-dots="3"
     />
 
-    <!-- Gantt -->
+    <!-- Gantt Chart -->
     <GanttChart :rows="rows" :format-date="formatDate" />
+
     <ProjectCard />
     <Footer />
   </div>
@@ -52,17 +61,31 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
 import GanttChart from './components/gantt.vue'
 import Filter from './components/filter.vue'
 import Footer from './components/footer.vue'
 import Calendar from './components/calendar.vue'
 import Table from './components/table.vue'
 import ProjectCard from './components/projectCard.vue'
+
+// Router
+const router = useRouter()
+
+// Role selection
+const currentRole = ref(localStorage.getItem('role') || 'none')
+function selectRole(role) {
+  localStorage.setItem('role', role)
+  currentRole.value = role
+  router.push('/signup')
+}
+
+// Tasks
 const projectId = ref(1)
 const tasks = ref([])
 const projectName = ref('Project Tasks')
 
-// Fetch tasks
 async function fetchTasks() {
   try {
     const res = await fetch(`http://localhost:3000/tasks/project/${projectId.value}`)
@@ -79,37 +102,28 @@ async function fetchTasks() {
 onMounted(fetchTasks)
 watch(projectId, fetchTasks)
 
-// helpers
+// Helpers
 function toLocalISO(dateInput) {
   if (!dateInput) return null
   const d = new Date(dateInput)
-  if (Number.isNaN(d.getTime())) return null
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  if (isNaN(d.getTime())) return null
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
-
 const todayISO = new Date().toISOString().split('T')[0]
 
-// Map backend tasks and normalize dates to YYYY-MM-DD (local)
+// Computed
 const mappedTasks = computed(() =>
-  tasks.value.map((task) => {
-    const startIso = toLocalISO(task.start_date) || todayISO
-    const dueIso = toLocalISO(task.due_date) || todayISO
-    return {
-      id: task.id,
-      name: task.t_name,
-      status: task.t_status,
-      priority: task.t_priority,
-      start_date: startIso,
-      due_date: dueIso,
-      icon: '/icons/user1.png',
-    }
-  }),
+  tasks.value.map((task) => ({
+    id: task.id,
+    name: task.t_name,
+    status: task.t_status,
+    priority: task.t_priority,
+    start_date: toLocalISO(task.start_date) || todayISO,
+    due_date: toLocalISO(task.due_date) || todayISO,
+    icon: '/icons/user1.png',
+  })),
 )
 
-// Table columns
 const tableColumns = [
   { key: 'name', label: 'Task Name' },
   { key: 'icon', label: 'Assignee' },
@@ -119,7 +133,6 @@ const tableColumns = [
   { key: 'due_date', label: 'Due Date' },
 ]
 
-// rows to feed to Gantt (single project row)
 const rows = computed(() => [
   {
     label: projectName.value,
@@ -132,17 +145,14 @@ const rows = computed(() => [
   },
 ])
 
-// calendar date model (optional)
-const calendarDate = ref(new Date().toISOString().split('T')[0])
-
-// formatDate
+const calendarDate = ref(todayISO)
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
 }
 
-// dummy filter handlers
+// Dummy filters
 const applySort = (o) => console.log('sort', o)
 const applyTaskFilters = (f) => console.log('filters', f)
 </script>
@@ -152,5 +162,17 @@ const applyTaskFilters = (f) => console.log('filters', f)
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  color: white;
+  cursor: pointer;
+}
+.btn-blue {
+  background-color: #3b82f6;
+}
+.btn-green {
+  background-color: #10b981;
 }
 </style>

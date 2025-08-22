@@ -2,7 +2,7 @@
   <div class="filter-dropdown">
     <!-- Trigger -->
     <button @click="toggle" class="filter-icon-btn">
-      <img src="/assets/icons/filter.svg" alt="Filter" class="filter-icon" />
+      <img src="../assets/icons/filter.svg" alt="Filter" class="filter-icon" />
       <span class="filter-label-text">{{ title }}</span>
     </button>
 

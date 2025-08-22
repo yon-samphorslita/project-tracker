@@ -11,12 +11,12 @@
 
 <style scoped>
 .search-container {
-  width: 100%;
+  /* width: 100%; */
   height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: fixed;
+  /* position: fixed; */
   top: 100px;
   left: 250px; /* Adjust based on sidebar width */
   z-index: 1000;

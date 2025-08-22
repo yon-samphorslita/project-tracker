@@ -14,7 +14,6 @@ const props = defineProps({
   },
 })
 
-// Map status to colors
 const statusClass = computed(() => {
   switch (props.status.toLowerCase()) {
     case 'completed':
@@ -40,18 +39,21 @@ const statusClass = computed(() => {
 }
 
 .completed {
-  background-color: #4caf50; /* green */
+  background-color: rgb(7, 199, 14, 0.3);
+  color: #07c70e;
 }
 
 .in-progress {
-  background-color: #ff9800; /* orange */
+  background-color: rgb(250, 192, 54, 0.3);
+  color: #fac036;
 }
 
 .not-started {
-  background-color: #f44336; /* red */
+  background-color: rgb(199, 7, 7, 0.3);
+  color: #c70707;
 }
 
 .unknown {
-  background-color: #9e9e9e; /* grey */
+  background-color: #9e9e9e;
 }
 </style>

@@ -3,7 +3,7 @@
     <div class="footer-container">
       <!-- Logo and Brand -->
       <div class="footer-section logo-section">
-        <img src="/assets/images/image.png" alt="TrackZen Logo" class="footer-logo" />
+        <img src="../assets/images/image.png" alt="TrackZen Logo" class="footer-logo" />
       </div>
 
       <!-- Center Text -->
@@ -18,7 +18,7 @@
         <div class="footer-contact-title">Contact Us</div>
         <div class="footer-contact-row">
           <img
-            src="/assets/icons/mail.svg"
+            src="../assets/icons/mail.svg"
             alt="Mail"
             class="footer-contact-icon"
             width="20"
@@ -28,7 +28,7 @@
         </div>
         <div class="footer-contact-row">
           <img
-            src="/assets/icons/phone.svg"
+            src="../assets/icons/phone.svg"
             alt="Phone"
             class="footer-contact-icon"
             width="20"
@@ -39,7 +39,7 @@
         <div class="footer-socials">
           <v-btn icon variant="text" size="small">
             <img
-              src="/assets/icons/facebook.svg"
+              src="../assets/icons/facebook.svg"
               alt="facebook"
               class="footer-contact-icon"
               width="30"
@@ -48,7 +48,7 @@
           </v-btn>
           <v-btn icon variant="text" size="small">
             <img
-              src="/assets/icons/instagram.svg"
+              src="../assets/icons/instagram.svg"
               alt="instagram"
               class="footer-contact-icon"
               width="30"
@@ -57,7 +57,7 @@
           </v-btn>
           <v-btn icon variant="text" size="small">
             <img
-              src="/assets/icons/twitter.svg"
+              src="../assets/icons/twitter.svg"
               alt="twitter"
               class="footer-contact-icon"
               width="30"
