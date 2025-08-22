@@ -1,9 +1,10 @@
 <template>
-  <div class="table-container">
-    <table class="custom-table">
+  <div class="border border-gray-600/80 rounded-lg overflow-x-auto shadow-lg">
+    <table class="w-full border-collapse">
       <thead>
         <tr>
-          <th v-for="col in columns" :key="col.key" @click="sortBy(col.key)">
+          <th v-for="col in columns" :key="col.key" @click="sortBy(col.key)"
+              class="bg-[#C6E7FF] cursor-pointer select-none px-4 py-2 text-left border-t border-b border-gray-200">
             {{ col.label }}
             <span v-if="sortColumn === col.key">
               {{ sortDirection === 'asc' ? '▲' : '▼' }}
@@ -14,26 +15,24 @@
 
       <tbody>
         <tr v-for="(row, rowIndex) in filteredData" :key="rowIndex">
-          <td v-for="col in columns" :key="col.key">
+          <td v-for="col in columns" :key="col.key" class="px-4 py-2 text-left border-t border-b border-gray-200">
             <!-- Priority -->
             <template v-if="col.key === 'priority'">
-              <span class="priority-pill" :class="row[col.key].toLowerCase()">
-                {{ row[col.key] }}
-              </span>
+              <Status :priority="row[col.key]" />
             </template>
 
             <!-- Status -->
             <template v-else-if="col.key === 'status'">
-              <span class="status-badge" :class="row[col.key].toLowerCase().replace(' ', '-')">
-                {{ row[col.key] }}
-              </span>
+              <Status :status="row[col.key]" />
             </template>
 
             <!-- Assignee / Avatar -->
             <template v-else-if="col.key === 'icon'">
-              <div class="avatar-wrapper">
-                <img v-if="row[col.key]" :src="row[col.key]" alt="assignee" class="avatar" />
-                <div v-else class="avatar-fallback">{{ getInitials(row.name) }}</div>
+              <div class="flex items-center">
+                <img v-if="row[col.key]" :src="row[col.key]" alt="assignee" class="w-8 h-8 rounded-full object-cover border-2 border-gray-300" />
+                <div v-else class="w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center font-semibold text-sm">
+                  {{ getInitials(row.name) }}
+                </div>
               </div>
             </template>
 
@@ -53,12 +52,15 @@
       </tbody>
     </table>
 
-    <div v-if="!filteredData.length" class="empty-message">No data found</div>
+    <div v-if="!filteredData.length" class="text-center text-gray-500 mt-2">
+      No data found
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import Status from '@/components/status.vue'
 
 const props = defineProps({
   data: { type: Array, required: true },
@@ -110,102 +112,3 @@ function getInitials(name) {
     .toUpperCase()
 }
 </script>
-
-<style scoped>
-.table-container {
-  border: 1px solid rgba(56, 56, 56, 0.8);
-  border-radius: 8px;
-  overflow-x: auto;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-.custom-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-/* Only horizontal borders, no vertical borders */
-.custom-table th,
-.custom-table td {
-  border-top: 1px solid #eee;
-  border-bottom: 1px solid #eee;
-  border-left: none;
-  border-right: none;
-  padding: 10px;
-  text-align: left;
-}
-
-.custom-table th {
-  background: #c6e7ff;
-  cursor: pointer;
-  user-select: none;
-}
-
-.empty-message {
-  text-align: center;
-  color: #777;
-  margin-top: 10px;
-}
-
-/* Priority Pills */
-.priority-pill {
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-weight: 600;
-  color: #fff;
-}
-.priority-pill.high {
-  background: #c70707;
-}
-.priority-pill.medium {
-  background: #fac036;
-}
-.priority-pill.low {
-  background: #07c70e;
-}
-
-/* Status Badges */
-.status-badge {
-  padding: 4px 8px;
-  border-radius: 5px;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-.status-badge.in-progress {
-  background: #2196f3;
-  color: #fff;
-}
-.status-badge.not-started {
-  background: #9e9e9e;
-  color: #fff;
-}
-.status-badge.completed {
-  background: #4caf50;
-  color: #fff;
-}
-
-/* Avatar */
-.avatar-wrapper {
-  display: flex;
-  align-items: center;
-}
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #ddd;
-}
-.avatar-fallback {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #bbb;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-</style>

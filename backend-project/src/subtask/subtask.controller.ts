@@ -34,6 +34,12 @@ export class SubtaskController {
     return this.subtaskService.findOne(+id);
   }
 
+  // Retrieve subtasks by task ID
+  @Get('task/:taskId')
+  findByTaskId(@Param('taskId') taskId: string): Promise<Subtask[]> {
+    return this.subtaskService.findByTaskId(+taskId);
+  }
+
   // Update a specific subtask by ID
   @Patch(':id')
   update(

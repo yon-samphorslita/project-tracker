@@ -1,6 +1,6 @@
 <template>
-  <span :class="statusClass" class="status-badge">
-    {{ status }}
+  <span :class="badgeClass" class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize">
+    {{ value }}
   </span>
 </template>
 
@@ -8,52 +8,38 @@
 import { defineProps, computed } from 'vue'
 
 const props = defineProps({
-  status: {
-    type: String,
-    required: true,
-  },
+  status: { type: String, default: '' },
+  priority: { type: String, default: '' },
 })
 
-const statusClass = computed(() => {
-  switch (props.status.toLowerCase()) {
-    case 'completed':
-      return 'completed'
-    case 'in progress':
-      return 'in-progress'
-    case 'not started':
-      return 'not-started'
-    default:
-      return 'unknown'
+const value = computed(() => props.status || props.priority)
+
+const badgeClass = computed(() => {
+  if (props.status) {
+    switch (props.status.toLowerCase()) {
+      case 'completed':
+        return 'bg-[rgb(7,199,14,0.3)] text-[#07c70e]'
+      case 'in progress':
+      case 'in_progress':
+        return 'bg-[rgb(250,192,54,0.3)] text-[#fac036]'
+      case 'not started':
+      case 'not_started':
+        return 'bg-[rgb(199,7,7,0.3)] text-[#c70707]'
+      default:
+        return 'bg-[#9e9e9e]'
+    }
+  } else if (props.priority) {
+    switch (props.priority.toLowerCase()) {
+      case 'high':
+        return 'bg-[rgb(199,7,7,0.3)] text-[#c70707]' 
+      case 'medium':
+        return 'bg-[rgb(250,192,54,0.3)] text-[#fac036]' 
+      case 'low':
+        return 'bg-[rgb(7,199,14,0.3)] text-[#07c70e]' 
+      default:
+        return 'bg-[#9e9e9e]'
+    }
   }
+  return 'bg-[#9e9e9e]'
 })
 </script>
-
-<style scoped>
-.status-badge {
-  padding: 4px 8px;
-  border-radius: 5px;
-  color: white;
-  font-weight: 500;
-  font-size: 16px;
-  text-transform: capitalize;
-}
-
-.completed {
-  background-color: rgb(7, 199, 14, 0.3);
-  color: #07c70e;
-}
-
-.in-progress {
-  background-color: rgb(250, 192, 54, 0.3);
-  color: #fac036;
-}
-
-.not-started {
-  background-color: rgb(199, 7, 7, 0.3);
-  color: #c70707;
-}
-
-.unknown {
-  background-color: #9e9e9e;
-}
-</style>

@@ -38,4 +38,10 @@ export class SubtaskService {
       throw new NotFoundException(`Subtask with id ${id} not found`);
     }
   }
+  async findByTaskId(taskId: number): Promise<Subtask[]> {
+  return this.subtaskRepository.find({
+    where: { task: { id: taskId } },
+  });
+}
+
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="header-container">
+  <div class="header-container bg-white">
     <div class="header">
       <span class="header-label">{{ menu_item }}</span>
       <div class="header-wrapper">
