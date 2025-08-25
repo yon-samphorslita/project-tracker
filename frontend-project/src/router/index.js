@@ -4,6 +4,7 @@ import AuthPage from '../views/authPage.vue'
 import ProjectList from '@/views/projectList.vue'
 import ProjectPage from '@/views/projectPage.vue'
 import TestComponent from '@/TestComponent.vue'
+import SettingsPage from '@/views/settingsPage.vue'
 const routes = [
   { path: '/', component: TestComponent },
   {
@@ -15,12 +16,9 @@ const routes = [
   {
     path: '/projects',
     component: ProjectList,
-    //     props: true,
-    //     children: [
-    //       { }
-    // ]
   },
   { path: '/project/:id', component: ProjectPage, props: true },
+  { path: '/settings', component: SettingsPage },
 ]
 
 const router = createRouter({

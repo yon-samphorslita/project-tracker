@@ -18,7 +18,12 @@ export const useProjectStore = defineStore(
     // Fetch all projects from backend
     async function fetchProjects() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/projects`)
+        const token = localStorage.getItem('token') // or wherever you store it
+        const response = await axios.get(`${API_BASE_URL}/projects`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         projects.value = response.data
       } catch (error) {
         console.error('Error fetching projects:', error)

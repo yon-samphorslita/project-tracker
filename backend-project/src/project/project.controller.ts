@@ -26,8 +26,15 @@ export class ProjectsController {
   findAll(@Request() req): Promise<Project[]> {
     if (!req.user?.id)
       throw new ForbiddenException('Invalid user authentication');
+
     console.log('Authenticated user:', req.user);
 
+    // If admin, return all projects
+    if (req.user.role === 'admin') {
+      return this.projectService.findAll(); // fetch all projects, no user filter
+    }
+
+    // Otherwise, return projects only for this user
     return this.projectService.findAll(req.user.id);
   }
 

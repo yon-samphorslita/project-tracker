@@ -31,14 +31,14 @@ export class ProjectService {
   }
 
   // Get all projects for the logged-in user
-  async findAll(userId: number): Promise<Project[]> {
-    if (!userId)
-      throw new ForbiddenException('User ID is required to fetch projects');
-
-    return this.projectRepository.find({
-      where: { user: { id: userId } },
-      relations: ['user'],
-    });
+  async findAll(userId?: number): Promise<Project[]> {
+    if (userId) {
+      // Fetch projects for specific user
+      return this.projectRepository.find({ where: { user: { id: userId } } });
+    } else {
+      // Fetch all projects (for admin)
+      return this.projectRepository.find();
+    }
   }
 
   // Get one project only if owned by user
