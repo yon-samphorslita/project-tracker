@@ -1,26 +1,51 @@
 <template>
-  <div class="calendar-frame">
-    <div class="vue-calendar">
+  <div
+    class="calendar-frame max-w-[420px] shadow-[0_2px_12px_rgba(0,0,0,0.1)] border overflow-x-auto p-4 rounded-xl border-solid border-[#e6e6e6]"
+  >
+    <div class="vue-calendar max-w-[400px] mx-auto my-0 pb-4 rounded-[10px]">
       <!-- Header -->
-      <header class="vc-header" v-if="showHeader">
-        <button class="vc-btn prev" @click="changeMonth(-1)">‹</button>
-        <div class="vc-title-bg">
-          <span class="vc-title">{{ monthName }} {{ displayYear }}</span>
+      <header class="vc-header flex items-center justify-between mb-2 px-0 py-3" v-if="showHeader">
+        <button
+          class="vc-btn prev text-[22px] cursor-pointer w-10 text-[#222] border-[none]"
+          @click="changeMonth(-1)"
+        >
+          ‹
+        </button>
+        <div class="vc-title-bg flex-1 flex justify-center">
+          <span
+            class="vc-title bg-[#c6e7ff] w-[90%] text-center font-semibold text-base px-0 py-2 rounded-lg"
+            >{{ monthName }} {{ displayYear }}</span
+          >
         </div>
-        <button class="vc-btn next" @click="changeMonth(1)">›</button>
+        <button
+          class="vc-btn nex text-[22px] cursor-pointer w-10 text-[#222] border-[none]t"
+          @click="changeMonth(1)"
+        >
+          ›
+        </button>
       </header>
 
       <!-- Weekdays -->
-      <div class="vc-weekdays-row">
-        <div v-for="d in weekdayNames" :key="d" class="vc-weekday">{{ d }}</div>
+      <div class="vc-weekdays-row bg-[#c6e7ff] flex mb-2.5 rounded-[5px]">
+        <div
+          v-for="d in weekdayNames"
+          :key="d"
+          class="vc-weekday flex-1 text-center text-[15px] text-[#222] font-medium px-0 py-2"
+        >
+          {{ d }}
+        </div>
       </div>
 
       <!-- Calendar Rows -->
-      <div class="vc-rows">
-        <div v-for="(week, wIdx) in weeks" :key="wIdx" class="vc-row">
+      <div class="vc-rows flex flex-col gap-2.5">
+        <div
+          v-for="(week, wIdx) in weeks"
+          :key="wIdx"
+          class="vc-row flex gap-2.5 relative rounded-[5px]"
+        >
           <!-- background layer with opacity -->
           <div
-            class="vc-row-bg"
+            class="vc-row-bg absolute z-0 rounded-[5px] inset-0"
             :style="{ backgroundColor: '#C6E7FF', opacity: 1 - wIdx * 0.1 }"
           ></div>
 
@@ -28,13 +53,14 @@
           <div
             v-for="cell in week"
             :key="cell.key"
-            class="vc-day"
+            class="vc-day flex-1 h-8 min-w-[34px] flex items-center justify-center relative cursor-default z-[1] rounded-md"
             :class="{
-              'vc-day--other': cell.otherMonth,
-              'vc-day--today': cell.isToday,
+              'vc-day--other opacity-[0.45]': cell.otherMonth,
+              'vc-day--today w-9 h-9 flex items-center justify-center font-semibold rounded-[50%] border-2 border-solid border-[black]':
+                cell.isToday,
             }"
           >
-            <div class="vc-day-num">{{ cell.date.getDate() }}</div>
+            <div class="vc-day-num text-[15px] font-medium">{{ cell.date.getDate() }}</div>
           </div>
         </div>
       </div>
@@ -140,7 +166,7 @@ const weeks = computed(() => {
 })
 </script>
 
-<style scoped>
+<!-- <style scoped>
 .calendar-frame {
   max-width: 420px;
   padding: 16px;
@@ -249,4 +275,4 @@ const weeks = computed(() => {
   font-size: 15px;
   font-weight: 500;
 }
-</style>
+</style> -->

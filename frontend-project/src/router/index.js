@@ -5,6 +5,7 @@ import ProjectList from '@/views/projectList.vue'
 import ProjectPage from '@/views/projectPage.vue'
 import TestComponent from '@/TestComponent.vue'
 import SettingsPage from '@/views/settingsPage.vue'
+import CalendarPage from '@/views/calendarPage.vue'
 const routes = [
   { path: '/', component: TestComponent },
   {
@@ -19,6 +20,7 @@ const routes = [
   },
   { path: '/project/:id', component: ProjectPage, props: true },
   { path: '/settings', component: SettingsPage },
+  { path: '/calendar', component: CalendarPage },
 ]
 
 const router = createRouter({
