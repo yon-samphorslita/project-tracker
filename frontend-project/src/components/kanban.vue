@@ -126,8 +126,8 @@ import { computed } from 'vue';
     width: 400px;
     height: calc(100vh - 91px);
     /* max-height: 75vh; */
-    /* overflow-x: hidden;
-    overflow-y: auto; */
+    overflow-x: hidden;
+    overflow-y: auto;
     top: 170px;
     border-radius: 5px;
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
@@ -205,7 +205,7 @@ import { computed } from 'vue';
     background: #f9f9f9;
 }
 .kanban-task{
-    width: 375px;
+    max-width: 375px;
     border: 1px solid black;
     border-radius: 5px;
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
@@ -234,6 +234,7 @@ import { computed } from 'vue';
     border-radius: 50%;
     overflow: hidden;
     margin-right: 8px;
+    align-self: center;
 }
 .kanban-task-responsible-user img{
     width: 100%;

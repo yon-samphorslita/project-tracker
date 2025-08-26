@@ -2,7 +2,6 @@
     <div class="search-container">
         <div class="search-wrapper">
             <input type="text" placeholder="Search..." class="search-input">
-            <!-- <button class="search-button">Search</button> -->
         </div>
         
     </div>
@@ -20,9 +19,9 @@
     justify-content: center;        
     align-items: center;
     position: fixed;
-    top: 100px;
-    left: 250px; /* Adjust based on sidebar width */
-    z-index: 1000;
+    /* top: 100px;
+    left: 250px; 
+    z-index: 1000; */
     /* background-color: pink; */
 }     
 .search-wrapper {
@@ -42,16 +41,4 @@
     border-radius: 5px;
     font-size: 16px;
 }
-/* .search-button {
-    padding: 10px 20px;
-    margin-left: 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-.search-button:hover {
-    background-color: #0056b3;
-} */
 </style>
