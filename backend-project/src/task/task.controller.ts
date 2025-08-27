@@ -42,12 +42,19 @@ export class TaskController {
     const taskId = +id;
     if (isNaN(taskId)) throw new NotFoundException('Invalid task ID');
 
-    return this.taskService.findOne(taskId, req.user.id, req.user.role === 'admin');
+    return this.taskService.findOne(
+      taskId,
+      req.user.id,
+      req.user.role === 'admin',
+    );
   }
 
   // Get all tasks by project
   @Get('project/:projectId')
-  findByProject(@Param('projectId') projectId: string, @Request() req): Promise<Task[]> {
+  findByProject(
+    @Param('projectId') projectId: string,
+    @Request() req,
+  ): Promise<Task[]> {
     const pid = +projectId;
     if (isNaN(pid)) throw new NotFoundException('Invalid project ID');
 

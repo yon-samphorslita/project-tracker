@@ -27,7 +27,10 @@ export class TaskGuard implements CanActivate {
     }
 
     const task = await this.taskService.findOne(taskId, user.id);
-    if (!task) throw new ForbiddenException('You are not authorized to access this task');
+    if (!task)
+      throw new ForbiddenException(
+        'You are not authorized to access this task',
+      );
 
     request.task = task;
     return true;

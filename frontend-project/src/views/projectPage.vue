@@ -2,17 +2,14 @@
   <ProjectLayout>
     <div v-if="project" class="container flex flex-col gap-4">
       <!-- Project Title & Description -->
-      <div class="flex gap-4">
+      <div class="flex gap-4 items-center">
         <h1 class="text-2xl font-bold">{{ project.p_name }}</h1>
-        <img
-          src="../assets/icons/edit.svg
-"
-        />
+        <img src="../assets/icons/edit.svg" alt="Edit" />
       </div>
       <p class="text-gray-600">{{ project.p_description }}</p>
 
       <!-- Timeline & Status -->
-      <div class="row flex items-center justify-between mt-4 w-3/4">
+      <div class="flex items-center justify-between mt-4 w-3/4">
         <div class="flex text-[#1E1E1E] opacity-80 gap-2">
           <div class="flex items-center gap-2">
             <div class="text-lg">Timeline:</div>
@@ -22,14 +19,21 @@
           </div>
         </div>
 
-        <div class="flex gap-2 mt-4 items-center justify-center text-[#1E1E1E] opacity-80">
+        <div class="flex gap-2 items-center text-[#1E1E1E] opacity-80">
           <div class="text-lg">Status:</div>
           <Status :status="project.status" />
         </div>
+
+        <Button
+          label="+ Create New Project"
+          btn-color="#C6E7FF"
+          btntext="black"
+          @click="openForm"
+        />
       </div>
 
       <!-- TypeList & Search -->
-      <div class="flex justify-between">
+      <div class="flex justify-between mt-4">
         <TypeList v-model:activeOption="activeOption" />
         <Search />
       </div>
@@ -57,7 +61,7 @@
 
         <!-- Gantt View -->
         <template v-else-if="activeOption === 'Gantt'">
-          <GanttChart :rows="rows" :format-date="formatDate" />
+          <GanttChart :rows="ganttRows" :format-date="formatDate" />
         </template>
 
         <!-- Table View -->
@@ -75,7 +79,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectStore } from '@/stores/project'
-import { useTaskStore } from '@/stores/task' // <-- import taskStore
+import { useTaskStore } from '@/stores/task'
 import ProjectLayout from './projectLayout.vue'
 import DescriptionLabel from '@/components/descriptionLabel.vue'
 import Status from '@/components/status.vue'
@@ -84,97 +88,15 @@ import Search from '@/components/search.vue'
 import Kanban from '@/components/kanban.vue'
 import GanttChart from '@/components/gantt.vue'
 import Table from '@/components/table.vue'
+import Button from '@/components/button.vue'
 
 const route = useRoute()
 const projectStore = useProjectStore()
-const taskStore = useTaskStore() // <-- initialize store
-const tasks = ref([]) // local tasks for this project
-const activeOption = ref('Kanban') // default active view
+const taskStore = useTaskStore()
+const activeOption = ref('Kanban') // default view
+const tasksWithSubtasks = ref([]) // tasks with mapped subtasks
 
-onMounted(async () => {
-  if (!projectStore.projects.length) await projectStore.fetchProjects()
-  await setCurrentProject()
-})
-
-// Watch route changes
-watch(
-  () => route.params.id,
-  async () => setCurrentProject(),
-)
-
-async function setCurrentProject() {
-  const selectedProject = projectStore.projects.find((p) => p.id === Number(route.params.id))
-  projectStore.setCurrent(selectedProject)
-  if (selectedProject) await fetchProjectTasks(selectedProject.id)
-}
-
-async function fetchProjectTasks(projectId) {
-  await taskStore.fetchTasksByProject(projectId)
-  const fetchedTasks = taskStore.tasks
-
-  // Map tasks with subtasks for Gantt view
-  tasks.value = await Promise.all(
-    fetchedTasks.map(async (task) => {
-      // Fetch subtasks using taskStore (if you have subtask store) or keep axios
-      // Here I keep axios for subtasks only
-      const subtaskResponse = await fetchSubtasks(task.id)
-      return {
-        taskname: task.t_name,
-        description: task.t_description,
-        taskpriority: task.t_priority || 'none',
-        status: task.t_status || 'Not Started',
-        user: task.user_avatar || null,
-        start_date: task.start_date,
-        due_date: task.due_date,
-        subtasks: subtaskResponse.map((st) => ({
-          name: st.name,
-          start: st.start_date
-            ? new Date(st.start_date)
-            : task.start_date
-              ? new Date(task.start_date)
-              : new Date(),
-          end: st.due_date
-            ? new Date(st.due_date)
-            : task.due_date
-              ? new Date(task.due_date)
-              : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          status: st.status,
-          color: getSubtaskColor(st.status),
-          icon: st.user_avatar || null,
-        })),
-      }
-    }),
-  )
-}
-
-// helper to fetch subtasks (can replace with subtask store if you have one)
-async function fetchSubtasks(taskId) {
-  try {
-    const res = await fetch(`http://localhost:3000/subtask/task/${taskId}`)
-    return await res.json()
-  } catch (err) {
-    console.error('Failed to fetch subtasks:', err)
-    return []
-  }
-}
-
-const notStartedTasks = computed(() =>
-  tasks.value.filter((t) => (t.status || '').toLowerCase() === 'not started'),
-)
-const inProgressTasks = computed(() =>
-  tasks.value.filter((t) => (t.status || '').toLowerCase() === 'in progress'),
-)
-const completedTasks = computed(() =>
-  tasks.value.filter((t) => (t.status || '').toLowerCase() === 'completed'),
-)
-
-const rows = computed(() =>
-  tasks.value.map((task) => ({
-    label: task.taskname,
-    tasks: task.subtasks,
-  })),
-)
-
+// Columns for table
 const tableColumns = ref([
   { key: 'name', label: 'Task Name' },
   { key: 'description', label: 'Description' },
@@ -185,8 +107,95 @@ const tableColumns = ref([
   { key: 'icon', label: 'Assignee' },
 ])
 
+// Format date helper
+function formatDate(dateStr) {
+  if (!dateStr) return 'TBD'
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+// Subtask color helper
+function getSubtaskColor(status) {
+  switch ((status || '').toLowerCase()) {
+    case 'not started':
+    case 'not_started':
+      return '#FFD5DB'
+    case 'in progress':
+    case 'in_progress':
+      return '#FFD966'
+    case 'completed':
+    case 'done':
+      return '#8BD3B7'
+    default:
+      return '#D3D3D3'
+  }
+}
+
+// Fetch subtasks
+async function fetchSubtasks(taskId) {
+  try {
+    const res = await fetch(`http://localhost:3000/subtask/task/${taskId}`)
+    return await res.json()
+  } catch (err) {
+    console.error('Failed to fetch subtasks:', err)
+    return []
+  }
+}
+
+// Fetch tasks for selected project
+async function fetchProjectTasks(projectId) {
+  await taskStore.fetchTasksByProject(projectId)
+
+  // Map tasks with subtasks
+  tasksWithSubtasks.value = await Promise.all(
+    taskStore.tasks.map(async (task) => {
+      const subtasks = await fetchSubtasks(task.id)
+      return {
+        taskname: task.t_name,
+        description: task.t_description,
+        taskpriority: task.t_priority || 'none',
+        status: task.t_status || 'Not Started',
+        user: task.user_avatar || null,
+        start_date: task.start_date,
+        due_date: task.due_date,
+        subtasks: subtasks.map((st) => ({
+          name: st.name,
+          start: st.start_date ? new Date(st.start_date) : task.start_date,
+          end: st.due_date ? new Date(st.due_date) : task.due_date,
+          status: st.status,
+          color: getSubtaskColor(st.status),
+          icon: st.user_avatar || null,
+        })),
+      }
+    }),
+  )
+}
+
+// Computed lists for Kanban
+const notStartedTasks = computed(() =>
+  tasksWithSubtasks.value.filter((t) => (t.status || '').toLowerCase() === 'not started'),
+)
+const inProgressTasks = computed(() =>
+  tasksWithSubtasks.value.filter((t) => (t.status || '').toLowerCase() === 'in progress'),
+)
+const completedTasks = computed(() =>
+  tasksWithSubtasks.value.filter((t) => (t.status || '').toLowerCase() === 'completed'),
+)
+
+// Computed rows for Gantt
+const ganttRows = computed(() =>
+  tasksWithSubtasks.value.map((task) => ({
+    label: task.taskname,
+    tasks: task.subtasks,
+  })),
+)
+
+// Computed tasks for Table view
 const mappedTasks = computed(() =>
-  tasks.value.map((task) => ({
+  tasksWithSubtasks.value.map((task) => ({
     name: task.taskname,
     description: task.description,
     priority: task.taskpriority,
@@ -197,30 +206,28 @@ const mappedTasks = computed(() =>
   })),
 )
 
-function formatDate(dateStr) {
-  if (!dateStr) return 'TBD'
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+// Set current project based on route
+async function setCurrentProject() {
+  if (!projectStore.projects.length) await projectStore.fetchProjects()
+  const selectedProject = projectStore.projects.find((p) => p.id === Number(route.params.id))
+  projectStore.setCurrent(selectedProject)
+  if (selectedProject) await fetchProjectTasks(selectedProject.id)
 }
 
-function getSubtaskColor(status) {
-  switch ((status || '').toLowerCase()) {
-    case 'not started':
-    case 'not_started':
-      return '#FFD5DB' // pink
-    case 'in progress':
-    case 'in_progress':
-      return '#FFD966' // yellow
-    case 'completed':
-    case 'done':
-      return '#8BD3B7' // green
-    default:
-      return '#D3D3D3' // fallback gray
-  }
-}
+// Watch route changes
+watch(
+  () => route.params.id,
+  async () => setCurrentProject(),
+)
+
+onMounted(async () => {
+  await setCurrentProject()
+})
 
 const project = computed(() => projectStore.current)
+
+// Placeholder function for opening form
+function openForm() {
+  console.log('Open project form')
+}
 </script>
