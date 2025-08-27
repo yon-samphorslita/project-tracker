@@ -1,9 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Task } from './task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { User } from 'src/user/user.entity';
 
 @Injectable()
 export class TaskService {
@@ -12,34 +17,59 @@ export class TaskService {
     private taskRepository: Repository<Task>,
   ) {}
 
-  async create(createTaskDto: CreateTaskDto): Promise<Task> {
+  async create(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const task = this.taskRepository.create({
       ...createTaskDto,
+      user: user,
       created_at: new Date(),
     });
     return this.taskRepository.save(task);
   }
 
-  async findAll(): Promise<Task[]> {
-    return this.taskRepository.find();
+  async findAll(userId?: number): Promise<Task[]> {
+    if (userId) {
+      return this.taskRepository.find({ where: { user: { id: userId } } });
+    }
+    return this.taskRepository.find({ relations: ['user'] });
   }
 
-  async findOne(id: number): Promise<Task | null> {
-    return this.taskRepository.findOneBy({ id });
-  }
-  async findByProject(projectId: number): Promise<Task[]> {
-    return this.taskRepository.find({
-      where: { project: { id: projectId } },
-      relations: ['project'],
+  async findOne(id: number, userId?: number): Promise<Task> {
+    const task = await this.taskRepository.findOne({
+      where: { id },
+      relations: ['user', 'project'],
     });
+    if (!task) throw new NotFoundException('Task not found');
+    if (userId && task.user?.id !== userId) {
+      throw new ForbiddenException('You do not have access to this task');
+    }
+    return task;
   }
 
-  async update(id: number, updateTaskDto: UpdateTaskDto): Promise<Task | null> {
-    await this.taskRepository.update(id, updateTaskDto);
-    return this.findOne(id);
+  async findByProject(projectId: number, userId?: number): Promise<Task[]> {
+    const query = this.taskRepository
+      .createQueryBuilder('task')
+      .leftJoinAndSelect('task.user', 'user')
+      .where('task.projectId = :projectId', { projectId });
+
+    if (userId) {
+      query.andWhere('user.id = :userId', { userId });
+    }
+
+    return query.getMany();
   }
 
-  async delete(id: number): Promise<void> {
-    await this.taskRepository.delete(id);
+  async update(
+    id: number,
+    updateTaskDto: UpdateTaskDto,
+    user?: User,
+  ): Promise<Task> {
+    const task = await this.findOne(id, user?.id);
+    Object.assign(task, updateTaskDto);
+    return this.taskRepository.save(task);
+  }
+
+  async delete(id: number, userId?: number): Promise<void> {
+    const task = await this.findOne(id, userId);
+    await this.taskRepository.delete(task.id);
   }
 }

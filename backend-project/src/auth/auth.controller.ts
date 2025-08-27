@@ -65,6 +65,10 @@ export class AuthController {
     const userId = req.user.id;
     console.log('Updating user with id:', userId);
 
+    if ('password' in updateUserDto) {
+      delete updateUserDto.password;
+    }
+
     const updatedUser = await this.userService.update(userId, updateUserDto);
     if (!updatedUser) throw new NotFoundException('User not found');
 

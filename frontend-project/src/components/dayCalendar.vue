@@ -19,47 +19,49 @@
         </div>
       </div>
 
-      <!-- Events Column -->
+      <!-- Events/Tasks Column -->
       <div class="relative flex-1 bg-[rgba(198,231,255,0.3)] min-w-[300px]">
         <!-- Hour lines -->
         <div v-for="hour in hours" :key="hour" class="h-12 border-b"></div>
 
-        <!-- Events -->
+        <!-- Events + Tasks -->
         <div
-          v-for="(event, idx) in getEventsForDay(day)"
+          v-for="(item, idx) in getItemsForDay(day)"
           :key="idx"
-          class="absolute left-1 right-1 bg-white rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
-          :style="getEventStyle(event)"
+          class="absolute flex justify-between gap-4 left-1 right-1 bg-white rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
+          :style="getItemStyle(item)"
         >
-          <div class="font-semibold">{{ event.title }}</div>
-          <div class="text-gray-500 text-[10px]">{{ event.time }}</div>
-        </div>
+          <div class="flex gap-2">
+            <div
+              class="block h-full w-[3px] rounded-sm mb-1"
+              :style="{ backgroundColor: getColor(item) }"
+            ></div>
 
-        <!-- Current time line -->
-        <div
-          v-if="format(day, 'yyyy-MM-dd') === format(currentTime, 'yyyy-MM-dd')"
-          class="absolute left-0 right-0 border-t-2 border-red-500 border-dashed"
-          :style="getCurrentTimeStyle()"
-        ></div>
+            <div>
+              <div class="font-semibold">
+                {{ item.e_title || item.t_name }}
+              </div>
+              <div>
+                {{ item.e_description || item.t_description }}
+              </div>
+            </div>
+          </div>
+          <div class="text-gray-500 text-[10px]">
+            {{ item.start && item.end ? formatTimeRange(item) : '' }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { format, parse, differenceInMinutes, isToday as isTodayFn } from 'date-fns'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { format, differenceInMinutes, parseISO } from 'date-fns'
+import { useTaskStore } from '@/stores/task'
 
 const props = defineProps({
   day: { type: Date, default: () => new Date() },
-  events: {
-    type: Array,
-    default: () => [
-      { date: '2025-08-11', time: '08:10 AM - 09:00 AM', title: 'Daily Standup' },
-      { date: '2025-08-11', time: '10:00 AM - 11:30 AM', title: 'Project Meeting' },
-      { date: '2025-08-11', time: '02:00 PM - 03:00 PM', title: 'Code Review' },
-    ],
-  },
 })
 
 // Generate hours dynamically from 12 AM to 11 PM
@@ -67,6 +69,26 @@ const hours = Array.from({ length: 24 }).map((_, i) => {
   const hour12 = i % 12 === 0 ? 12 : i % 12
   const ampm = i < 12 ? 'AM' : 'PM'
   return `${hour12} ${ampm}`
+})
+
+// Stores
+const taskStore = useTaskStore()
+
+// Merge tasks (parse dates properly)
+const items = computed(() => {
+  return taskStore.tasks.map((t) => ({
+    ...t,
+    start: parseISO(t.start_date), // safer than new Date()
+    end: parseISO(t.due_date),
+    title: t.t_title,
+    description: t.t_description,
+    type: 'task',
+  }))
+})
+
+// Fetch data when mounted
+onMounted(async () => {
+  await taskStore.fetchTasks()
 })
 
 // Reactive current time
@@ -80,49 +102,57 @@ onMounted(() => {
 onUnmounted(() => clearInterval(timer))
 
 // --- Helpers ---
-function getEventsForDay(selectedDay) {
-  return props.events.filter((event) => {
-    const eventDate = format(new Date(event.date), 'yyyy-MM-dd')
-    const slotDay = format(selectedDay, 'yyyy-MM-dd')
-    return eventDate === slotDay
-  })
+function getItemsForDay(selectedDay) {
+  const dayStr = format(selectedDay, 'yyyy-MM-dd')
+  return items.value.filter(
+    (item) =>
+      format(item.start, 'yyyy-MM-dd') <= dayStr && format(item.end, 'yyyy-MM-dd') >= dayStr,
+  )
 }
 
-function getEventStyle(event) {
-  const [startStr, endStr] = event.time.split(' - ')
-  const dayStart = parse(startStr, 'hh:mm a', new Date())
-  const dayEnd = parse(endStr, 'hh:mm a', new Date())
+// Calculate top/height based on local time, clamped to day bounds
+function getItemStyle(item) {
+  if (!item.start || !item.end) return { top: '0', height: '2rem' }
 
-  const minutesFromStart = dayStart.getHours() * 60 + dayStart.getMinutes()
-  const durationMinutes = differenceInMinutes(dayEnd, dayStart)
+  const start = new Date(item.start)
+  const end = new Date(item.end)
+
+  // Define bounds for the selected day
+  const dayStart = new Date(props.day)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(props.day)
+  dayEnd.setHours(23, 59, 59, 999)
+
+  // Clamp task to this day's bounds (only for rendering)
+  const renderStart = start < dayStart ? dayStart : start
+  const renderEnd = end > dayEnd ? dayEnd : end
+
+  // Convert clamped times to minutes
+  const minutesFromStart = renderStart.getHours() * 60 + renderStart.getMinutes()
+  const durationMinutes = differenceInMinutes(renderEnd, renderStart)
 
   return {
-    top: `${(minutesFromStart / 60) * 4}rem`,
+    top: `${(minutesFromStart / 60) * 4}rem`, // 1 hour = 4rem
     height: `${(durationMinutes / 60) * 4}rem`,
   }
 }
 
-function getCurrentTimeStyle() {
-  const now = currentTime.value
-  const topRem = now.getHours() + now.getMinutes() / 60
-  return {
-    top: `${topRem * 4}rem`,
-  }
+// Display true original times, not clamped
+function formatTimeRange(item) {
+  if (!item.start || !item.end) return ''
+  return `${format(item.start, 'HH:mm')} - ${format(item.end, 'HH:mm')}`
 }
 
-function isToday(date) {
-  return isTodayFn(date)
+// Color based on event/task
+const colors = ['#FFE578', '#FFD5DB', '#D9CBFB']
+
+function getColor(item) {
+  if (item.type === 'event') return colors[0]
+  if (item.type === 'task') {
+    if (item.t_priority?.toUpperCase() === 'LOW') return '#C6E7FF'
+    if (item.t_priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
+    if (item.t_priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
+  }
+  return colors[0]
 }
 </script>
-
-<style scoped>
-/* Nice scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-</style>

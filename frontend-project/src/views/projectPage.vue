@@ -75,6 +75,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectStore } from '@/stores/project'
+import { useTaskStore } from '@/stores/task' // <-- import taskStore
 import ProjectLayout from './projectLayout.vue'
 import DescriptionLabel from '@/components/descriptionLabel.vue'
 import Status from '@/components/status.vue'
@@ -83,13 +84,12 @@ import Search from '@/components/search.vue'
 import Kanban from '@/components/kanban.vue'
 import GanttChart from '@/components/gantt.vue'
 import Table from '@/components/table.vue'
-import axios from 'axios'
 
 const route = useRoute()
 const projectStore = useProjectStore()
-const tasks = ref([]) // all tasks for the current project
+const taskStore = useTaskStore() // <-- initialize store
+const tasks = ref([]) // local tasks for this project
 const activeOption = ref('Kanban') // default active view
-const API_BASE_URL = 'http://localhost:3000'
 
 onMounted(async () => {
   if (!projectStore.projects.length) await projectStore.fetchProjects()
@@ -109,44 +109,52 @@ async function setCurrentProject() {
 }
 
 async function fetchProjectTasks(projectId) {
-  try {
-    // Fetch tasks for Kanban and Table views
-    const taskResponse = await axios.get(`${API_BASE_URL}/tasks/project/${projectId}`)
-    const fetchedTasks = taskResponse.data
+  await taskStore.fetchTasksByProject(projectId)
+  const fetchedTasks = taskStore.tasks
 
-    // Fetch subtasks for each task for Gantt view
-    tasks.value = await Promise.all(
-      fetchedTasks.map(async (task) => {
-        const subtaskResponse = await axios.get(`${API_BASE_URL}/subtask/task/${task.id}`)
-        return {
-          taskname: task.t_name,
-          description: task.t_description,
-          taskpriority: task.t_priority || 'none',
-          status: task.t_status || 'Not Started',
-          user: task.user_avatar || null,
-          start_date: task.start_date,
-          due_date: task.due_date,
-          subtasks: subtaskResponse.data.map((st) => ({
-            name: st.name,
-            start: st.start_date
-              ? new Date(st.start_date)
-              : task.start_date
-                ? new Date(task.start_date)
-                : new Date(),
-            end: st.due_date
-              ? new Date(st.due_date)
-              : task.due_date
-                ? new Date(task.due_date)
-                : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            status: st.status,
-            color: getSubtaskColor(st.status),
-            icon: st.user_avatar || null,
-          })),
-        }
-      }),
-    )
-  } catch (error) {
-    console.error('Failed to fetch project tasks or subtasks:', error)
+  // Map tasks with subtasks for Gantt view
+  tasks.value = await Promise.all(
+    fetchedTasks.map(async (task) => {
+      // Fetch subtasks using taskStore (if you have subtask store) or keep axios
+      // Here I keep axios for subtasks only
+      const subtaskResponse = await fetchSubtasks(task.id)
+      return {
+        taskname: task.t_name,
+        description: task.t_description,
+        taskpriority: task.t_priority || 'none',
+        status: task.t_status || 'Not Started',
+        user: task.user_avatar || null,
+        start_date: task.start_date,
+        due_date: task.due_date,
+        subtasks: subtaskResponse.map((st) => ({
+          name: st.name,
+          start: st.start_date
+            ? new Date(st.start_date)
+            : task.start_date
+              ? new Date(task.start_date)
+              : new Date(),
+          end: st.due_date
+            ? new Date(st.due_date)
+            : task.due_date
+              ? new Date(task.due_date)
+              : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          status: st.status,
+          color: getSubtaskColor(st.status),
+          icon: st.user_avatar || null,
+        })),
+      }
+    }),
+  )
+}
+
+// helper to fetch subtasks (can replace with subtask store if you have one)
+async function fetchSubtasks(taskId) {
+  try {
+    const res = await fetch(`http://localhost:3000/subtask/task/${taskId}`)
+    return await res.json()
+  } catch (err) {
+    console.error('Failed to fetch subtasks:', err)
+    return []
   }
 }
 

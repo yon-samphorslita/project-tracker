@@ -15,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
 import { SubtaskModule } from './subtask/subtask.module';
 import { NotificationModule } from './notification/notification.module';
 import { MemberModule } from './member/member.module';
+// import { EventModule } from './event/event.module';
 import { authMiddlewareFactory } from './auth/auth.middleware.factory';
 import { Role } from './enums/role.enum';
 
@@ -38,6 +39,7 @@ import { Role } from './enums/role.enum';
     SubtaskModule,
     NotificationModule,
     MemberModule,
+    // EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],

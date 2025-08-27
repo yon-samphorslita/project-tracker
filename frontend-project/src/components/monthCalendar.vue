@@ -1,10 +1,8 @@
 <template>
   <div class="w-full border rounded-md">
     <!-- Calendar Header -->
-    <div class="grid grid-cols-7 border-b text-center font-semibold sticky top-0 z-10">
-      <div v-for="day in weekDays" :key="day" class="p-2">
-        {{ day }}
-      </div>
+    <div class="grid grid-cols-7 border-b text-center font-semibold sticky top-0 z-10 bg-white">
+      <div v-for="day in weekDays" :key="day" class="p-2">{{ day }}</div>
     </div>
 
     <!-- Calendar Grid -->
@@ -16,29 +14,30 @@
       >
         <!-- Date Number -->
         <div
-          class="text-xs font-semibold mb-1 flex items-center justify-center"
+          class="text-xs font-semibold mb-1 flex items-center justify-start"
           :class="{
             'text-gray-400': !day.isCurrentMonth,
-            'bg-blue-200 rounded-full w-6 h-6': isToday(day.date),
+            'bg-blue-200 rounded-full w-6 h-6 flex items-center justify-center': isToday(day.date),
           }"
         >
           {{ day.date.getDate() }}
         </div>
 
-        <!-- Events -->
+        <!-- Events & Tasks -->
         <div
-          v-for="(event, i) in day.events"
+          v-for="(item, i) in day.items"
           :key="i"
           class="truncate text-xs p-1 my-1 border rounded bg-white shadow-sm flex items-center"
         >
-          <!-- Random color bar -->
+          <!-- Color bar -->
           <span
             class="rounded-md w-[2px] h-4 p-[1px] mr-1"
-            :style="{ backgroundColor: getRandomColor() }"
+            :style="{ backgroundColor: getColor(item) }"
           ></span>
 
           <!-- Time + Title -->
-          <span class="text-[rgba(56,56,56,0.8)]">{{ event.time }}</span> - {{ event.title }}
+          <span class="text-[rgba(56,56,56,0.8)]">{{ item.time || item.start_time || '' }}</span>
+          - {{ item.title || item.t_name }}
         </div>
       </div>
     </div>
@@ -46,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   startOfMonth,
   endOfMonth,
@@ -55,46 +54,69 @@ import {
   eachDayOfInterval,
   isSameMonth,
   isToday as isTodayFn,
+  format,
+  parseISO,
 } from 'date-fns'
+import { useTaskStore } from '@/stores/task'
 
-const props = defineProps({
-  year: { type: Number, default: new Date().getFullYear() },
-  month: { type: Number, default: new Date().getMonth() }, // 0 = Jan
-  events: {
-    type: Array,
-    default: () => [
-      { date: '2025-08-02', time: '07:10 AM', title: 'Weekly Meeting' },
-      { date: '2025-08-07', time: '10:00 AM', title: 'Design Review' },
-      { date: '2025-08-24', time: '01:00 PM', title: 'Sprint Planning' },
-    ],
-  },
-})
+const taskStore = useTaskStore()
 
 // Weekday names
 const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
-// Generate days for the grid
+// Props
+const props = defineProps({
+  year: { type: Number, default: new Date().getFullYear() },
+  month: { type: Number, default: new Date().getMonth() },
+})
+
+// Fetch events & tasks on mount
+onMounted(async () => {
+  // await eventStore.fetchEvents()
+  await taskStore.fetchTasks()
+})
+
+// Generate calendar days
 const days = computed(() => {
   const start = startOfWeek(startOfMonth(new Date(props.year, props.month)))
   const end = endOfWeek(endOfMonth(new Date(props.year, props.month)))
+
   return eachDayOfInterval({ start, end }).map((date) => {
-    const formatted = date.toISOString().split('T')[0]
+    const formatted = format(date, 'yyyy-MM-dd') // local day string
+
+    const dayTasks = taskStore.tasks.filter((t) => {
+      if (!t.due_date) return false
+      const dueDate = parseISO(t.due_date) // parse into Date (local)
+      const dueDay = format(dueDate, 'yyyy-MM-dd')
+      return dueDay === formatted
+    })
+
     return {
       date,
       isCurrentMonth: isSameMonth(date, new Date(props.year, props.month)),
-      events: props.events.filter((e) => e.date === formatted),
+      items: [...dayTasks],
     }
   })
 })
 
-// Check if date is today
+// Check today
 function isToday(date) {
   return isTodayFn(date)
 }
 
-// Random color generator (from three options)
+// Colors for events/tasks
 const colors = ['#FFE578', '#FFD5DB', '#D9CBFB']
-function getRandomColor() {
-  return colors[Math.floor(Math.random() * colors.length)]
+function getColor(item) {
+  // Event by project
+  if (item.projectId) return colors[item.projectId % colors.length]
+
+  // Task by priority
+  if (item.t_priority) {
+    if (item.t_priority.toUpperCase() === 'LOW') return '#C6E7FF'
+    if (item.t_priority.toUpperCase() === 'MEDIUM') return '#FFD5DB'
+    if (item.t_priority.toUpperCase() === 'HIGH') return '#FF8A5B'
+  }
+
+  return colors[0]
 }
 </script>

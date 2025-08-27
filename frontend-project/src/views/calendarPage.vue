@@ -10,9 +10,14 @@
         <Calendar />
 
         <!-- Add Schedule -->
-        <div class="flex">
+        <!-- <div class="flex items-center">
           <div>Add Schedule</div>
-        </div>
+          <button
+            class="ml-auto bg-[#C6E7FF] text-black px-2 py-1 rounded hover:bg-blue-300 transition"
+          >
+            <img src="@/assets/icons/add.svg" alt="Add" class="w-4 h-4 inline" />
+          </button>
+        </div> -->
 
         <!-- Categories / Projects -->
         <div>

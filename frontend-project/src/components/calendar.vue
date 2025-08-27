@@ -46,7 +46,7 @@
           <!-- background layer with opacity -->
           <div
             class="vc-row-bg absolute z-0 rounded-[5px] inset-0"
-            :style="{ backgroundColor: '#C6E7FF', opacity: 1 - wIdx * 0.1 }"
+            :style="{ backgroundColor: '#C6E7FF', opacity: 0.9 - wIdx * 0.1 }"
           ></div>
 
           <!-- days -->
@@ -56,7 +56,7 @@
             class="vc-day flex-1 h-8 min-w-[34px] flex items-center justify-center relative cursor-default z-[1] rounded-md"
             :class="{
               'vc-day--other opacity-[0.45]': cell.otherMonth,
-              'vc-day--today w-9 h-9 flex items-center justify-center font-semibold rounded-[50%] border-2 border-solid border-[black]':
+              'vc-day--today w-9 h-9 flex items-center justify-center font-semibold rounded-[100px] border-2 border-solid border-[black]':
                 cell.isToday,
             }"
           >
@@ -165,114 +165,3 @@ const weeks = computed(() => {
   return arr
 })
 </script>
-
-<!-- <style scoped>
-.calendar-frame {
-  max-width: 420px;
-  padding: 16px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e6e6e6;
-  overflow-x: auto;
-}
-
-.vue-calendar {
-  border-radius: 10px;
-  padding-bottom: 16px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.vc-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  padding: 12px 0;
-}
-.vc-title-bg {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-}
-.vc-title {
-  background: #c6e7ff;
-  border-radius: 8px;
-  padding: 8px 0;
-  width: 90%;
-  text-align: center;
-  font-weight: 600;
-  font-size: 16px;
-}
-.vc-btn {
-  background: transparent;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-  width: 40px;
-  color: #222;
-}
-
-.vc-weekdays-row {
-  display: flex;
-  background: #c6e7ff;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
-.vc-weekday {
-  flex: 1;
-  text-align: center;
-  font-size: 15px;
-  color: #222;
-  padding: 8px 0;
-  font-weight: 500;
-}
-
-.vc-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.vc-row {
-  display: flex;
-  gap: 10px;
-  position: relative;
-  border-radius: 5px;
-}
-.vc-row-bg {
-  position: absolute;
-  inset: 0;
-  border-radius: 5px;
-  z-index: 0;
-}
-.vc-day {
-  flex: 1;
-  height: 32px;
-  min-width: 34px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  cursor: default;
-  z-index: 1;
-}
-.vc-day--other {
-  opacity: 0.45;
-}
-.vc-day--today .vc-day-num {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid black;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-}
-.vc-day-num {
-  font-size: 15px;
-  font-weight: 500;
-}
-</style> -->

@@ -4,7 +4,8 @@
 
     <div class="mx-auto bg-white shadow-md rounded-2xl p-8">
       <!-- Header -->
-      <div class="flex items-center justify-end mb-6">
+      <div class="flex items-center justify-between mb-6">
+        <!-- Edit -->
         <button
           v-if="!isEditing"
           @click="startEditing"
@@ -88,6 +89,14 @@
         </button>
       </div>
     </div>
+    <div>
+      <!-- Logout -->
+      <button
+        @click="logout"
+        class="px-4 py-2 text-sm bg-red-500 text-white rounded-xl hover:bg-red-600 transition">
+        Logout
+      </button>
+    </div>
   </SettingsLayout>
 </template>
 
@@ -96,37 +105,35 @@ import { ref, onMounted } from 'vue'
 import SettingsLayout from './settingsLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
+const router = useRouter()
 
+// Profile form 
 const form = ref({
   first_name: '',
   last_name: '',
   email: '',
-  password: '',
   img_url: '',
 })
 
 const isEditing = ref(false)
 
-// 🔹 Fetch authenticated user profile
+// Fetch authenticated user profile
 onMounted(async () => {
   try {
     const res = await axios.get('http://localhost:3000/auth/profile', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
+      headers: { Authorization: `Bearer ${authStore.token}` },
     })
 
     form.value = {
       first_name: res.data.first_name,
       last_name: res.data.last_name,
       email: res.data.email,
-      password: '',
       img_url: res.data.img_url || '',
     }
 
-    // update store user
     authStore.user = res.data
   } catch (err) {
     console.error('Failed to fetch user', err)
@@ -142,11 +149,13 @@ function cancelEditing() {
 }
 async function saveChanges() {
   try {
-    const res = await axios.patch('http://localhost:3000/auth/update', form.value, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const { first_name, last_name, email, img_url } = form.value
+    const res = await axios.patch(
+      'http://localhost:3000/auth/update',
+      { first_name, last_name, email, img_url },
+      { headers: { Authorization: `Bearer ${authStore.token}` } },
+    )
+
     alert('Profile updated successfully!')
     authStore.user = res.data
     isEditing.value = false
@@ -161,7 +170,13 @@ function handleImageUpload(e) {
   const file = e.target.files[0]
   if (file) {
     form.value.img_url = URL.createObjectURL(file)
-    // 🔹 In real app, upload image to backend here
+    // TODO: Upload image to backend
   }
+}
+
+// Logout
+function logout() {
+  authStore.logout()
+  router.push('/login')
 }
 </script>
