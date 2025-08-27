@@ -1,27 +1,27 @@
 <template>
-  <div class="search-container">
-    <div class="search-wrapper">
-      <input type="text" placeholder="Search..." class="search-input" />
-      <!-- <button class="search-button">Search</button> -->
+    <div class="search-container">
+        <div class="search-wrapper">
+            <input type="text" placeholder="Search..." class="search-input">
+        </div>
+        
     </div>
-  </div>
 </template>
 
 <script></script>
 
 <style scoped>
 .search-container {
-  /* width: 100%; */
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* position: fixed; */
-  top: 100px;
-  left: 250px; /* Adjust based on sidebar width */
-  z-index: 1000;
-  /* background-color: pink; */
-}
+    width: 100%;
+    height: 50px;               
+    display: flex;
+    justify-content: center;        
+    align-items: center;
+    /* position: fixed; */
+    /* top: 100px;
+    left: 250px; 
+    z-index: 1000; */
+    /* background-color: pink; */
+}     
 .search-wrapper {
   width: 80%;
   display: flex;
@@ -39,16 +39,4 @@
   border-radius: 5px;
   font-size: 16px;
 }
-/* .search-button {
-    padding: 10px 20px;
-    margin-left: 10px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-.search-button:hover {
-    background-color: #0056b3;
-} */
 </style>
