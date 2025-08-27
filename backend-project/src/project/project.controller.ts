@@ -1,0 +1,76 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { ProjectService } from './project.service';
+import { Project } from './project.entity';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { ProjectGuard } from './project.guard';
+@UseGuards(AuthGuard('jwt')) // Protect all routes with JWT
+@Controller('projects')
+export class ProjectsController {
+  constructor(private readonly projectService: ProjectService) {}
+
+  @Get()
+  findAll(@Request() req): Promise<Project[]> {
+    if (!req.user?.id)
+      throw new ForbiddenException('Invalid user authentication');
+
+    console.log('Authenticated user:', req.user);
+
+    // If admin, return all projects
+    if (req.user.role === 'admin') {
+      return this.projectService.findAll(); // fetch all projects, no user filter
+    }
+
+    // Otherwise, return projects only for this user
+    return this.projectService.findAll(req.user.id);
+  }
+
+  @Get(':id')
+  @UseGuards(ProjectGuard) // Verify project ownership
+  findOne(@Param('id') id: string, @Request() req): Promise<Project> {
+    const projectId = +id;
+    if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
+    return this.projectService.findOne(projectId, req.user.id);
+  }
+
+  @Post()
+  create(
+    @Body() createProjectDto: CreateProjectDto,
+    @Request() req,
+  ): Promise<Project> {
+    return this.projectService.createProject(createProjectDto, req.user);
+  }
+
+  @Patch(':id')
+  @UseGuards(ProjectGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+    @Request() req,
+  ): Promise<Project> {
+    const projectId = +id;
+    if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
+    return this.projectService.update(projectId, updateProjectDto, req.user);
+  }
+
+  @Delete(':id')
+  @UseGuards(ProjectGuard)
+  delete(@Param('id') id: string, @Request() req): Promise<void> {
+    const projectId = +id;
+    if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
+    return this.projectService.delete(projectId, req.user.id);
+  }
+}
