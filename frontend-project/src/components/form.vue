@@ -97,7 +97,12 @@
     async function submitForm() {
         try {
             const payload = mapPayload();
-            const response = await axios.post(`http://localhost:3000/${props.endpoint}`, payload);
+            const token = localStorage.getItem('token') 
+            const response = await axios.post(`http://localhost:3000/${props.endpoint}` , payload , {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
             console.log(`${props.formTitle} created:`, response.data);
 
             // reset form + close popup
