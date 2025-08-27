@@ -1,27 +1,26 @@
 <template>
-    <div class="search-container">
-        <div class="search-wrapper">
-            <input type="text" placeholder="Search..." class="search-input">
-        </div>
-        
+  <div class="search-container">
+    <div class="search-wrapper">
+      <input type="text" placeholder="Search..." class="search-input" />
     </div>
+  </div>
 </template>
 
 <script></script>
 
 <style scoped>
 .search-container {
-    width: 100%;
-    height: 50px;               
-    display: flex;
-    justify-content: center;        
-    align-items: center;
-    /* position: fixed; */
-    /* top: 100px;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* position: fixed; */
+  /* top: 100px;
     left: 250px; 
     z-index: 1000; */
-    /* background-color: pink; */
-}     
+  /* background-color: pink; */
+}
 .search-wrapper {
   width: 80%;
   display: flex;

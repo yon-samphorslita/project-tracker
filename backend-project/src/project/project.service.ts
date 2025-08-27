@@ -32,20 +32,20 @@ export class ProjectService {
 
   // Get all projects for the logged-in user
   async findAll(userId?: number): Promise<Project[]> {
-    if (userId) {
-      // Fetch projects for specific user
-      return this.projectRepository.find({ where: { user: { id: userId } } });
-    } else {
-      // Fetch all projects (for admin)
-      return this.projectRepository.find();
-    }
+    return this.projectRepository.find({
+      where: [{ user: { id: userId } }, { members: { user: { id: userId } } }],
+      relations: ['members', 'members.user', 'user'],
+    });
   }
 
   // Get one project only if owned by user
   async findOne(id: number, userId: number): Promise<Project> {
     const project = await this.projectRepository.findOne({
-      where: { id, user: { id: userId } },
-      relations: ['user'],
+      where: [
+        { id, user: { id: userId } },
+        { id, members: { user: { id: userId } } },
+      ],
+      relations: ['members', 'members.user', 'user'],
     });
     if (!project)
       throw new NotFoundException(
@@ -60,14 +60,26 @@ export class ProjectService {
     dto: UpdateProjectDto,
     user: User,
   ): Promise<Project> {
-    const project = await this.findOne(id, user.id);
+    const project = await this.findOne(id, user.id); // fetch project (owner or member)
+
+    // Only owner can modify
+    if (project.user.id !== user.id) {
+      throw new ForbiddenException('Only owner can modify the project');
+    }
+
     Object.assign(project, dto);
     return this.projectRepository.save(project);
   }
 
   // Delete project only if owned by user
   async delete(id: number, userId: number): Promise<void> {
-    const project = await this.findOne(id, userId);
+    const project = await this.findOne(id, userId); 
+
+    // Only owner can delete
+    if (project.user.id !== userId) {
+      throw new ForbiddenException('Only owner can delete the project');
+    }
+
     await this.projectRepository.remove(project);
   }
 }

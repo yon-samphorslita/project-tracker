@@ -5,10 +5,11 @@
 
       <!-- Header with search & filter -->
       <div class="flex justify-between items-center w-full">
-        <div class="flex font-semibold text-lg">All Projects</div>
-        <div class="flex gap-4">
+        <Button label="+ Create New Project" btn-color="#C6E7FF" btntext="black" @click="openForm"/>
+            <Form formTitle="Create Project" :fields="projectFields" endpoint="projects" />
+        <div class="flex gap-4 items-center">
           <search />
-          <Filter
+          <Filter class="min-w-fit"
             title="Sort by"
             :options="[
               { value: 'priority-High', label: 'Priority (High → Low)' },
@@ -39,14 +40,46 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import ProjectLayout from './projectLayout.vue'
 import search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
 import ProjectCard from '@/components/projectCard.vue'
 import { useProjectStore } from '@/stores/project'
-
+import Button from '@/components/button.vue'
+import Form from '@/components/form.vue'
 const projectStore = useProjectStore()
+const showForm = ref(false)
+function openForm() {
+  showForm.value = true
+}
+const Teams = [
+  { id: 1, name: 'Team A' },
+  { id: 2, name: 'Team B' },
+  { id: 3, name: 'Team C' },
+]
+const projectFields = [
+  { type: 'text', label: 'Project Title', placeholder: 'Enter project title', model: 'title' },
+  {
+    type: 'textarea',
+    label: 'Description',
+    placeholder: 'Enter description',
+    model: 'description',
+  },
+  { type: 'select', label: 'Assignee', options: Teams, model: 'assignee' },
+  {
+    type: 'select',
+    label: 'Priority',
+    options: [
+      { id: 'high', name: 'High' },
+      { id: 'medium', name: 'Medium' },
+      { id: 'low', name: 'Low' },
+    ],
+    model: 'priority',
+  },
+  { type: 'date', label: 'Start Date', model: 'startDate' },
+  { type: 'date', label: 'Due Date', model: 'dueDate' },
+]
 
 onMounted(() => {
   projectStore.fetchProjects()

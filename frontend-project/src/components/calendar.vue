@@ -53,10 +53,10 @@
           <div
             v-for="cell in week"
             :key="cell.key"
-            class="vc-day flex-1 h-8 min-w-[34px] flex items-center justify-center relative cursor-default z-[1] rounded-md"
+            class="vc-day flex-1 h-8 min-w-[34px] flex items-center justify-center relative cursor-default z-[1] rounded-full"
             :class="{
               'vc-day--other opacity-[0.45]': cell.otherMonth,
-              'vc-day--today w-9 h-9 flex items-center justify-center font-semibold rounded-[100px] border-2 border-solid border-[black]':
+              'vc-day--today w-9 h-9 flex items-center justify-center font-semibold  border-2 border-solid border-[black]':
                 cell.isToday,
             }"
           >

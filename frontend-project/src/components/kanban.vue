@@ -143,17 +143,16 @@ const getPriorityColors = (priority) => {
 
 <style>
 .kanban-container {
-    width: 400px;
-    height: calc(100vh - 91px);
-    /* max-height: 75vh; */
-    overflow-x: hidden;
-    overflow-y: auto;
-    top: 170px;
-    border-radius: 5px;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
-    background-color: #C6E7FF; 
-    padding: 15px;
-    
+  width: 400px;
+  height: calc(100vh - 91px);
+  /* max-height: 75vh; */
+  overflow-x: hidden;
+  overflow-y: auto;
+  top: 170px;
+  border-radius: 5px;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
+  background-color: #c6e7ff;
+  padding: 15px;
 }
 .kanban-header {
   display: flex;
@@ -225,16 +224,16 @@ const getPriorityColors = (priority) => {
   color: #333;
   background: #f9f9f9;
 }
-.kanban-task{
-    max-width: 375px;
-    border: 1px solid black;
-    border-radius: 5px;
-    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
-    background: white;
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-    margin: 20px 0px;
+.kanban-task {
+  max-width: 375px;
+  border: 1px solid black;
+  border-radius: 5px;
+  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
+  background: white;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  margin: 20px 0px;
 }
 .kanban-task-description {
   width: 90%;
@@ -249,13 +248,13 @@ const getPriorityColors = (priority) => {
   border-radius: 5px;
   font-size: smaller;
 }
-.kanban-task-responsible-user{
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    overflow: hidden;
-    margin-right: 8px;
-    align-self: center;
+.kanban-task-responsible-user {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 8px;
+  align-self: center;
 }
 .kanban-task-responsible-user img {
   width: 100%;
