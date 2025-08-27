@@ -5,10 +5,10 @@
     <div class="mx-auto bg-white shadow-md rounded-2xl p-8">
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
-        <!-- Edit -->
         <button
           v-if="!isEditing"
           @click="startEditing"
+          type="button"
           class="px-4 py-2 text-sm bg-[#C6E7FF] text-black rounded-xl hover:bg-blue-400 transition"
         >
           Edit
@@ -40,7 +40,7 @@
       </div>
 
       <!-- Editable Form -->
-      <form class="grid gap-6">
+      <form class="grid gap-6" @submit.prevent>
         <div class="grid grid-cols-2 gap-6">
           <div>
             <label class="block text-gray-700 mb-1">First Name</label>
@@ -66,8 +66,8 @@
           <label class="block text-gray-700 mb-1">Email</label>
           <input
             v-model="form.email"
-            :disabled="!isEditing"
-            class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200 disabled:bg-gray-100"
+            disabled
+            class="w-full px-4 py-2 border rounded-xl bg-gray-100 cursor-not-allowed"
             type="email"
           />
         </div>
@@ -77,22 +77,71 @@
       <div v-if="isEditing" class="flex justify-end gap-3 mt-6">
         <button
           @click="cancelEditing"
+          type="button"
           class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
         >
           Cancel
         </button>
         <button
           @click="saveChanges"
+          type="button"
           class="px-4 py-2 rounded-xl bg-[#C6E7FF] text-black hover:bg-blue-400 transition"
         >
           Save Changes
         </button>
       </div>
+
+      <!-- Change Password Section -->
+      <div class="mt-8 border-t pt-6">
+        <h2 class="text-xl font-semibold mb-4">Change Password</h2>
+        <form @submit.prevent="updatePassword" class="flex flex-col gap-4">
+          <div>
+            <label class="block text-gray-700 mb-1">Current Password</label>
+            <input
+              v-model="passwordForm.oldPassword"
+              type="password"
+              placeholder="Enter current password"
+              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 mb-1">New Password</label>
+            <input
+              v-model="passwordForm.newPassword"
+              type="password"
+              placeholder="Enter new password"
+              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 mb-1">Confirm New Password</label>
+            <input
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              placeholder="Confirm new password"
+              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="mt-4 px-4 py-2 bg-[#C6E7FF] text-black font-bold rounded-xl hover:bg-blue-400 transition"
+          >
+            Update Password
+          </button>
+        </form>
+      </div>
     </div>
-    <div>
-      <!-- Logout -->
+
+    <div class="mt-4">
       <button
         @click="logout"
+        type="button"
         class="px-4 py-2 text-sm bg-red-500 text-white rounded-xl hover:bg-red-600 transition"
       >
         Logout
@@ -105,13 +154,11 @@
 import { ref, onMounted } from 'vue'
 import SettingsLayout from './settingsLayout.vue'
 import { useAuthStore } from '@/stores/auth'
-import axios from 'axios'
 import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
-// Profile form
 const form = ref({
   first_name: '',
   last_name: '',
@@ -119,46 +166,37 @@ const form = ref({
   img_url: '',
 })
 
+const passwordForm = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
 const isEditing = ref(false)
 
-// Fetch authenticated user profile
 onMounted(async () => {
-  try {
-    const res = await axios.get('http://localhost:3000/auth/profile', {
-      headers: { Authorization: `Bearer ${authStore.token}` },
-    })
-
-    form.value = {
-      first_name: res.data.first_name,
-      last_name: res.data.last_name,
-      email: res.data.email,
-      img_url: res.data.img_url || '',
-    }
-
-    authStore.user = res.data
-  } catch (err) {
-    console.error('Failed to fetch user', err)
+  const profile = await authStore.fetchProfile()
+  if (profile) {
+    form.value.first_name = profile.first_name
+    form.value.last_name = profile.last_name
+    form.value.email = profile.email
+    form.value.img_url = profile.img_url || ''
   }
 })
 
-// Toggle editing
 function startEditing() {
   isEditing.value = true
 }
+
 function cancelEditing() {
   isEditing.value = false
 }
+
 async function saveChanges() {
   try {
-    const { first_name, last_name, email, img_url } = form.value
-    const res = await axios.patch(
-      'http://localhost:3000/auth/update',
-      { first_name, last_name, email, img_url },
-      { headers: { Authorization: `Bearer ${authStore.token}` } },
-    )
-
+    const { first_name, last_name, img_url } = form.value
+    await authStore.updateProfile({ first_name, last_name, img_url })
     alert('Profile updated successfully!')
-    authStore.user = res.data
     isEditing.value = false
   } catch (err) {
     console.error('Failed to update profile', err)
@@ -166,7 +204,27 @@ async function saveChanges() {
   }
 }
 
-// Handle profile image upload
+async function updatePassword() {
+  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+    alert('New password and confirm password do not match')
+    return
+  }
+
+  try {
+    const res = await authStore.updatePassword(
+      passwordForm.value.oldPassword,
+      passwordForm.value.newPassword,
+    )
+    alert(res.message)
+    passwordForm.value.oldPassword = ''
+    passwordForm.value.newPassword = ''
+    passwordForm.value.confirmPassword = ''
+  } catch (err) {
+    alert(err.response?.data?.message || 'Failed to update password')
+    console.error(err)
+  }
+}
+
 function handleImageUpload(e) {
   const file = e.target.files[0]
   if (file) {
@@ -175,7 +233,6 @@ function handleImageUpload(e) {
   }
 }
 
-// Logout
 function logout() {
   authStore.logout()
   router.push('/login')

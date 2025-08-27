@@ -5,11 +5,17 @@
 
       <!-- Header with search & filter -->
       <div class="flex justify-between items-center w-full">
-        <Button label="+ Create New Project" btn-color="#C6E7FF" btntext="black" @click="openForm"/>
-            <Form formTitle="Create Project" :fields="projectFields" endpoint="projects" />
+        <Button
+          label="+ Create New Project"
+          btn-color="#C6E7FF"
+          btntext="black"
+          @click="openForm"
+        />
+        <Form formTitle="Create Project" :fields="projectFields" endpoint="projects" />
         <div class="flex gap-4 items-center">
           <search />
-          <Filter class="min-w-fit"
+          <Filter
+            class="min-w-fit"
             title="Sort by"
             :options="[
               { value: 'priority-High', label: 'Priority (High → Low)' },

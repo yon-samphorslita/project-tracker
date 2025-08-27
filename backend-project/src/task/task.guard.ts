@@ -1,4 +1,3 @@
-// /src/task/task.guard.ts
 import {
   CanActivate,
   ExecutionContext,
@@ -7,33 +6,30 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
-import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class TaskGuard implements CanActivate {
-  constructor(
-    private readonly taskService: TaskService,
-    private readonly reflector: Reflector,
-  ) {}
+  constructor(private readonly taskService: TaskService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     const taskId = +request.params.id;
 
-    if (!user) throw new ForbiddenException('User not authenticated');
-    if (isNaN(taskId)) throw new NotFoundException('Invalid task ID');
+    if (!user?.id || isNaN(taskId)) {
+      throw new NotFoundException('Invalid user or task ID');
+    }
 
-    // Admins bypass ownership check
-    if (user.role === 'admin') return true;
+    // Admins bypass
+    if (user.role === 'admin') {
+      request.task = await this.taskService.findOne(taskId, undefined, true);
+      return true;
+    }
 
-    // Fetch the task
-    const task = await this.taskService.findOne(taskId);
-    if (!task) throw new NotFoundException('Task not found');
+    const task = await this.taskService.findOne(taskId, user.id);
+    if (!task) throw new ForbiddenException('You are not authorized to access this task');
 
-    // Check ownership: task.user.id must match authenticated user id
-    if (task.user && task.user.id === user.id) return true;
-
-    throw new ForbiddenException('You do not have access to this task');
+    request.task = task;
+    return true;
   }
 }

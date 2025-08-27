@@ -35,4 +35,7 @@ export class AuthService {
     const accessToken = await this.jwtService.signAsync(payload);
     return { accessToken };
   }
+  async updateUserPassword(userId: number, newPassword: string): Promise<User> {
+    return this.userService.updatePassword(userId, newPassword);
+  }
 }

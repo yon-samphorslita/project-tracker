@@ -17,7 +17,8 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ProjectGuard } from './project.guard';
-@UseGuards(AuthGuard('jwt')) // Protect all routes with JWT
+
+@UseGuards(AuthGuard('jwt'))
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectService: ProjectService) {}
@@ -27,23 +28,18 @@ export class ProjectsController {
     if (!req.user?.id)
       throw new ForbiddenException('Invalid user authentication');
 
-    console.log('Authenticated user:', req.user);
-
-    // If admin, return all projects
-    if (req.user.role === 'admin') {
-      return this.projectService.findAll(); // fetch all projects, no user filter
-    }
-
-    // Otherwise, return projects only for this user
-    return this.projectService.findAll(req.user.id);
+    const isAdmin = req.user.role === 'admin';
+    return this.projectService.findAll(req.user.id, isAdmin);
   }
 
   @Get(':id')
-  @UseGuards(ProjectGuard) // Verify project ownership
+  @UseGuards(ProjectGuard)
   findOne(@Param('id') id: string, @Request() req): Promise<Project> {
     const projectId = +id;
     if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
-    return this.projectService.findOne(projectId, req.user.id);
+
+    const isAdmin = req.user.role === 'admin';
+    return this.projectService.findOne(projectId, req.user.id, isAdmin);
   }
 
   @Post()
@@ -63,6 +59,7 @@ export class ProjectsController {
   ): Promise<Project> {
     const projectId = +id;
     if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
+
     return this.projectService.update(projectId, updateProjectDto, req.user);
   }
 
@@ -71,6 +68,7 @@ export class ProjectsController {
   delete(@Param('id') id: string, @Request() req): Promise<void> {
     const projectId = +id;
     if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
-    return this.projectService.delete(projectId, req.user.id);
+
+    return this.projectService.delete(projectId, req.user);
   }
 }

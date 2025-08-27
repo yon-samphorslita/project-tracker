@@ -7,13 +7,12 @@ import TestComponent from '@/TestComponent.vue'
 import SettingsPage from '@/views/settingsPage.vue'
 import CalendarPage from '@/views/calendarPage.vue'
 const routes = [
-  { path: '/', component: TestComponent },
+  { path: '/', component: TestComponent, redirect: { name: 'Login' } },
   {
     path: '/home',
     component: Home,
   },
-  { path: '/signup', component: AuthPage },
-  { path: '/login', component: AuthPage },
+  { path: '/login', component: AuthPage, name: 'Login' },
   {
     path: '/projects',
     component: ProjectList,

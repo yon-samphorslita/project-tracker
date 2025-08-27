@@ -39,14 +39,6 @@ export const useAuthStore = defineStore(
       return config
     })
 
-    // Signup
-    async function signup(userData) {
-      const response = await axios.post(`${API_BASE_URL}/auth/signup`, userData)
-      const { user: u, accessToken } = response.data
-      setAuthData(u, accessToken)
-      return u
-    }
-
     // Login
     async function login(credentials) {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials)
@@ -74,7 +66,7 @@ export const useAuthStore = defineStore(
       }
     }
 
-    // Update profile
+    // Update profile (excluding password)
     async function updateProfile(updateUserDto) {
       if (!token.value) return null
       const response = await api.patch('/auth/update', updateUserDto)
@@ -82,18 +74,28 @@ export const useAuthStore = defineStore(
       return user.value
     }
 
+    // Update password
+    async function updatePassword(oldPassword, newPassword) {
+      if (!token.value) return null
+      const response = await api.patch('/auth/update-password', {
+        oldPassword,
+        newPassword,
+      })
+      return response.data
+    }
+
     return {
       user,
       token,
       isAuthenticated,
-      signup,
       login,
       logout,
       fetchProfile,
       updateProfile,
+      updatePassword,
     }
   },
   {
-    persist: true, // persist store in localStorage
+    persist: true,
   },
 )
