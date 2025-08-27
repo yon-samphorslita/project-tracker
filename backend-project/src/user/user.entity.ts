@@ -11,7 +11,7 @@ import { Project } from '../project/project.entity';
 import { Role } from '../enums/role.enum';
 import { Notification } from '../notification/notification.entity';
 import { Member } from 'src/member/member.entity';
-import { Event } from 'src/event/event.entity';
+// import { Event } from 'src/event/event.entity';
 @Entity('users')
 @Unique(['email']) // Ensures that email is unique across users
 export class User {
@@ -54,6 +54,6 @@ export class User {
   @OneToMany(() => Member, (member) => member.user)
   members: Member[];
 
-  @OneToMany(() => Event, (event) => event.user)
-  events: Event[];
+  // @OneToMany(() => Event, (event) => event.user)
+  // events: Event[];
 }
