@@ -233,8 +233,13 @@ function handleImageUpload(e) {
   }
 }
 
-function logout() {
-  authStore.logout()
-  router.push('/login')
+async function logout() {
+  try {
+    await authStore.logout() // wait for backend logout and clearing state
+  } catch (err) {
+    console.error('Logout failed', err)
+  } finally {
+    router.push('/login')
+  }
 }
 </script>

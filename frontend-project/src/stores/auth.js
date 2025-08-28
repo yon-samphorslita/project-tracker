@@ -1,4 +1,3 @@
-// stores/authStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
@@ -12,7 +11,7 @@ export const useAuthStore = defineStore(
     const token = ref(localStorage.getItem('token') || null)
     const isAuthenticated = ref(!!token.value)
 
-    // Helper: set user & token
+    // set user & token
     function setAuthData(userData, accessToken) {
       user.value = userData
       token.value = accessToken
@@ -41,15 +40,21 @@ export const useAuthStore = defineStore(
 
     // Login
     async function login(credentials) {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials)
+      const response = await api.post('/auth/login', credentials)
       const { user: u, accessToken } = response.data
       setAuthData(u, accessToken)
       return u
     }
 
     // Logout
-    function logout() {
-      clearAuthData()
+    async function logout() {
+      try {
+        if (token.value) await api.post('/auth/logout')
+      } catch (error) {
+        console.warn('Backend logout failed, clearing local auth anyway')
+      } finally {
+        clearAuthData()
+      }
     }
 
     // Fetch profile
@@ -60,9 +65,22 @@ export const useAuthStore = defineStore(
         user.value = response.data
         return user.value
       } catch (error) {
-        console.error('Error fetching profile:', error)
-        if (error.response?.status === 401) logout()
+        if (error.response?.status === 401) {
+          logout() // token expired, clear state
+        }
         return null
+      }
+    }
+
+    // Fetch all users (admin only)
+    async function fetchAllUsers() {
+      if (!token.value) return []
+      try {
+        const response = await api.get('/auth/users')
+        return response.data // array of users without passwords
+      } catch (error) {
+        console.error('Error fetching users:', error)
+        throw error
       }
     }
 
@@ -91,6 +109,7 @@ export const useAuthStore = defineStore(
       login,
       logout,
       fetchProfile,
+      fetchAllUsers,
       updateProfile,
       updatePassword,
     }

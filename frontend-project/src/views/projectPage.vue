@@ -1,7 +1,7 @@
 <template>
   <ProjectLayout>
     <div v-if="project" class="container flex flex-col gap-4">
-      <!-- Project Title & Description -->
+      <!-- Project Header -->
       <div class="flex gap-4 items-center">
         <h1 class="text-2xl font-bold">{{ project.p_name }}</h1>
         <img src="../assets/icons/edit.svg" alt="Edit" />
@@ -9,7 +9,7 @@
       <p class="text-gray-600">{{ project.p_description }}</p>
 
       <!-- Timeline & Status -->
-      <div class="flex items-center justify-between mt-4 w-3/4">
+      <div class="flex items-center justify-between mt-4 w-[60%]">
         <div class="flex text-[#1E1E1E] opacity-80 gap-2">
           <div class="flex items-center gap-2">
             <div class="text-lg">Timeline:</div>
@@ -19,52 +19,68 @@
           </div>
         </div>
 
-        <div class="flex gap-2 items-center text-[#1E1E1E] opacity-80">
-          <div class="text-lg">Status:</div>
-          <Status :status="project.status" />
+        <div class="flex gap-4">
+          <div class="flex gap-2 items-center text-[#1E1E1E] opacity-80">
+            <div class="text-lg">Status:</div>
+            <Status :status="project.status" />
+          </div>
+
+          <Button label="+ New Task" btn-color="#C6E7FF" btntext="black" @click="openForm" />
+
+          <Form
+            v-model:modelValue="showTaskForm"
+            formTitle="Create Task"
+            :fields="taskFields"
+            endpoint="tasks"
+            @submitted="onTaskCreated"
+          />
         </div>
-
-        <Button
-          label="+ Create New Project"
-          btn-color="#C6E7FF"
-          btntext="black"
-          @click="openForm"
-        />
       </div>
 
-      <!-- TypeList & Search -->
-      <div class="flex justify-between mt-4">
+      <!-- Type & Search -->
+      <div class="flex justify-between items-center mt-4">
         <TypeList v-model:activeOption="activeOption" />
-        <Search />
+        <Search @update="searchQuery = $event" />
       </div>
 
-      <!-- Content: Kanban / Gantt / Table -->
+      <!-- Task Views -->
       <div class="flex gap-4 mt-4">
-        <!-- Kanban View -->
         <template v-if="activeOption === 'Kanban'">
           <Kanban
-            :kanbantasks="notStartedTasks"
+            :kanbantasks="
+              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'not started')
+            "
             kanbanTaskStatus="Not Started"
-            :kanbanTaskNum="notStartedTasks.length"
+            :kanbanTaskNum="
+              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'not started')
+                .length
+            "
           />
           <Kanban
-            :kanbantasks="inProgressTasks"
+            :kanbantasks="
+              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'in progress')
+            "
             kanbanTaskStatus="In Progress"
-            :kanbanTaskNum="inProgressTasks.length"
+            :kanbanTaskNum="
+              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'in progress')
+                .length
+            "
           />
           <Kanban
-            :kanbantasks="completedTasks"
+            :kanbantasks="
+              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'completed')
+            "
             kanbanTaskStatus="Completed"
-            :kanbanTaskNum="completedTasks.length"
+            :kanbanTaskNum="
+              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'completed').length
+            "
           />
         </template>
 
-        <!-- Gantt View -->
         <template v-else-if="activeOption === 'Gantt'">
           <GanttChart :rows="ganttRows" :format-date="formatDate" />
         </template>
 
-        <!-- Table View -->
         <template v-else-if="activeOption === 'Table'">
           <Table :data="mappedTasks" :columns="tableColumns" :format-date="formatDate" />
         </template>
@@ -89,14 +105,18 @@ import Kanban from '@/components/kanban.vue'
 import GanttChart from '@/components/gantt.vue'
 import Table from '@/components/table.vue'
 import Button from '@/components/button.vue'
+import Form from '@/components/form.vue'
 
 const route = useRoute()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
-const activeOption = ref('Kanban') // default view
-const tasksWithSubtasks = ref([]) // tasks with mapped subtasks
 
-// Columns for table
+const activeOption = ref('Kanban')
+const tasksWithSubtasks = ref([])
+const showTaskForm = ref(false)
+const searchQuery = ref('')
+
+// Table columns
 const tableColumns = ref([
   { key: 'name', label: 'Task Name' },
   { key: 'description', label: 'Description' },
@@ -107,7 +127,29 @@ const tableColumns = ref([
   { key: 'icon', label: 'Assignee' },
 ])
 
-// Format date helper
+// Form fields
+const taskFields = [
+  { type: 'text', label: 'Task Name', placeholder: 'Enter task name', model: 'title' },
+  {
+    type: 'textarea',
+    label: 'Description',
+    placeholder: 'Enter description',
+    model: 'description',
+  },
+  {
+    type: 'select',
+    label: 'Priority',
+    options: [
+      { id: 'high', name: 'High' },
+      { id: 'medium', name: 'Medium' },
+      { id: 'low', name: 'Low' },
+    ],
+    model: 'priority',
+  },
+  { type: 'date', label: 'Start Date', model: 'startDate' },
+  { type: 'date', label: 'Due Date', model: 'dueDate' },
+]
+
 function formatDate(dateStr) {
   if (!dateStr) return 'TBD'
   return new Date(dateStr).toLocaleDateString('en-US', {
@@ -117,7 +159,6 @@ function formatDate(dateStr) {
   })
 }
 
-// Subtask color helper
 function getSubtaskColor(status) {
   switch ((status || '').toLowerCase()) {
     case 'not started':
@@ -127,7 +168,6 @@ function getSubtaskColor(status) {
     case 'in_progress':
       return '#FFD966'
     case 'completed':
-    case 'done':
       return '#8BD3B7'
     default:
       return '#D3D3D3'
@@ -139,17 +179,14 @@ async function fetchSubtasks(taskId) {
   try {
     const res = await fetch(`http://localhost:3000/subtask/task/${taskId}`)
     return await res.json()
-  } catch (err) {
-    console.error('Failed to fetch subtasks:', err)
+  } catch {
     return []
   }
 }
 
-// Fetch tasks for selected project
+// Fetch project tasks
 async function fetchProjectTasks(projectId) {
   await taskStore.fetchTasksByProject(projectId)
-
-  // Map tasks with subtasks
   tasksWithSubtasks.value = await Promise.all(
     taskStore.tasks.map(async (task) => {
       const subtasks = await fetchSubtasks(task.id)
@@ -174,28 +211,32 @@ async function fetchProjectTasks(projectId) {
   )
 }
 
-// Computed lists for Kanban
-const notStartedTasks = computed(() =>
-  tasksWithSubtasks.value.filter((t) => (t.status || '').toLowerCase() === 'not started'),
-)
-const inProgressTasks = computed(() =>
-  tasksWithSubtasks.value.filter((t) => (t.status || '').toLowerCase() === 'in progress'),
-)
-const completedTasks = computed(() =>
-  tasksWithSubtasks.value.filter((t) => (t.status || '').toLowerCase() === 'completed'),
-)
+// Filtered tasks
+const filteredTasksWithSubtasks = computed(() => {
+  const q = searchQuery.value.toLowerCase()
+  return tasksWithSubtasks.value
+    .map((task) => ({
+      ...task,
+      subtasks: task.subtasks.filter((st) => st.name.toLowerCase().includes(q)),
+    }))
+    .filter(
+      (task) =>
+        task.taskname.toLowerCase().includes(q) ||
+        (task.description && task.description.toLowerCase().includes(q)) ||
+        task.subtasks.length > 0,
+    )
+})
 
-// Computed rows for Gantt
+// Gantt & Table
 const ganttRows = computed(() =>
-  tasksWithSubtasks.value.map((task) => ({
+  filteredTasksWithSubtasks.value.map((task) => ({
     label: task.taskname,
     tasks: task.subtasks,
   })),
 )
 
-// Computed tasks for Table view
 const mappedTasks = computed(() =>
-  tasksWithSubtasks.value.map((task) => ({
+  filteredTasksWithSubtasks.value.map((task) => ({
     name: task.taskname,
     description: task.description,
     priority: task.taskpriority,
@@ -206,7 +247,7 @@ const mappedTasks = computed(() =>
   })),
 )
 
-// Set current project based on route
+// Load project & tasks
 async function setCurrentProject() {
   if (!projectStore.projects.length) await projectStore.fetchProjects()
   const selectedProject = projectStore.projects.find((p) => p.id === Number(route.params.id))
@@ -214,20 +255,19 @@ async function setCurrentProject() {
   if (selectedProject) await fetchProjectTasks(selectedProject.id)
 }
 
-// Watch route changes
 watch(
   () => route.params.id,
-  async () => setCurrentProject(),
+  () => setCurrentProject(),
 )
-
-onMounted(async () => {
-  await setCurrentProject()
-})
+onMounted(() => setCurrentProject())
 
 const project = computed(() => projectStore.current)
-
-// Placeholder function for opening form
 function openForm() {
-  console.log('Open project form')
+  showTaskForm.value = true
+}
+
+// Task created
+function onTaskCreated(task) {
+  fetchProjectTasks(projectStore.current.id)
 }
 </script>

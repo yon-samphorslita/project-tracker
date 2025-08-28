@@ -44,7 +44,7 @@
           v-model="formData[field.model]"
         >
           <option disabled selected>Select {{ field.label }}</option>
-          <option v-for="option in field.options" :key="option.id" :value="option.id">
+          <option v-for="option in field.options" :key="option.id" :value="option">
             {{ option.name }}
           </option>
         </select>
@@ -59,18 +59,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { defineProps, reactive } from 'vue'
+import { ref, watch } from 'vue'
+import { defineProps, defineEmits, reactive } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
   formTitle: { type: String, required: true },
   fields: { type: Array, required: true },
   endpoint: { type: String, required: true },
+  modelValue: { type: Boolean, required: false },
 })
-
+const emit = defineEmits(['update:modelValue', 'submitted'])
 const formData = reactive({})
-const showForm = ref(false)
+const showForm = ref(props.modelValue || false)
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    showForm.value = newVal
+  },
+)
+watch(showForm, (val) => emit('update:modelValue', val))
 
 function mapPayload() {
   if (props.endpoint === 'projects') {
@@ -87,8 +96,8 @@ function mapPayload() {
       t_name: formData.title,
       t_description: formData.description,
       t_status: formData.status || 'not started',
-      t_priority: formData.priority,
-      start_date: formData.dueDate || null,
+      t_priority: formData.priority || 'medium',
+      start_date: formData.startDate || null,
       due_date: formData.dueDate || null,
     }
   } else if (props.endpoint === 'subtask') {
@@ -109,7 +118,7 @@ async function submitForm() {
       },
     })
     console.log(`${props.formTitle} created:`, response.data)
-
+    emit('submitted', response.data)
     // reset form + close popup
     Object.keys(formData).forEach((key) => (formData[key] = ''))
     showForm.value = false

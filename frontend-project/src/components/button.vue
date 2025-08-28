@@ -1,5 +1,9 @@
 <template>
-  <button class="btn" :style="{ background: btnColor, color: btntext, 'font-size': btntextsize }">
+  <button
+    class="btn"
+    :style="{ background: btnColor, color: btntext, 'font-size': btntextsize }"
+    @click="$emit('click')"
+  >
     {{ label }}
   </button>
 </template>

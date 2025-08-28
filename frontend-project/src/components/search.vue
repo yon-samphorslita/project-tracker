@@ -1,16 +1,30 @@
 <template>
   <div class="search-container">
     <div class="search-wrapper">
-      <input type="text" placeholder="Search..." class="search-input" />
+      <input
+        type="text"
+        placeholder="Search..."
+        class="search-input"
+        v-model="query"
+        @input="onInput"
+      />
     </div>
   </div>
 </template>
 
-<script></script>
+<script setup>
+import { ref } from 'vue'
+const query = ref('')
+
+const emit = defineEmits(['update:query'])
+const onInput = () => {
+  emit('update', query.value)
+}
+</script>
 
 <style scoped>
 .search-container {
-  width: 100%;
+  /* width: 100%; */
   height: 50px;
   display: flex;
   justify-content: center;
@@ -22,7 +36,7 @@
   /* background-color: pink; */
 }
 .search-wrapper {
-  width: 80%;
+  /* width: 80%; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -35,7 +49,7 @@
   /* outline: none; */
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 50px;
   font-size: 16px;
 }
 </style>

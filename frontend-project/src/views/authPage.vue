@@ -49,9 +49,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const loginForm = ref({
   email: '',
@@ -61,16 +62,14 @@ const loginForm = ref({
 // Login handler
 async function handleLogin() {
   try {
-    const res = await axios.post('http://localhost:3000/auth/login', loginForm.value)
+    const user = await auth.login(loginForm.value)
+    const role = user.role
 
-    localStorage.setItem('token', res.data.accessToken)
-    localStorage.setItem('role', res.data.user.role)
-
-    if (res.data.user.role === 'admin') {
+    if (role === 'admin') {
       router.push('/settings')
-    } else if (res.data.user.role === 'project_manager') {
+    } else if (role === 'project_manager') {
       router.push('/projects')
-    } else if (res.data.user.role === 'member') {
+    } else if (role === 'member') {
       router.push('/member-dashboard')
     } else {
       router.push('/home')

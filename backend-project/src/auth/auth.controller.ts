@@ -29,6 +29,15 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('users')
+  async getAllUsers() {
+    const users = await this.userService.findAll();
+
+    return users.map(({ password, ...rest }) => rest);
+  }
+
   // Create user (admin only)
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
@@ -49,6 +58,15 @@ export class AuthController {
     const token = await this.authService.login(user);
     const { password, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, ...token };
+  }
+  @UseGuards(AuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Request() req) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader?.split(' ')[1];
+    await this.authService.logout(token);
+    return { message: 'Logged out successfully' };
   }
 
   // Get profile
