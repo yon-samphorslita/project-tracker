@@ -5,6 +5,7 @@ import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+
 @Injectable()
 export class UserService {
   constructor(
@@ -24,18 +25,40 @@ export class UserService {
   }
 
   // Find user by ID
-  async findOne(id: number): Promise<User | null> {
-    return this.userRepository.findOneBy({ id });
+  async findOne(id: number, includePassword = false): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { id },
+      select: includePassword
+        ? [
+            'id',
+            'email',
+            'role',
+            'first_name',
+            'last_name',
+            'img_url',
+            'active',
+            'password',
+            'password_changed',
+          ]
+        : [
+            'id',
+            'email',
+            'role',
+            'first_name',
+            'last_name',
+            'img_url',
+            'active',
+          ],
+    });
   }
 
   // Update user (supports partial updates)
   async update(
     userId: number,
-    updateUserDto: UpdateUserDto,
+    updateUserDto: UpdateUserDto & any,
   ): Promise<User | null> {
     if (!userId) return null;
 
-    // Remove undefined fields (optional updates)
     const fieldsToUpdate = { ...updateUserDto };
     Object.keys(fieldsToUpdate).forEach(
       (key) => fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key],
@@ -51,7 +74,7 @@ export class UserService {
 
   // Delete user
   async delete(id: number): Promise<void> {
-    await this.userRepository.delete(id);
+    await this.userRepository.softDelete(id);
   }
 
   // Find user by email, optionally include password
@@ -62,16 +85,41 @@ export class UserService {
     return this.userRepository.findOne({
       where: { email },
       select: includePassword
-        ? ['id', 'email', 'role', 'password']
-        : ['id', 'email', 'role'],
+        ? [
+            'id',
+            'email',
+            'role',
+            'password',
+            'first_name',
+            'last_name',
+            'img_url',
+            'active',
+            'password_changed',
+          ]
+        : [
+            'id',
+            'email',
+            'role',
+            'first_name',
+            'last_name',
+            'img_url',
+            'active',
+          ],
     });
   }
-  async updatePassword(userId: number, newPassword: string): Promise<User> {
-    const user = await this.findOne(userId);
+
+  // Update password and optionally mark password_changed
+  async updatePassword(
+    userId: number,
+    newPassword: string,
+    markChanged = true,
+  ): Promise<User> {
+    const user = await this.findOne(userId, true);
     if (!user) throw new NotFoundException('User not found');
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
+    if (markChanged) user.password_changed = true;
 
     return this.userRepository.save(user);
   }

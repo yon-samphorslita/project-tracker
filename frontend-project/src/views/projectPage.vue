@@ -4,8 +4,22 @@
       <!-- Project Header -->
       <div class="flex gap-4 items-center">
         <h1 class="text-2xl font-bold">{{ project.p_name }}</h1>
-        <img src="../assets/icons/edit.svg" alt="Edit" />
+        <img
+          src="../assets/icons/edit.svg"
+          alt="Edit"
+          class="cursor-pointer"
+          @click="openEditProjectForm(project)"
+        />
+        <Form
+          v-model:modelValue="showEditProjectForm"
+          formTitle="Edit Project"
+          :fields="projectFields"
+          :initialData="editProjectData"
+          endpoint="projects"
+          @submitted="onProjectUpdated"
+        />
       </div>
+
       <p class="text-gray-600">{{ project.p_description }}</p>
 
       <!-- Timeline & Status -->
@@ -25,8 +39,12 @@
             <Status :status="project.status" />
           </div>
 
-          <Button label="+ New Task" btn-color="#C6E7FF" btntext="black" @click="openForm" />
-
+          <Button
+            label="+ New Task"
+            btn-color="#C6E7FF"
+            btntext="black"
+            @click="showTaskForm = true"
+          />
           <Form
             v-model:modelValue="showTaskForm"
             formTitle="Create Task"
@@ -47,33 +65,11 @@
       <div class="flex gap-4 mt-4">
         <template v-if="activeOption === 'Kanban'">
           <Kanban
-            :kanbantasks="
-              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'not started')
-            "
-            kanbanTaskStatus="Not Started"
-            :kanbanTaskNum="
-              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'not started')
-                .length
-            "
-          />
-          <Kanban
-            :kanbantasks="
-              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'in progress')
-            "
-            kanbanTaskStatus="In Progress"
-            :kanbanTaskNum="
-              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'in progress')
-                .length
-            "
-          />
-          <Kanban
-            :kanbantasks="
-              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'completed')
-            "
-            kanbanTaskStatus="Completed"
-            :kanbanTaskNum="
-              filteredTasksWithSubtasks.filter((t) => t.status.toLowerCase() === 'completed').length
-            "
+            v-for="status in ['Not Started', 'In Progress', 'Completed']"
+            :key="status"
+            :kanbantasks="filteredTasksByStatus(status)"
+            :kanbanTaskStatus="status"
+            :kanbanTaskNum="filteredTasksByStatus(status).length"
           />
         </template>
 
@@ -82,7 +78,33 @@
         </template>
 
         <template v-else-if="activeOption === 'Table'">
-          <Table :data="mappedTasks" :columns="tableColumns" :format-date="formatDate" />
+          <Table :data="mappedTasks" :columns="tableColumns" :format-date="formatDate">
+            <template #actions="{ row }">
+              <div class="flex gap-2">
+                <img
+                  src="../assets/icons/edit.svg"
+                  alt="Edit"
+                  class="cursor-pointer"
+                  @click="editTask(row)"
+                />
+                <img
+                  src="../assets/icons/delete.svg"
+                  alt="Delete"
+                  class="cursor-pointer"
+                  @click="deleteTask(row)"
+                />
+              </div>
+            </template>
+          </Table>
+
+          <Form
+            v-model:modelValue="showEditTaskForm"
+            formTitle="Edit Task"
+            :fields="taskFields"
+            :initialData="editTaskData"
+            endpoint="tasks"
+            @submitted="onTaskCreated"
+          />
         </template>
       </div>
     </div>
@@ -96,6 +118,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
+
 import ProjectLayout from './projectLayout.vue'
 import DescriptionLabel from '@/components/descriptionLabel.vue'
 import Status from '@/components/status.vue'
@@ -111,10 +134,15 @@ const route = useRoute()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 
+// State
 const activeOption = ref('Kanban')
 const tasksWithSubtasks = ref([])
 const showTaskForm = ref(false)
 const searchQuery = ref('')
+const showEditProjectForm = ref(false)
+const editProjectData = ref(null)
+const showEditTaskForm = ref(false)
+const editTaskData = ref(null)
 
 // Table columns
 const tableColumns = ref([
@@ -125,6 +153,7 @@ const tableColumns = ref([
   { key: 'start_date', label: 'Start Date' },
   { key: 'due_date', label: 'Due Date' },
   { key: 'icon', label: 'Assignee' },
+  { key: 'actions', label: 'Actions', slot: 'actions' },
 ])
 
 // Form fields
@@ -136,6 +165,35 @@ const taskFields = [
     placeholder: 'Enter description',
     model: 'description',
   },
+  { type: 'date', label: 'Start Date', model: 'startDate' },
+  { type: 'date', label: 'Due Date', model: 'dueDate' },
+  {
+    type: 'select',
+    label: 'Priority',
+    options: [
+      { id: 'high', name: 'High' },
+      { id: 'medium', name: 'Medium' },
+      { id: 'low', name: 'Low' },
+    ],
+    model: 'priority',
+  },
+]
+
+// Project form fields
+const Teams = [
+  { id: 1, name: 'Team A' },
+  { id: 2, name: 'Team B' },
+  { id: 3, name: 'Team C' },
+]
+const projectFields = [
+  { type: 'text', label: 'Project Title', placeholder: 'Enter project title', model: 'title' },
+  {
+    type: 'textarea',
+    label: 'Description',
+    placeholder: 'Enter description',
+    model: 'description',
+  },
+  { type: 'select', label: 'Assignee', options: Teams, model: 'assignee' },
   {
     type: 'select',
     label: 'Priority',
@@ -150,6 +208,8 @@ const taskFields = [
   { type: 'date', label: 'Due Date', model: 'dueDate' },
 ]
 
+// Helpers
+const project = computed(() => projectStore.current)
 function formatDate(dateStr) {
   if (!dateStr) return 'TBD'
   return new Date(dateStr).toLocaleDateString('en-US', {
@@ -158,14 +218,11 @@ function formatDate(dateStr) {
     year: 'numeric',
   })
 }
-
 function getSubtaskColor(status) {
   switch ((status || '').toLowerCase()) {
     case 'not started':
-    case 'not_started':
       return '#FFD5DB'
     case 'in progress':
-    case 'in_progress':
       return '#FFD966'
     case 'completed':
       return '#8BD3B7'
@@ -174,7 +231,7 @@ function getSubtaskColor(status) {
   }
 }
 
-// Fetch subtasks
+// Fetch tasks & subtasks
 async function fetchSubtasks(taskId) {
   try {
     const res = await fetch(`http://localhost:3000/subtask/task/${taskId}`)
@@ -184,13 +241,13 @@ async function fetchSubtasks(taskId) {
   }
 }
 
-// Fetch project tasks
 async function fetchProjectTasks(projectId) {
   await taskStore.fetchTasksByProject(projectId)
   tasksWithSubtasks.value = await Promise.all(
     taskStore.tasks.map(async (task) => {
       const subtasks = await fetchSubtasks(task.id)
       return {
+        id: task.id,
         taskname: task.t_name,
         description: task.t_description,
         taskpriority: task.t_priority || 'none',
@@ -211,7 +268,6 @@ async function fetchProjectTasks(projectId) {
   )
 }
 
-// Filtered tasks
 const filteredTasksWithSubtasks = computed(() => {
   const q = searchQuery.value.toLowerCase()
   return tasksWithSubtasks.value
@@ -227,16 +283,9 @@ const filteredTasksWithSubtasks = computed(() => {
     )
 })
 
-// Gantt & Table
-const ganttRows = computed(() =>
-  filteredTasksWithSubtasks.value.map((task) => ({
-    label: task.taskname,
-    tasks: task.subtasks,
-  })),
-)
-
 const mappedTasks = computed(() =>
   filteredTasksWithSubtasks.value.map((task) => ({
+    id: task.id,
     name: task.taskname,
     description: task.description,
     priority: task.taskpriority,
@@ -247,27 +296,73 @@ const mappedTasks = computed(() =>
   })),
 )
 
-// Load project & tasks
+const ganttRows = computed(() =>
+  filteredTasksWithSubtasks.value.map((task) => ({
+    label: task.taskname,
+    tasks: task.subtasks,
+  })),
+)
+
+function filteredTasksByStatus(status) {
+  return filteredTasksWithSubtasks.value.filter(
+    (t) => t.status.toLowerCase() === status.toLowerCase(),
+  )
+}
+
 async function setCurrentProject() {
   if (!projectStore.projects.length) await projectStore.fetchProjects()
   const selectedProject = projectStore.projects.find((p) => p.id === Number(route.params.id))
   projectStore.setCurrent(selectedProject)
   if (selectedProject) await fetchProjectTasks(selectedProject.id)
 }
-
 watch(
   () => route.params.id,
   () => setCurrentProject(),
 )
 onMounted(() => setCurrentProject())
 
-const project = computed(() => projectStore.current)
-function openForm() {
-  showTaskForm.value = true
+// Edit project
+function openEditProjectForm(project) {
+  editProjectData.value = {
+    id: project.id,
+    title: project.p_name,
+    description: project.p_description,
+    startDate: project.start_date,
+    dueDate: project.due_date,
+    status: project.status,
+    priority: project.priority,
+  }
+  showEditProjectForm.value = true
+}
+function onProjectUpdated(updatedProject) {
+  projectStore.setCurrent(updatedProject)
+  showEditProjectForm.value = false
 }
 
-// Task created
-function onTaskCreated(task) {
+// Edit and Delete tasks
+function editTask(row) {
+  const task = taskStore.tasks.find((t) => t.id === row.id)
+  if (!task) return
+  editTaskData.value = {
+    id: task.id,
+    title: task.t_name,
+    description: task.t_description,
+    startDate: task.start_date,
+    dueDate: task.due_date,
+    priority: task.t_priority,
+    status: task.t_status,
+  }
+  showEditTaskForm.value = true
+}
+async function deleteTask(row) {
+  const task = taskStore.tasks.find((t) => t.id === row.id)
+  if (!task) return
+  if (confirm(`Are you sure you want to delete task "${row.name}"?`)) {
+    await taskStore.deleteTask(task.id)
+    fetchProjectTasks(projectStore.current.id)
+  }
+}
+function onTaskCreated() {
   fetchProjectTasks(projectStore.current.id)
 }
 </script>

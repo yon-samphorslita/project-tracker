@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   ForbiddenException,
+  Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
@@ -41,11 +42,12 @@ export class AuthController {
   // Create user (admin only)
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  @Post('create')
+  @Post('user')
+  @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() createUserDto: CreateUserDto) {
     const newUser = await this.authService.createUser(createUserDto);
     const { password, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
+    return { user: userWithoutPassword };
   }
 
   // Login
@@ -80,22 +82,27 @@ export class AuthController {
     return userWithoutPassword;
   }
 
-  // Update profile (cannot update email or password)
-  @UseGuards(AuthGuard)
-  @Patch('update')
-  async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    const userId = req.user.id;
-
-    // Remove email and password updates
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Patch('user/:id')
+  async updateUser(
+    @Param('id') userId: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    // Remove password/email if you don't want to allow changes
     if ('email' in updateUserDto) delete updateUserDto.email;
     if ('password' in updateUserDto) delete updateUserDto.password;
 
-    const updatedUser = await this.userService.update(userId, updateUserDto);
+    const updatedUser = await this.userService.update(
+      Number(userId),
+      updateUserDto,
+    );
     if (!updatedUser) throw new NotFoundException('User not found');
 
     const { password, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
+    return { user: userWithoutPassword };
   }
+
   @UseGuards(AuthGuard)
   @Patch('update-password')
   async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {

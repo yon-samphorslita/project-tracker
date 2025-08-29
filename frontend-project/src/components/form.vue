@@ -2,55 +2,63 @@
   <div v-if="showForm" class="overlay">
     <div class="form-container">
       <div class="formTitle">{{ formTitle }}</div>
-
-      <div v-for="field in fields" :key="field.label" class="form-group">
-        <label :for="field.label">{{ field.label }}</label>
-
-        <!-- Text input -->
-        <input
-          v-if="field.type === 'text'"
-          :id="field.label"
-          class="form-control"
-          :placeholder="field.placeholder"
-          v-model="formData[field.model]"
-          required
-        />
-
-        <!-- Textarea -->
-        <textarea
-          v-else-if="field.type === 'textarea'"
-          :id="field.label"
-          class="form-control"
-          :placeholder="field.placeholder"
-          v-model="formData[field.model]"
+      <div class="field-grid">
+        <div
+          v-for="field in fields"
+          :key="field.label"
+          :class="[
+            'form-group',
+            field.type === 'textarea' || field.type === 'text' ? 'full-row' : '',
+          ]"
         >
-        </textarea>
+          <label :for="field.label">{{ field.label }}</label>
 
-        <!-- Date -->
-        <input
-          v-else-if="field.type === 'date'"
-          type="date"
-          :id="field.label"
-          class="form-control"
-          v-model="formData[field.model]"
-          required
-        />
+          <!-- Text, Email, Password -->
+          <input
+            v-if="['text', 'email', 'password'].includes(field.type)"
+            :type="field.type"
+            :id="field.label"
+            class="form-control"
+            :placeholder="field.placeholder"
+            v-model="formData[field.model]"
+            required
+          />
 
-        <!-- Select -->
-        <select
-          v-else-if="field.type === 'select'"
-          :id="field.label"
-          class="form-control"
-          v-model="formData[field.model]"
-        >
-          <option disabled selected>Select {{ field.label }}</option>
-          <option v-for="option in field.options" :key="option.id" :value="option">
-            {{ option.name }}
-          </option>
-        </select>
+          <!-- Textarea -->
+          <textarea
+            v-else-if="field.type === 'textarea'"
+            :id="field.label"
+            class="form-control"
+            :placeholder="field.placeholder"
+            v-model="formData[field.model]"
+          >
+          </textarea>
+
+          <!-- Date -->
+          <input
+            v-else-if="field.type === 'date'"
+            type="date"
+            :id="field.label"
+            class="form-control"
+            v-model="formData[field.model]"
+            required
+          />
+
+          <!-- Select -->
+          <select
+            v-else-if="field.type === 'select'"
+            :id="field.label"
+            class="form-control"
+            v-model="formData[field.model]"
+          >
+            <option disabled selected>Select {{ field.label }}</option>
+            <option v-for="option in field.options" :key="option.id" :value="option.id">
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
       </div>
-
-      <div style="display: flex; justify-content: space-around; width: 100%; margin-top: 20px">
+      <div style="display: flex; justify-content: end; gap: 10px; width: 100%; margin-top: 20px">
         <button class="form-btn" style="background: red" @click="cancel">Cancel</button>
         <button class="form-btn" style="background: blue" @click="submitForm">Submit</button>
       </div>
@@ -68,6 +76,7 @@ const props = defineProps({
   fields: { type: Array, required: true },
   endpoint: { type: String, required: true },
   modelValue: { type: Boolean, required: false },
+  initialData: { type: Object, required: false, default: () => ({}) },
 })
 const emit = defineEmits(['update:modelValue', 'submitted'])
 const formData = reactive({})
@@ -80,7 +89,13 @@ watch(
   },
 )
 watch(showForm, (val) => emit('update:modelValue', val))
-
+watch(
+  () => props.initialData,
+  (data) => {
+    if (data) Object.keys(data).forEach((key) => (formData[key] = data[key]))
+  },
+  { immediate: true },
+)
 function mapPayload() {
   if (props.endpoint === 'projects') {
     return {
@@ -104,6 +119,16 @@ function mapPayload() {
     return {
       name: formData.title,
     }
+  } else if (props.endpoint === 'auth/user') {
+    return {
+      first_name: formData.first_name?.trim() || '',
+      last_name: formData.last_name?.trim() || '',
+      email: formData.email?.trim() || '',
+      password: formData.password || undefined,
+      role: formData.role || 'member',
+      active: formData.active !== undefined ? formData.active : true,
+      img_url: formData.img_url || null,
+    }
   }
 }
 
@@ -112,18 +137,27 @@ async function submitForm() {
   try {
     const payload = mapPayload()
     const token = localStorage.getItem('token')
-    const response = await axios.post(`http://localhost:3000/${props.endpoint}`, payload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    console.log(`${props.formTitle} created:`, response.data)
-    emit('submitted', response.data)
-    // reset form + close popup
+    let response
+
+    if (props.initialData?.id) {
+      // Update existing user
+      response = await axios.patch(
+        `http://localhost:3000/${props.endpoint}/${props.initialData.id}`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+    } else {
+      // Create new user
+      response = await axios.post(`http://localhost:3000/${props.endpoint}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    }
+
+    emit('submitted', response.data.user || response.data)
     Object.keys(formData).forEach((key) => (formData[key] = ''))
     showForm.value = false
   } catch (error) {
-    console.error('Error saving data:', error)
+    console.error('Error saving user:', error.response?.data || error.message)
   }
 }
 
@@ -150,10 +184,11 @@ function cancel() {
   z-index: 1000;
 }
 .form-container {
+  height: fit-content;
   background: white;
   padding: 40px;
   border-radius: 10px;
-  width: 400px;
+  /* width: 400px; */
   max-width: 90%;
   box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
 }
@@ -166,7 +201,7 @@ function cancel() {
 }
 
 .form-group {
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
   width: 100%;
 }
 
@@ -179,7 +214,7 @@ function cancel() {
 }
 
 .form-control {
-  width: 90%;
+  width: 100%;
   padding: 14px 16px;
   border: 1px solid #dce1e6;
   border-radius: 10px;
@@ -206,5 +241,13 @@ textarea.form-control {
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.form-group.full-row {
+  grid-column: span 2;
 }
 </style>

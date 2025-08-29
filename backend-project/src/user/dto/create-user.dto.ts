@@ -1,15 +1,15 @@
-import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsEmail,
+  MinLength,
+} from 'class-validator';
 import { Role } from 'src/enums/role.enum';
 
 export class CreateUserDto {
-  //   @IsNotEmpty()
-  //   @IsString()
-  //   first_name: string;
-
-  //   @IsNotEmpty()
-  //   @IsString()
-  //   last_name: string;
-
   @IsOptional()
   @IsString()
   first_name?: string;
@@ -20,18 +20,22 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsString()
+  @MinLength(6)
   password: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsEmail()
   email: string;
 
-  //   @IsNotEmpty()
   @IsOptional()
   @IsEnum(Role)
-  role: Role;
+  role?: Role;
 
-  @IsString()
   @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+
+  @IsOptional()
+  @IsString()
   img_url?: string;
 }

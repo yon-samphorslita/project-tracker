@@ -16,18 +16,36 @@ export const useProjectStore = defineStore(
     }
 
     // Fetch all projects from backend
-    // If the user is admin, backend returns all projects automatically
     async function fetchProjects() {
       try {
         const token = localStorage.getItem('token')
         const response = await axios.get(`${API_BASE_URL}/projects`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
-        projects.value = response.data
+
+        // Deduplicate by ID
+        const uniqueProjects = Array.from(new Map(response.data.map((p) => [p.id, p])).values())
+        projects.value = uniqueProjects
       } catch (error) {
         console.error('Error fetching projects:', error)
+      }
+    }
+
+    async function createProject(projectDto) {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.post(`${API_BASE_URL}/projects`, projectDto, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        // Only add if it doesn't exist
+        if (!projects.value.some((p) => p.id === response.data.id)) {
+          projects.value.push(response.data)
+        }
+        return response.data
+      } catch (error) {
+        console.error('Error creating project:', error)
+        return null
       }
     }
 
@@ -43,23 +61,6 @@ export const useProjectStore = defineStore(
         return response.data
       } catch (error) {
         console.error(`Error fetching project ${id}:`, error)
-        return null
-      }
-    }
-
-    // Create a new project
-    async function createProject(projectDto) {
-      try {
-        const token = localStorage.getItem('token')
-        const response = await axios.post(`${API_BASE_URL}/projects`, projectDto, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        projects.value.push(response.data)
-        return response.data
-      } catch (error) {
-        console.error('Error creating project:', error)
         return null
       }
     }

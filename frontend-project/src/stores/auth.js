@@ -87,7 +87,7 @@ export const useAuthStore = defineStore(
     // Update profile (excluding password)
     async function updateProfile(updateUserDto) {
       if (!token.value) return null
-      const response = await api.patch('/auth/update', updateUserDto)
+      const response = await api.patch('/auth/user', updateUserDto)
       user.value = response.data
       return user.value
     }
@@ -101,7 +101,16 @@ export const useAuthStore = defineStore(
       })
       return response.data
     }
+    async function createUser(userDto) {
+      if (!token.value) throw new Error('Not authenticated')
 
+      const payload = Object.fromEntries(
+        Object.entries(userDto).filter(([_, v]) => v !== undefined && v !== null),
+      )
+
+      const response = await api.post('/auth/user', payload)
+      return response.data.user
+    }
     return {
       user,
       token,
@@ -112,6 +121,7 @@ export const useAuthStore = defineStore(
       fetchAllUsers,
       updateProfile,
       updatePassword,
+      createUser,
     }
   },
   {

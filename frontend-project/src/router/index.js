@@ -5,6 +5,7 @@ import ProjectList from '@/views/projectList.vue'
 import ProjectPage from '@/views/projectPage.vue'
 import SettingsPage from '@/views/settingsPage.vue'
 import CalendarPage from '@/views/calendarPage.vue'
+import UserPage from '@/views/userPage.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -15,6 +16,7 @@ const routes = [
   { path: '/project/:id', component: ProjectPage, props: true, meta: { requiresAuth: true } },
   { path: '/settings', component: SettingsPage, meta: { requiresAuth: true } },
   { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true } },
+  { path: '/user', component: UserPage, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
