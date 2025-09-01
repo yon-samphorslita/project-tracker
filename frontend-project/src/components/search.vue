@@ -1,44 +1,16 @@
 <template>
-    <div class="search-container">
-        <div class="search-wrapper">
-            <input type="text" placeholder="Search..." class="search-input">
-        </div>
-        
+  <div class="fixed w-full flex justify-center items-center h-12 top-24 px-4 z-50">
+    <div class="w-full max-w-2xl">
+      <input type="text" placeholder="Search..."
+            class="w-full p-2 md:p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
     </div>
+  </div>
 </template>
 
-<script>
-
+<script setup>
 </script>
 
+
 <style scoped>
-.search-container {
-    width: 100%;
-    height: 50px;               
-    display: flex;
-    justify-content: center;        
-    align-items: center;
-    position: fixed;
-    /* top: 100px;
-    left: 250px; 
-    z-index: 1000; */
-    /* background-color: pink; */
-}     
-.search-wrapper {
-    width: 80%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}  
-.search-input {
-    width: 400px;
-    /* height: 20px; */
-    border: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    /* outline: none; */
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-}
 </style>
