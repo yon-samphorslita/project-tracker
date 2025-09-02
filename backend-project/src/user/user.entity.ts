@@ -32,7 +32,7 @@ export class User {
   password: string;
 
   @Column({ default: false })
-  password_changed: boolean; // <-- new column
+  password_changed: boolean;
 
   @Column({
     type: 'enum',

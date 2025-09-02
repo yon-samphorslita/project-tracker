@@ -101,7 +101,6 @@ onMounted(() => {
 })
 onUnmounted(() => clearInterval(timer))
 
-// --- Helpers ---
 function getItemsForDay(selectedDay) {
   const dayStr = format(selectedDay, 'yyyy-MM-dd')
   return items.value.filter(
