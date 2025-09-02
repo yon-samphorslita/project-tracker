@@ -1,70 +1,65 @@
 <template>
-  <div v-if="showForm" class="overlay">
-    <div class="form-container">
-      <div class="formTitle">{{ formTitle }}</div>
-      <div class="field-grid">
-        <div
-          v-for="field in fields"
-          :key="field.label"
-          :class="[
-            'form-group',
-            field.type === 'textarea' || field.type === 'text' ? 'full-row' : '',
-          ]"
-        >
-          <label :for="field.label">{{ field.label }}</label>
-
-          <!-- Text, Email, Password -->
-          <input
-            v-if="['text', 'email', 'password'].includes(field.type)"
-            :type="field.type"
-            :id="field.label"
-            class="form-control"
-            :placeholder="field.placeholder"
-            v-model="formData[field.model]"
-            required
-          />
-
-          <!-- Textarea -->
-          <textarea
-            v-else-if="field.type === 'textarea'"
-            :id="field.label"
-            class="form-control"
-            :placeholder="field.placeholder"
-            v-model="formData[field.model]"
-          >
-          </textarea>
-
-          <!-- Date -->
-          <input
-            v-else-if="field.type === 'date'"
-            type="date"
-            :id="field.label"
-            class="form-control"
-            v-model="formData[field.model]"
-            required
-          />
-
-          <!-- Select -->
-          <select
-            v-else-if="field.type === 'select'"
-            :id="field.label"
-            class="form-control"
-            v-model="formData[field.model]"
-          >
-            <option disabled selected>Select {{ field.label }}</option>
-            <option v-for="option in field.options" :key="option.id" :value="option.id">
-              {{ option.name }}
-            </option>
-          </select>
-        </div>
+  <div v-if="showForm" 
+       class="fixed top-0 left-[250px] w-[calc(100vw-250px)] h-full 
+              bg-[rgba(153,153,153,0.2)] backdrop-blur-sm 
+              flex items-center justify-center z-[1000]">
+    <div class="bg-white p-10 rounded-lg w-[400px] max-w-[90%] shadow-xl">
+      <div class="text-2xl mb-5 text-[#2c3e50] font-semibold">
+        {{ formTitle }}
       </div>
-      <div style="display: flex; justify-content: end; gap: 10px; width: 100%; margin-top: 20px">
-        <button class="form-btn" style="background: red" @click="cancel">Cancel</button>
-        <button class="form-btn" style="background: blue" @click="submitForm">Submit</button>
+
+      <div v-for="field in fields" :key="field.label" class="mb-5 w-full">
+        <label :for="field.label" class="block mb-2 text-[#34495e] font-medium">
+          {{ field.label }}
+        </label>
+
+        <!-- Text input -->
+        <input v-if="['text', 'email', 'password'].includes(field.type)"
+               :id="field.label"
+               class="w-[90%] px-4 py-3 border border-gray-300 rounded-lg text-base transition duration-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+               :placeholder="field.placeholder"
+               v-model="formData[field.model]"
+               required />
+
+        <!-- Textarea -->
+        <textarea v-else-if="field.type === 'textarea'"
+                  :id="field.label"
+                  class="w-[90%] px-4 py-3 border border-gray-300 rounded-lg text-base transition duration-300 min-h-[120px] resize-y focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  :placeholder="field.placeholder"
+                  v-model="formData[field.model]">
+        </textarea>
+
+        <!-- Date -->
+        <input v-else-if="field.type === 'date'"
+               type="date"
+               :id="field.label"
+               class="w-[90%] px-4 py-3 border border-gray-300 rounded-lg text-base transition duration-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+               v-model="formData[field.model]"
+               required />
+
+        <!-- Select -->
+        <select v-else-if="field.type === 'select'"
+                :id="field.label"
+                class="w-[90%] px-4 py-3 border border-gray-300 rounded-lg text-base transition duration-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                v-model="formData[field.model]">
+          <option disabled selected>Select {{ field.label }}</option>
+          <option v-for="option in field.options" :key="option.id" :value="option.id">
+            {{ option.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-around w-full mt-5">
+        <button class="px-5 py-3 rounded text-white text-base cursor-pointer transition-colors bg-red-500 hover:bg-red-600"
+                @click="cancel">Cancel</button>
+        <button class="px-5 py-3 rounded text-white text-base cursor-pointer transition-colors bg-blue-500 hover:bg-blue-600"
+                @click="submitForm">Submit</button>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, watch } from 'vue'
@@ -170,84 +165,4 @@ function cancel() {
 </script>
 
 <style>
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 250px;
-  width: calc(100vw - 250px);
-  height: 100%;
-  background: rgba(153, 153, 153, 0.2);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.form-container {
-  height: fit-content;
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  /* width: 400px; */
-  max-width: 90%;
-  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-.formTitle {
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #2c3e50;
-  font-weight: 600;
-}
-
-.form-group {
-  /* margin-bottom: 20px; */
-  width: 100%;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #34495e;
-  font-weight: 500;
-  width: 100%;
-}
-
-.form-control {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid #dce1e6;
-  border-radius: 10px;
-  font-size: 16px;
-  transition: all 0.3s;
-}
-
-textarea.form-control {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-}
-
-.form-btn {
-  padding: 15px 20px;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.field-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-.form-group.full-row {
-  grid-column: span 2;
-}
 </style>
