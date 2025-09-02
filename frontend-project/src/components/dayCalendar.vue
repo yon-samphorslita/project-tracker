@@ -78,8 +78,8 @@ const taskStore = useTaskStore()
 const items = computed(() => {
   return taskStore.tasks.map((t) => ({
     ...t,
-    start: parseISO(t.start_date), // safer than new Date()
-    end: parseISO(t.due_date),
+    start: t.start_date ? parseISO(t.start_date) : null,
+    end: t.due_date ? parseISO(t.due_date) : null,
     title: t.t_title,
     description: t.t_description,
     type: 'task',
@@ -101,7 +101,6 @@ onMounted(() => {
 })
 onUnmounted(() => clearInterval(timer))
 
-// --- Helpers ---
 function getItemsForDay(selectedDay) {
   const dayStr = format(selectedDay, 'yyyy-MM-dd')
   return items.value.filter(

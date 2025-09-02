@@ -1,9 +1,4 @@
-import {
-  Module,
-  NestModule,
-  MiddlewareConsumer,
-  RequestMethod,
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -15,9 +10,6 @@ import { AuthModule } from './auth/auth.module';
 import { SubtaskModule } from './subtask/subtask.module';
 import { NotificationModule } from './notification/notification.module';
 import { MemberModule } from './member/member.module';
-// import { EventModule } from './event/event.module';
-import { authMiddlewareFactory } from './auth/auth.middleware.factory';
-import { Role } from './enums/role.enum';
 
 @Module({
   imports: [
@@ -39,21 +31,8 @@ import { Role } from './enums/role.enum';
     SubtaskModule,
     NotificationModule,
     MemberModule,
-    // EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    // Admin only route
-    consumer
-      .apply(authMiddlewareFactory([Role.ADMIN]))
-      .forRoutes({ path: 'auth/admin', method: RequestMethod.GET });
-
-    // Admin OR Project Manager route
-    consumer
-      .apply(authMiddlewareFactory([Role.ADMIN, Role.PROJECT_MANAGER]))
-      .forRoutes({ path: 'auth/pm-or-admin', method: RequestMethod.GET });
-  }
-}
+export class AppModule {}

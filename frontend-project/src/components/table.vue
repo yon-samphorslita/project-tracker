@@ -1,5 +1,5 @@
 <template>
-  <div class="border border-gray-600/80 rounded-lg overflow-x-auto shadow-lg">
+  <div class="border border-gray-600/80 rounded-lg overflow-x-auto shadow-lg max-h-[600px]">
     <table class="w-full border-collapse">
       <thead>
         <tr>
@@ -24,14 +24,23 @@
             :key="col.key"
             class="px-4 py-2 text-left border-t border-b border-gray-200"
           >
+            <!-- Actions Column -->
+            <template v-if="col.slot === 'actions'">
+              <slot name="actions" :row="row"></slot>
+            </template>
+
             <!-- Priority -->
-            <template v-if="col.key === 'priority'">
+            <template v-else-if="col.key === 'priority'">
               <Status :priority="row[col.key]" />
             </template>
 
             <!-- Status -->
             <template v-else-if="col.key === 'status'">
               <Status :status="row[col.key]" />
+            </template>
+            <!-- Active Column -->
+            <template v-else-if="col.key === 'active'">
+              <Status :active="row[col.key]" />
             </template>
 
             <!-- Assignee / Avatar -->

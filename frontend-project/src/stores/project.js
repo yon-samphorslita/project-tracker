@@ -18,21 +18,100 @@ export const useProjectStore = defineStore(
     // Fetch all projects from backend
     async function fetchProjects() {
       try {
-        const token = localStorage.getItem('token') // or wherever you store it
+        const token = localStorage.getItem('token')
         const response = await axios.get(`${API_BASE_URL}/projects`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
-        projects.value = response.data
+
+        // Deduplicate by ID
+        const uniqueProjects = Array.from(new Map(response.data.map((p) => [p.id, p])).values())
+        projects.value = uniqueProjects
       } catch (error) {
         console.error('Error fetching projects:', error)
       }
     }
 
-    return { current, projects, setCurrent, fetchProjects }
+    async function createProject(projectDto) {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.post(`${API_BASE_URL}/projects`, projectDto, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        // Only add if it doesn't exist
+        if (!projects.value.some((p) => p.id === response.data.id)) {
+          projects.value.push(response.data)
+        }
+        return response.data
+      } catch (error) {
+        console.error('Error creating project:', error)
+        return null
+      }
+    }
+
+    // Fetch a single project by ID
+    async function fetchProjectById(id) {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${API_BASE_URL}/projects/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        return response.data
+      } catch (error) {
+        console.error(`Error fetching project ${id}:`, error)
+        return null
+      }
+    }
+
+    // Update a project
+    async function updateProject(id, updateDto) {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.patch(`${API_BASE_URL}/projects/${id}`, updateDto, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        const index = projects.value.findIndex((p) => p.id === id)
+        if (index !== -1) projects.value[index] = response.data
+        if (current.value?.id === id) current.value = response.data
+        return response.data
+      } catch (error) {
+        console.error(`Error updating project ${id}:`, error)
+        return null
+      }
+    }
+
+    // Delete a project
+    async function deleteProject(id) {
+      try {
+        const token = localStorage.getItem('token')
+        await axios.delete(`${API_BASE_URL}/projects/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        projects.value = projects.value.filter((p) => p.id !== id)
+        if (current.value?.id === id) current.value = null
+      } catch (error) {
+        console.error(`Error deleting project ${id}:`, error)
+      }
+    }
+
+    return {
+      current,
+      projects,
+      setCurrent,
+      fetchProjects,
+      fetchProjectById,
+      createProject,
+      updateProject,
+      deleteProject,
+    }
   },
   {
-    persist: true, // persists store in localStorage
+    persist: true,
   },
 )

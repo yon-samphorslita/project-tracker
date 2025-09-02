@@ -5,6 +5,7 @@ import {
   OneToMany,
   CreateDateColumn,
   Unique,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
@@ -13,7 +14,7 @@ import { Notification } from '../notification/notification.entity';
 import { Member } from 'src/member/member.entity';
 // import { Event } from 'src/event/event.entity';
 @Entity('users')
-@Unique(['email']) // Ensures that email is unique across users
+@Unique(['email'])
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -30,17 +31,27 @@ export class User {
   @Column({ nullable: true })
   password: string;
 
+  @Column({ default: false })
+  password_changed: boolean;
+
   @Column({
     type: 'enum',
     enum: Role,
     default: Role.MEMBER,
   })
   role: Role;
+
+  @Column({ default: true, nullable: true })
+  active: boolean;
+
   @Column({ nullable: true })
   img_url: string;
 
   @CreateDateColumn()
   created_at: Date;
+
+  @DeleteDateColumn({ nullable: true })
+  deletedAt?: Date;
 
   @OneToMany(() => Project, (project) => project.user)
   projects: Project[];
@@ -53,7 +64,4 @@ export class User {
 
   @OneToMany(() => Member, (member) => member.user)
   members: Member[];
-
-  // @OneToMany(() => Event, (event) => event.user)
-  // events: Event[];
 }
