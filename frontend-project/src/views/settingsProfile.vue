@@ -1,5 +1,6 @@
 <template>
-  <SettingsLayout>
+  <!-- <SettingsLayout /> -->
+  <div>
     <h1 class="text-2xl font-bold mb-6">Account Settings</h1>
 
     <div class="mx-auto bg-white shadow-md rounded-2xl p-8">
@@ -147,7 +148,8 @@
         Logout
       </button>
     </div>
-  </SettingsLayout>
+  </div>
+  <!-- </SettingsLayout> -->
 </template>
 
 <script setup>
@@ -177,10 +179,12 @@ const isEditing = ref(false)
 onMounted(async () => {
   const profile = await authStore.fetchProfile()
   if (profile) {
-    form.value.first_name = profile.first_name
-    form.value.last_name = profile.last_name
-    form.value.email = profile.email
-    form.value.img_url = profile.img_url || ''
+    form.value = {
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      email: profile.email,
+      img_url: profile.img_url || '',
+    }
   }
 })
 

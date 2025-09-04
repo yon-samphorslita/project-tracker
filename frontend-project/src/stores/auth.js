@@ -72,12 +72,14 @@ export const useAuthStore = defineStore(
       }
     }
 
-    // Fetch all users (admin only)
+    const users = ref([]) // add this
+
     async function fetchAllUsers() {
       if (!token.value) return []
       try {
         const response = await api.get('/auth/users')
-        return response.data // array of users without passwords
+        users.value = response.data
+        return users.value
       } catch (error) {
         console.error('Error fetching users:', error)
         throw error
@@ -85,11 +87,25 @@ export const useAuthStore = defineStore(
     }
 
     // Update profile (excluding password)
+    async function updateUser(updateUserDto) {
+      if (!token.value) return null
+
+      if (!updateUserDto.id) throw new Error('User ID is required for update')
+
+      const response = await api.patch(`/auth/user/${updateUserDto.id}`, updateUserDto)
+      return response.data.user // contains { user: ... } from backend
+    }
+
     async function updateProfile(updateUserDto) {
       if (!token.value) return null
-      const response = await api.patch('/auth/user', updateUserDto)
-      user.value = response.data
-      return user.value
+      try {
+        const response = await api.patch('/auth/profile', updateUserDto)
+        user.value = response.data
+        return user.value
+      } catch (err) {
+        console.error('Failed to update profile', err)
+        throw err
+      }
     }
 
     // Update password
@@ -113,12 +129,14 @@ export const useAuthStore = defineStore(
     }
     return {
       user,
+      users, // add this
       token,
       isAuthenticated,
       login,
       logout,
       fetchProfile,
       fetchAllUsers,
+      updateUser,
       updateProfile,
       updatePassword,
       createUser,

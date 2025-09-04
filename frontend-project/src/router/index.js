@@ -3,7 +3,8 @@ import Home from '../views/homepage.vue'
 import AuthPage from '../views/authPage.vue'
 import ProjectList from '@/views/projectList.vue'
 import ProjectPage from '@/views/projectPage.vue'
-import SettingsPage from '@/views/settingsPage.vue'
+import SettingsProfile from '@/views/settingsProfile.vue'
+import SettingsLayout from '@/views/settingsLayout.vue'
 import CalendarPage from '@/views/calendarPage.vue'
 import UserPage from '@/views/userPage.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -14,7 +15,14 @@ const routes = [
   { path: '/login', component: AuthPage, name: 'Login' },
   { path: '/projects', component: ProjectList, meta: { requiresAuth: true } },
   { path: '/project/:id', component: ProjectPage, props: true, meta: { requiresAuth: true } },
-  { path: '/settings', component: SettingsPage, meta: { requiresAuth: true } },
+  {
+    path: '/settings',
+    component: SettingsLayout,
+    meta: { requiresAuth: true },
+    children: [
+      { path: 'profile', component: SettingsProfile }, // relative path!
+    ],
+  },
   { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true } },
   { path: '/user', component: UserPage, meta: { requiresAuth: true } },
 ]

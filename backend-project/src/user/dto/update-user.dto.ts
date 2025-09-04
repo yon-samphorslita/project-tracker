@@ -4,7 +4,9 @@ import {
   IsString,
   MinLength,
   IsBoolean,
+  IsEnum,
 } from 'class-validator';
+import { Role } from 'src/enums/role.enum';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -16,19 +18,23 @@ export class UpdateUserDto {
   last_name?: string;
 
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'Email must be valid' })
   email?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(6)
-  password?: string;
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  password?: string; // optional for updates
 
   @IsOptional()
-  @IsString()
-  img_url?: string;
+  @IsEnum(Role, { message: 'Role must be valid' })
+  role?: Role;
 
   @IsOptional()
   @IsBoolean()
   active?: boolean;
+
+  @IsOptional()
+  @IsString()
+  img_url?: string;
 }

@@ -1,11 +1,11 @@
 <template>
-    <button 
-        class="px-5 py-2.5 rounded-md text-center text-base fixed shadow-md"
-        :style="{'background': btnColor, 'color': btntext, 'font-size': btntextsize}"
-        @click="$emit('click')"
-    >
-        {{ label  }}
-    </button>
+  <button
+    class="px-5 py-2.5 rounded-md text-center text-base shadow-md"
+    :style="{ background: btnColor, color: btntext, 'font-size': btntextsize }"
+    @click="$emit('click')"
+  >
+    {{ label }}
+  </button>
 </template>
 
 <script setup>
@@ -31,5 +31,4 @@ defineProps({
 })
 </script>
 
-<style>
-</style>
+<style></style>

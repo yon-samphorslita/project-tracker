@@ -1,8 +1,13 @@
 <template>
   <div class="w-full min-h-screen flex flex-col">
     <sidebar :items="menuItems" />
-    <Header />
-    <div class="container mt-32 ml-[285px] w-[79%] px-1 flex gap-4">
+    <Header
+      menu_item="Calendar"
+      :username="`${auth.user?.first_name || ''} ${auth.user?.last_name || ''}`.trim()"
+      :role="auth.user?.role"
+      :profile="auth.user?.profile || profileFallback"
+    />
+    <div class="container mt-32 ml-[320px] w-3/4 px-1">
       <slot />
     </div>
     <Footer class="mt-24" />
@@ -13,6 +18,14 @@
 import sidebar from '@/components/sidebar.vue'
 import Header from '@/components/header.vue'
 import Footer from '@/components/footer.vue'
+import { useAuthStore } from '@/stores/auth'
+import profileFallback from '@/assets/profile.jpg'
+
+const auth = useAuthStore()
+
+if (!auth.user) {
+  auth.fetchProfile()
+}
 
 const menuItems = [
   {

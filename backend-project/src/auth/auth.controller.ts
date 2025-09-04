@@ -45,9 +45,11 @@ export class AuthController {
   @Post('user')
   @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() createUserDto: CreateUserDto) {
+    console.log('Create user DTO:', createUserDto); // <-- Check what is received
+
     const newUser = await this.authService.createUser(createUserDto);
     const { password, ...userWithoutPassword } = newUser;
-    return { user: userWithoutPassword };
+    return userWithoutPassword;
   }
 
   // Login
@@ -81,6 +83,21 @@ export class AuthController {
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
+  @UseGuards(AuthGuard)
+  @Patch('profile')
+  async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+    const userId = req.user.id;
+
+    // Remove password/email if not allowed
+    if ('email' in updateUserDto) delete updateUserDto.email;
+    if ('password' in updateUserDto) delete updateUserDto.password;
+
+    const updatedUser = await this.userService.update(userId, updateUserDto);
+    if (!updatedUser) throw new NotFoundException('User not found');
+
+    const { password, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
@@ -100,7 +117,7 @@ export class AuthController {
     if (!updatedUser) throw new NotFoundException('User not found');
 
     const { password, ...userWithoutPassword } = updatedUser;
-    return { user: userWithoutPassword };
+    return userWithoutPassword;
   }
 
   @UseGuards(AuthGuard)

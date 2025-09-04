@@ -50,6 +50,7 @@
             formTitle="Create Task"
             :fields="taskFields"
             endpoint="tasks"
+            :initialData="{ project_id: project.id }"
             @submitted="onTaskCreated"
           />
         </div>
@@ -130,19 +131,20 @@ import Table from '@/components/table.vue'
 import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'
 
+// Stores
 const route = useRoute()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 
-// State
+// Reactive state
 const activeOption = ref('Kanban')
 const tasksWithSubtasks = ref([])
 const showTaskForm = ref(false)
-const searchQuery = ref('')
 const showEditProjectForm = ref(false)
 const editProjectData = ref(null)
 const showEditTaskForm = ref(false)
 const editTaskData = ref(null)
+const searchQuery = ref('')
 
 // Table columns
 const tableColumns = ref([
@@ -208,65 +210,8 @@ const projectFields = [
   { type: 'date', label: 'Due Date', model: 'dueDate' },
 ]
 
-// Helpers
+// Computed
 const project = computed(() => projectStore.current)
-function formatDate(dateStr) {
-  if (!dateStr) return 'TBD'
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-function getSubtaskColor(status) {
-  switch ((status || '').toLowerCase()) {
-    case 'not started':
-      return '#FFD5DB'
-    case 'in progress':
-      return '#FFD966'
-    case 'completed':
-      return '#8BD3B7'
-    default:
-      return '#D3D3D3'
-  }
-}
-
-// Fetch tasks & subtasks
-async function fetchSubtasks(taskId) {
-  try {
-    const res = await fetch(`http://localhost:3000/subtask/task/${taskId}`)
-    return await res.json()
-  } catch {
-    return []
-  }
-}
-
-async function fetchProjectTasks(projectId) {
-  await taskStore.fetchTasksByProject(projectId)
-  tasksWithSubtasks.value = await Promise.all(
-    taskStore.tasks.map(async (task) => {
-      const subtasks = await fetchSubtasks(task.id)
-      return {
-        id: task.id,
-        taskname: task.t_name,
-        description: task.t_description,
-        taskpriority: task.t_priority || 'none',
-        status: task.t_status || 'Not Started',
-        user: task.user_avatar || null,
-        start_date: task.start_date,
-        due_date: task.due_date,
-        subtasks: subtasks.map((st) => ({
-          name: st.name,
-          start: st.start_date ? new Date(st.start_date) : task.start_date,
-          end: st.due_date ? new Date(st.due_date) : task.due_date,
-          status: st.status,
-          color: getSubtaskColor(st.status),
-          icon: st.user_avatar || null,
-        })),
-      }
-    }),
-  )
-}
 
 const filteredTasksWithSubtasks = computed(() => {
   const q = searchQuery.value.toLowerCase()
@@ -309,12 +254,79 @@ function filteredTasksByStatus(status) {
   )
 }
 
+// Helpers
+function formatDate(dateStr) {
+  if (!dateStr) return 'TBD'
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function getSubtaskColor(status) {
+  switch ((status || '').toLowerCase()) {
+    case 'not started':
+      return '#FFD5DB'
+    case 'in progress':
+      return '#FFD966'
+    case 'completed':
+      return '#8BD3B7'
+    default:
+      return '#D3D3D3'
+  }
+}
+
+// Fetch subtasks
+async function fetchSubtasks(taskId) {
+  try {
+    const res = await fetch(`http://localhost:3000/subtask/task/${taskId}`)
+    return await res.json()
+  } catch {
+    return []
+  }
+}
+
+// Fetch tasks with subtasks
+async function fetchProjectTasks(projectId) {
+  taskStore.tasks = taskStore.tasks.filter((t) => String(t.project?.id) !== String(projectId))
+  await taskStore.fetchTasksByProject(projectId)
+
+  tasksWithSubtasks.value = await Promise.all(
+    taskStore.tasks
+      .filter((t) => String(t.project?.id) === String(projectId))
+      .map(async (task) => {
+        const subtasks = await fetchSubtasks(task.id)
+        return {
+          id: task.id,
+          taskname: task.t_name,
+          description: task.t_description,
+          taskpriority: task.t_priority || 'none',
+          status: task.t_status || 'Not Started',
+          user: task.user_avatar || null,
+          start_date: task.start_date,
+          due_date: task.due_date,
+          subtasks: subtasks.map((st) => ({
+            name: st.name,
+            start: st.start_date ? new Date(st.start_date) : task.start_date,
+            end: st.due_date ? new Date(st.due_date) : task.due_date,
+            status: st.status,
+            color: getSubtaskColor(st.status),
+            icon: st.user_avatar || null,
+          })),
+        }
+      }),
+  )
+}
+
+// Project selection
 async function setCurrentProject() {
   if (!projectStore.projects.length) await projectStore.fetchProjects()
   const selectedProject = projectStore.projects.find((p) => p.id === Number(route.params.id))
   projectStore.setCurrent(selectedProject)
   if (selectedProject) await fetchProjectTasks(selectedProject.id)
 }
+
 watch(
   () => route.params.id,
   () => setCurrentProject(),
@@ -334,12 +346,14 @@ function openEditProjectForm(project) {
   }
   showEditProjectForm.value = true
 }
-function onProjectUpdated(updatedProject) {
-  projectStore.setCurrent(updatedProject)
+
+async function onProjectUpdated() {
+  const latestProject = await projectStore.fetchProjectById(project.value.id)
+  projectStore.setCurrent(latestProject)
   showEditProjectForm.value = false
 }
 
-// Edit and Delete tasks
+// Edit & Delete tasks
 function editTask(row) {
   const task = taskStore.tasks.find((t) => t.id === row.id)
   if (!task) return
@@ -351,9 +365,11 @@ function editTask(row) {
     dueDate: task.due_date,
     priority: task.t_priority,
     status: task.t_status,
+    project_id: task.project?.id,
   }
   showEditTaskForm.value = true
 }
+
 async function deleteTask(row) {
   const task = taskStore.tasks.find((t) => t.id === row.id)
   if (!task) return
@@ -362,6 +378,7 @@ async function deleteTask(row) {
     fetchProjectTasks(projectStore.current.id)
   }
 }
+
 function onTaskCreated() {
   fetchProjectTasks(projectStore.current.id)
 }

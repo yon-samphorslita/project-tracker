@@ -9,49 +9,84 @@ import { Task } from './task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { User } from '../user/user.entity';
+import { ProjectService } from '../project/project.service';
 
 @Injectable()
 export class TaskService {
   constructor(
     @InjectRepository(Task)
-    private taskRepository: Repository<Task>,
+    private readonly taskRepository: Repository<Task>,
+    private readonly projectService: ProjectService,
   ) {}
 
-  // Create
+  // Create a new task
   async create(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const task = this.taskRepository.create({
       ...createTaskDto,
       user,
       created_at: new Date(),
     });
-    return this.taskRepository.save(task);
+
+    const savedTask = await this.taskRepository.save(task);
+
+    if (savedTask.project?.id) {
+      await this.projectService.refreshProjectStatus(savedTask.project.id);
+    }
+
+    return savedTask;
   }
 
-  // Find all (admin → all, user → own only)
+  // Find all tasks
   async findAll(userId?: number): Promise<Task[]> {
+    const relations = ['user', 'project', 'subtasks'];
     if (userId) {
       return this.taskRepository.find({
         where: { user: { id: userId } },
-        relations: ['user', 'project'],
+        relations,
       });
     }
-    return this.taskRepository.find({ relations: ['user', 'project'] });
+    return this.taskRepository.find({ relations });
   }
 
-  // Find one
+  // Find a single task by ID
   async findOne(id: number, userId?: number, isAdmin = false): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { id },
-      relations: ['user', 'project'],
+      relations: ['user', 'project', 'subtasks'],
     });
 
     if (!task) throw new NotFoundException(`Task with ID ${id} not found`);
-
     if (!isAdmin && userId && task.user?.id !== userId) {
       throw new ForbiddenException('You do not have access to this task');
     }
 
     return task;
+  }
+
+  // Update a task
+  async update(id: number, dto: UpdateTaskDto, user: User): Promise<Task> {
+    const task = await this.findOne(id, user.id, user.role === 'admin');
+    Object.assign(task, dto);
+
+    const savedTask = await this.taskRepository.save(task);
+
+    if (task.project?.id) {
+      await this.projectService.refreshProjectStatus(task.project.id);
+    }
+
+    return savedTask;
+  }
+
+  // Delete a task
+  async delete(id: number, user: User): Promise<void> {
+    const task = await this.findOne(id, user.id, user.role === 'admin');
+    const projectId = task.project?.id;
+
+    await this.taskRepository.remove(task);
+
+    if (projectId) {
+      await this.projectService.refreshProjectStatus(projectId);
+    }
   }
 
   // Find tasks by project
@@ -60,6 +95,7 @@ export class TaskService {
       .createQueryBuilder('task')
       .leftJoinAndSelect('task.user', 'user')
       .leftJoinAndSelect('task.project', 'project')
+      .leftJoinAndSelect('task.subtasks', 'subtasks')
       .where('task.projectId = :projectId', { projectId });
 
     if (userId) {
@@ -67,18 +103,5 @@ export class TaskService {
     }
 
     return query.getMany();
-  }
-
-  // Update
-  async update(id: number, dto: UpdateTaskDto, user: User): Promise<Task> {
-    const task = await this.findOne(id, user.id, user.role === 'admin');
-    Object.assign(task, dto);
-    return this.taskRepository.save(task);
-  }
-
-  // Delete
-  async delete(id: number, user: User): Promise<void> {
-    const task = await this.findOne(id, user.id, user.role === 'admin');
-    await this.taskRepository.remove(task);
   }
 }

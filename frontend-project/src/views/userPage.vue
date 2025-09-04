@@ -28,13 +28,7 @@
               <Filter
                 class="min-w-fit"
                 title="Sort / Filter"
-                :options="[
-                  { value: 'name-asc', label: 'Name (A → Z)' },
-                  { value: 'name-desc', label: 'Name (Z → A)' },
-                  { value: 'role-admin', label: 'Role: Admin' },
-                  { value: 'role-member', label: 'Role: Member' },
-                  { value: 'role-all', label: 'All Roles' },
-                ]"
+                :options="sortOptions"
                 @select="applySort"
               />
             </div>
@@ -59,10 +53,10 @@
               </div>
             </template>
           </Table>
-        </div>
 
-        <div v-if="isReady && filteredUsers.length === 0" class="text-center py-4 text-gray-500">
-          No users found.
+          <div v-if="isReady && filteredUsers.length === 0" class="text-center py-4 text-gray-500">
+            No users found.
+          </div>
         </div>
       </div>
     </div>
@@ -79,10 +73,8 @@ import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
-
 const authStore = useAuthStore()
 const userStore = useUserStore()
-
 const isReady = ref(false)
 const showForm = ref(false)
 const editUserData = ref(null)
@@ -107,31 +99,31 @@ const userFields = [
   {
     type: 'select',
     label: 'Role',
+    model: 'role',
     options: [
       { id: 'admin', name: 'Admin' },
       { id: 'member', name: 'Member' },
       { id: 'project_manager', name: 'Project Manager' },
     ],
-    model: 'role',
   },
   {
     type: 'select',
     label: 'Status',
+    model: 'active',
     options: [
       { id: true, name: 'Active' },
       { id: false, name: 'Inactive' },
     ],
-    model: 'active',
   },
 ]
 
-onMounted(async () => {
-  if (!authStore.user) await authStore.fetchProfile()
-  if (userRole.value === 'admin') await userStore.fetchUsers()
-  isReady.value = true
-})
-
-const users = computed(() => userStore.users || [])
+const sortOptions = [
+  { value: 'name-asc', label: 'Name (A → Z)' },
+  { value: 'name-desc', label: 'Name (Z → A)' },
+  { value: 'role-admin', label: 'Role: Admin' },
+  { value: 'role-member', label: 'Role: Member' },
+  { value: 'role-all', label: 'All Roles' },
+]
 
 const roleLabels = {
   admin: 'Admin',
@@ -139,13 +131,14 @@ const roleLabels = {
   project_manager: 'Project Manager',
 }
 
+const users = computed(() => authStore.users || [])
+
 const mappedUsers = computed(() =>
   users.value.map((u) => ({
     id: u.id,
     name: `${u.first_name} ${u.last_name}`,
     email: u.email,
     role: roleLabels[u.role] || u.role,
-    role_raw: u.role,
     active: Boolean(u.active),
     first_name: u.first_name,
     last_name: u.last_name,
@@ -173,13 +166,10 @@ const filteredUsers = computed(() => {
       result = [...result].sort((a, b) => b.name.localeCompare(a.name))
       break
     case 'role-admin':
-      result = result.filter((u) => u.role === 'admin')
+      result = result.filter((u) => u.role === 'Admin')
       break
     case 'role-member':
-      result = result.filter((u) => u.role === 'member')
-      break
-    case 'role-all':
-    default:
+      result = result.filter((u) => u.role === 'Team Member')
       break
   }
 
@@ -198,28 +188,38 @@ function openForm() {
 function editUser(row) {
   const user = users.value.find((u) => u.id === row.id)
   if (user) {
-    editUserData.value = { ...user }
+    editUserData.value = { ...user, id: user.id }
     showForm.value = true
   }
 }
 
 async function deleteUser(row) {
-  const user = users.value.find((u) => u.id === row.id)
-  if (user && confirm(`Are you sure you want to delete "${user.first_name} ${user.last_name}"?`)) {
-    await userStore.deleteUser(user.id)
+  if (!confirm(`Are you sure you want to delete "${row.name}"?`)) return
+  try {
+    await userStore.deleteUser(row.id)
+    await authStore.fetchAllUsers()
+  } catch (err) {
+    console.error('Failed to delete user:', err)
   }
 }
-function handleSubmit(createdUser) {
-  if (!createdUser) return
 
-  const index = userStore.users.findIndex(u => u.id === createdUser.id)
-  if (index !== -1) {
-    userStore.users[index] = createdUser
-  } else {
-    userStore.users.push(createdUser)
+async function handleSubmit(formUser) {
+  try {
+    if (editUserData.value?.id) {
+      await authStore.updateUser({ id: editUserData.value.id, ...formUser })
+    }
+    await authStore.fetchAllUsers()
+  } catch (err) {
+    console.error('Error saving user:', err)
+  } finally {
+    showForm.value = false
+    editUserData.value = null
   }
-
-  showForm.value = false
 }
 
+onMounted(async () => {
+  if (!authStore.user) await authStore.fetchProfile()
+  if (userRole.value === 'admin') await authStore.fetchAllUsers()
+  isReady.value = true
+})
 </script>

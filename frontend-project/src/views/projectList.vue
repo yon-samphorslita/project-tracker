@@ -3,7 +3,7 @@
     <div class="container flex flex-col gap-4">
       <div class="flex font-semibold text-2xl">All Projects</div>
 
-      <!-- Header -->
+      <!-- Header: Create + Search + Filter -->
       <div class="flex justify-between items-center w-full">
         <Button
           label="+ New Project"
@@ -12,25 +12,15 @@
           @click="showForm = true"
         />
         <Form
+          v-model:modelValue="showForm"
           formTitle="Create Project"
           :fields="projectFields"
           endpoint="projects"
-          v-model:modelValue="showForm"
           @submitted="onProjectCreated"
         />
         <div class="flex gap-4 items-center">
           <Search @update="searchQuery = $event" />
-          <Filter
-            class="min-w-fit"
-            title="Sort by"
-            :options="[
-              { value: 'priority-High', label: 'Priority (High → Low)' },
-              { value: 'priority-Low', label: 'Priority (Low → High)' },
-              { value: 'due-soonest', label: 'Due (Soonest first)' },
-              { value: 'due-latest', label: 'Due (Latest first)' },
-            ]"
-            @select="applySort"
-          />
+          <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
         </div>
       </div>
 
@@ -38,7 +28,7 @@
       <div v-if="!isReady" class="text-center py-4 text-gray-500">Loading projects...</div>
 
       <!-- Admin Table -->
-      <div v-if="isReady && userRole === 'admin'">
+      <div v-if="isReady && userRole === 'admin'" class="h-[600px] overflow-y-auto">
         <Table
           :data="mappedFilteredSortedProjects"
           :columns="tableColumns"
@@ -62,7 +52,6 @@
           </template>
         </Table>
 
-        <!-- Edit Project Form -->
         <Form
           v-model:modelValue="showEditProjectForm"
           formTitle="Edit Project"
@@ -73,17 +62,20 @@
         />
       </div>
 
-      <!-- Project Cards for other users -->
-      <div v-else-if="isReady" class="flex flex-col gap-4">
+      <!-- Project Cards for non-admin users -->
+      <div v-else-if="isReady" class="flex flex-col gap-4 h-[600px] overflow-y-auto">
         <ProjectCard
           v-for="project in filteredSortedProjects"
           :key="project.id"
+          :project="project"
           :name="project.p_name"
           :detail="project.p_description"
-          :startdate="formatDate(project.start_date)"
-          :enddate="formatDate(project.due_date)"
+          :startdate="project.start_date"
+          :enddate="project.due_date"
           :status="project.status"
-          :project="project"
+          :members="project.assignee?.name || 'None'"
+          :completedTasks="getCompletedTasks(project.id)"
+          :totalTasks="getTotalTasks(project.id)"
         />
       </div>
     </div>
@@ -91,33 +83,34 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import ProjectLayout from './projectLayout.vue'
+import ProjectCard from '@/components/projectCard.vue'
 import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
-import ProjectCard from '@/components/projectCard.vue'
 import Table from '@/components/table.vue'
 import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'
 import { useProjectStore } from '@/stores/project'
+import { useTaskStore } from '@/stores/task'
 import { useAuthStore } from '@/stores/auth'
 
+// Stores
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
+const taskStore = useTaskStore()
 
 // State
 const showForm = ref(false)
-const searchQuery = ref('')
-const isReady = ref(false)
 const showEditProjectForm = ref(false)
 const editProjectData = ref(null)
+const searchQuery = ref('')
 const selectedSort = ref('')
-
-// User role
+const isReady = ref(false)
 const userRole = computed(() => authStore.user?.role || 'user')
 
-// Table columns for admin
-const tableColumns = ref([
+// Table columns
+const tableColumns = [
   { key: 'name', label: 'Project Name' },
   { key: 'description', label: 'Description' },
   { key: 'priority', label: 'Priority' },
@@ -126,9 +119,17 @@ const tableColumns = ref([
   { key: 'due_date', label: 'Due Date' },
   { key: 'icon', label: 'Assignee' },
   { key: 'actions', label: 'Actions', slot: 'actions' },
-])
+]
 
-// Teams for form
+// Sort options
+const sortOptions = [
+  { value: 'priority-High', label: 'Priority (High → Low)' },
+  { value: 'priority-Low', label: 'Priority (Low → High)' },
+  { value: 'due-soonest', label: 'Due (Soonest first)' },
+  { value: 'due-latest', label: 'Due (Latest first)' },
+]
+
+// Teams for forms
 const Teams = [
   { id: 1, name: 'Team A' },
   { id: 2, name: 'Team B' },
@@ -159,45 +160,26 @@ const projectFields = [
   { type: 'date', label: 'Due Date', model: 'dueDate' },
 ]
 
-// Fetch data
-onMounted(async () => {
-  if (!authStore.user) await authStore.fetchProfile()
-  await projectStore.fetchProjects()
-  isReady.value = true
-})
-
 // Helpers
-function formatDate(dateStr) {
-  if (!dateStr) return 'TBD'
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-function priorityValue(priority) {
-  switch ((priority || '').toLowerCase()) {
-    case 'high':
-      return 3
-    case 'medium':
-      return 2
-    case 'low':
-      return 1
-    default:
-      return 0
-  }
-}
+const formatDate = (dateStr) =>
+  !dateStr
+    ? 'TBD'
+    : new Date(dateStr).toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+const priorityValue = (priority) => ({ high: 3, medium: 2, low: 1 })[priority?.toLowerCase()] || 0
 
-// Search & sort
+// Computed filtered & sorted projects
 const filteredSortedProjects = computed(() => {
   let list = [...projectStore.projects]
-
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
     list = list.filter(
-      (p) =>
-        p.p_name.toLowerCase().includes(q) ||
-        (p.p_description && p.p_description.toLowerCase().includes(q)),
+      (p) => p.p_name.toLowerCase().includes(q) || p.p_description?.toLowerCase().includes(q),
     )
   }
-
   switch (selectedSort.value) {
     case 'priority-High':
       return list.sort((a, b) => priorityValue(b.priority) - priorityValue(a.priority))
@@ -211,6 +193,7 @@ const filteredSortedProjects = computed(() => {
       return list
   }
 })
+
 const mappedFilteredSortedProjects = computed(() =>
   filteredSortedProjects.value.map((p) => ({
     id: p.id,
@@ -223,16 +206,33 @@ const mappedFilteredSortedProjects = computed(() =>
     icon: p.assignee?.avatar || null,
   })),
 )
-function applySort(option) {
+
+// Task counts
+const getTotalTasks = (projectId) =>
+  taskStore.tasks.filter((t) => String(t.project?.id) === String(projectId)).length
+const getCompletedTasks = (projectId) =>
+  taskStore.tasks.filter(
+    (t) => String(t.project?.id) === String(projectId) && t.t_status?.toLowerCase() === 'completed',
+  ).length
+
+// Fetch data
+onMounted(async () => {
+  if (!authStore.user) await authStore.fetchProfile()
+  await projectStore.fetchProjects()
+  taskStore.tasks = []
+  for (const p of projectStore.projects) await taskStore.fetchTasksByProject(p.id)
+  isReady.value = true
+})
+
+// Sorting
+const applySort = (option) => {
   selectedSort.value = option
 }
 
 // Project actions
-function onProjectCreated(project) {
-  projectStore.projects.push(project)
-}
+const onProjectCreated = (project) => projectStore.projects.push(project)
 
-function editProject(row) {
+const editProject = (row) => {
   const project = projectStore.projects.find((p) => p.id === row.id)
   if (!project) return
   editProjectData.value = {
@@ -248,7 +248,7 @@ function editProject(row) {
   showEditProjectForm.value = true
 }
 
-async function deleteProject(row) {
+const deleteProject = async (row) => {
   const project = projectStore.projects.find((p) => p.id === row.id)
   if (!project) return
   if (confirm(`Are you sure you want to delete project "${row.name}"?`)) {
@@ -256,9 +256,10 @@ async function deleteProject(row) {
   }
 }
 
-function onEditProjectSubmitted(updatedProject) {
-  const index = projectStore.projects.findIndex((p) => p.id === updatedProject.id)
-  if (index !== -1) projectStore.projects[index] = updatedProject
+const onEditProjectSubmitted = (updatedProject) => {
+  projectStore.projects = projectStore.projects.map((p) =>
+    p.id === updatedProject.id ? updatedProject : p,
+  )
   showEditProjectForm.value = false
 }
 </script>
