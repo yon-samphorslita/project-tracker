@@ -1,24 +1,14 @@
 <template>
-  <!-- <SettingsLayout /> -->
   <div>
     <h1 class="text-2xl font-bold mb-6">Account Settings</h1>
 
     <div class="mx-auto bg-white shadow-md rounded-2xl p-8">
-      <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
-        <button
-          v-if="!isEditing"
-          @click="startEditing"
-          type="button"
-          class="px-4 py-2 text-sm bg-[#C6E7FF] text-black rounded-xl hover:bg-blue-400 transition"
-        >
-          Edit
-        </button>
-      </div>
 
       <!-- Profile Section -->
-      <div class="flex items-center gap-6 mb-8">
-        <div class="relative w-24 h-24">
+      <div class="flex items-center justify-between gap-6 mb-8">
+        
+        <div class="flex items-center gap-4">
+          <div class="relative w-24 h-24">
           <img
             :src="form.img_url || 'https://via.placeholder.com/150'"
             alt="Profile"
@@ -38,6 +28,13 @@
           <h2 class="text-xl font-semibold">{{ form.first_name }} {{ form.last_name }}</h2>
           <p class="text-gray-500">{{ form.email }}</p>
         </div>
+        </div>
+        <Button
+          v-if="!isEditing"
+          @click="startEditing"
+          label="Edit"
+btn-color="#C6E7FF"
+            btntext="black"        />
       </div>
 
       <!-- Editable Form -->
@@ -76,88 +73,37 @@
 
       <!-- Action Buttons -->
       <div v-if="isEditing" class="flex justify-end gap-3 mt-6">
-        <button
+        <Button
           @click="cancelEditing"
-          type="button"
-          class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
-        >
-          Cancel
-        </button>
-        <button
+          label="Cancel"
+          btn-color="#c70707"
+          btntext="white"
+        />
+        <Button
+          label="Save Changes"
           @click="saveChanges"
-          type="button"
-          class="px-4 py-2 rounded-xl bg-[#C6E7FF] text-black hover:bg-blue-400 transition"
-        >
-          Save Changes
-        </button>
-      </div>
-
-      <!-- Change Password Section -->
-      <div class="mt-8 border-t pt-6">
-        <h2 class="text-xl font-semibold mb-4">Change Password</h2>
-        <form @submit.prevent="updatePassword" class="flex flex-col gap-4">
-          <div>
-            <label class="block text-gray-700 mb-1">Current Password</label>
-            <input
-              v-model="passwordForm.oldPassword"
-              type="password"
-              placeholder="Enter current password"
-              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
-              required
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-700 mb-1">New Password</label>
-            <input
-              v-model="passwordForm.newPassword"
-              type="password"
-              placeholder="Enter new password"
-              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
-              required
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-700 mb-1">Confirm New Password</label>
-            <input
-              v-model="passwordForm.confirmPassword"
-              type="password"
-              placeholder="Confirm new password"
-              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="mt-4 px-4 py-2 bg-[#C6E7FF] text-black font-bold rounded-xl hover:bg-blue-400 transition"
-          >
-            Update Password
-          </button>
-        </form>
+          btn-color="#c6e7ff"
+          btntext="black"
+        />
       </div>
     </div>
 
     <div class="mt-4">
-      <button
+      <Button
         @click="logout"
-        type="button"
-        class="px-4 py-2 text-sm bg-red-500 text-white rounded-xl hover:bg-red-600 transition"
-      >
-        Logout
-      </button>
+        label="Logout"
+        btn-color="#c70707"
+        btntext="white"
+      />
     </div>
   </div>
-  <!-- </SettingsLayout> -->
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import SettingsLayout from './settingsLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-
+import Button from '@/components/button.vue'
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -208,32 +154,11 @@ async function saveChanges() {
   }
 }
 
-async function updatePassword() {
-  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-    alert('New password and confirm password do not match')
-    return
-  }
-
-  try {
-    const res = await authStore.updatePassword(
-      passwordForm.value.oldPassword,
-      passwordForm.value.newPassword,
-    )
-    alert(res.message)
-    passwordForm.value.oldPassword = ''
-    passwordForm.value.newPassword = ''
-    passwordForm.value.confirmPassword = ''
-  } catch (err) {
-    alert(err.response?.data?.message || 'Failed to update password')
-    console.error(err)
-  }
-}
-
 function handleImageUpload(e) {
   const file = e.target.files[0]
   if (file) {
     form.value.img_url = URL.createObjectURL(file)
-    // TODO: Upload image to backend
+    // TODO: Upload image to backend . localstorage
   }
 }
 

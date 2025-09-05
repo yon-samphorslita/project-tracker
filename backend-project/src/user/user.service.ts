@@ -39,6 +39,8 @@ export class UserService {
             'active',
             'password',
             'password_changed',
+            'otp_code',
+            'otp_expiry',
           ]
         : [
             'id',
@@ -95,6 +97,8 @@ export class UserService {
             'img_url',
             'active',
             'password_changed',
+            'otp_code',
+            'otp_expiry',
           ]
         : [
             'id',

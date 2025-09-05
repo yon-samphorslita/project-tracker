@@ -23,17 +23,18 @@
           <input
             v-if="['text', 'email', 'password'].includes(field.type)"
             :id="field.label"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-base transition duration-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 focus:outline-none"
+            :class="errors[field.model] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'"
             :placeholder="field.placeholder"
             v-model="formData[field.model]"
-            required
           />
 
           <!-- Textarea -->
           <textarea
             v-else-if="field.type === 'textarea'"
             :id="field.label"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-base transition duration-300 min-h-[120px] resize-y focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 min-h-[120px] resize-y focus:outline-none"
+            :class="errors[field.model] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'"
             :placeholder="field.placeholder"
             v-model="formData[field.model]"
           />
@@ -43,16 +44,17 @@
             v-else-if="field.type === 'date'"
             type="date"
             :id="field.label"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-base transition duration-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 focus:outline-none"
+            :class="errors[field.model] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'"
             v-model="formData[field.model]"
-            required
           />
 
           <!-- Select input -->
           <select
             v-else-if="field.type === 'select'"
             :id="field.label"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-base transition duration-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 focus:outline-none"
+            :class="errors[field.model] ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'"
             v-model="formData[field.model]"
           >
             <option disabled selected>Select {{ field.label }}</option>
@@ -60,6 +62,9 @@
               {{ option.name }}
             </option>
           </select>
+
+          <!-- Error message -->
+          <p v-if="errors[field.model]" class="text-red-500 text-sm mt-1">{{ errors[field.model] }}</p>
         </div>
       </div>
 
@@ -98,20 +103,18 @@ const emit = defineEmits(['update:modelValue', 'submitted'])
 const formData = reactive({})
 const showForm = ref(props.modelValue)
 const submitting = ref(false)
+const errors = reactive({})
 
-// Sync props.modelValue with showForm
-watch(
-  () => props.modelValue,
-  (val) => (showForm.value = val),
-)
-watch(showForm, (val) => emit('update:modelValue', val))
+// Sync props.modelValue
+watch(() => props.modelValue, val => (showForm.value = val))
+watch(showForm, val => emit('update:modelValue', val))
 
-// Populate formData with initialData
+// Populate formData
 watch(
   () => props.initialData,
-  (data) => {
+  data => {
     if (!data) return
-    Object.keys(data).forEach((key) => {
+    Object.keys(data).forEach(key => {
       formData[key] =
         key === 'startDate' || key === 'dueDate' ? data[key]?.split('T')[0] || '' : data[key]
     })
@@ -119,7 +122,28 @@ watch(
   { immediate: true },
 )
 
-// Map formData to API payload
+// Validate fields
+function validate() {
+  let valid = true
+  Object.keys(errors).forEach(k => delete errors[k]) // reset errors
+
+  props.fields.forEach(field => {
+    const value = formData[field.model]
+    if (field.type !== 'select' && (!value || value.toString().trim() === '')) {
+      errors[field.model] = `${field.label} is required`
+      valid = false
+    } else if (field.type === 'email' && value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(value)) {
+        errors[field.model] = 'Invalid email format'
+        valid = false
+      }
+    }
+  })
+  return valid
+}
+
+// Map payload
 function mapPayload() {
   switch (props.endpoint) {
     case 'projects':
@@ -156,11 +180,12 @@ function mapPayload() {
   }
 }
 
-// Submit form
+// Submit
 async function submitForm() {
   if (submitting.value) return
-  submitting.value = true
+  if (!validate()) return
 
+  submitting.value = true
   try {
     const payload = mapPayload()
     const token = localStorage.getItem('token')
@@ -170,7 +195,7 @@ async function submitForm() {
       response = await axios.patch(
         `http://localhost:3000/${props.endpoint}/${props.initialData.id}`,
         payload,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       )
     } else {
       response = await axios.post(`http://localhost:3000/${props.endpoint}`, payload, {
@@ -179,22 +204,23 @@ async function submitForm() {
     }
 
     emit('submitted', response.data)
-    Object.keys(formData).forEach((key) => (formData[key] = ''))
+    Object.keys(formData).forEach(k => (formData[k] = ''))
     showForm.value = false
-  } catch (error) {
-    console.error('Error saving:', error.response?.data || error.message)
+  } catch (err) {
+    console.error('Error saving:', err.response?.data || err.message)
   } finally {
     submitting.value = false
   }
 }
 
-// Cancel form
+// Cancel
 function cancel() {
-  Object.keys(formData).forEach((key) => (formData[key] = ''))
+  Object.keys(formData).forEach(k => (formData[k] = ''))
+  Object.keys(errors).forEach(k => delete errors[k])
   showForm.value = false
 }
 
-// Determine if input should span two columns
+// Determine input span
 function isSingleInput(index, type) {
   const next = props.fields[index + 1]
   return ['text', 'email', 'password'].includes(type) && next?.type === 'textarea'

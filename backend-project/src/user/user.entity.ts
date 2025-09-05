@@ -47,6 +47,13 @@ export class User {
   @Column({ nullable: true })
   img_url: string;
 
+  @Column({ nullable: true })
+otp_code: string;
+
+@Column({ type: 'timestamp', nullable: true })
+otp_expiry: Date;
+
+
   @CreateDateColumn()
   created_at: Date;
 

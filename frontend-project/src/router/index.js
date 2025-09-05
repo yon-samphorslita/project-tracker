@@ -4,6 +4,7 @@ import AuthPage from '../views/authPage.vue'
 import ProjectList from '@/views/projectList.vue'
 import ProjectPage from '@/views/projectPage.vue'
 import SettingsProfile from '@/views/settingsProfile.vue'
+import SettingsPassword from '@/views/settingsPassword.vue'
 import SettingsLayout from '@/views/settingsLayout.vue'
 import CalendarPage from '@/views/calendarPage.vue'
 import UserPage from '@/views/userPage.vue'
@@ -20,7 +21,8 @@ const routes = [
     component: SettingsLayout,
     meta: { requiresAuth: true },
     children: [
-      { path: 'profile', component: SettingsProfile }, // relative path!
+      { path: 'profile', component: SettingsProfile }, 
+      { path: 'password', component: SettingsPassword },
     ],
   },
   { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true } },
@@ -52,7 +54,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.path === '/login' && isLoggedIn) {
     // Redirect based on role
     const role = authStore.user?.role
-    if (role === 'admin') return next('/settings')
+    if (role === 'admin') return next('/settings/profile')
     if (role === 'project_manager') return next('/projects')
     if (role === 'member') return next('/home')
     return next('/') // fallback

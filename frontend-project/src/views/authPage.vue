@@ -66,7 +66,7 @@ async function handleLogin() {
     const role = user.role
 
     if (role === 'admin') {
-      router.push('/settings')
+      router.push('/settings/profile')
     } else if (role === 'project_manager') {
       router.push('/projects')
     } else if (role === 'member') {
