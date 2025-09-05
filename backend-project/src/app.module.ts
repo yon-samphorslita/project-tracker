@@ -10,7 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { SubtaskModule } from './subtask/subtask.module';
 import { NotificationModule } from './notification/notification.module';
 import { MemberModule } from './member/member.module';
-
+import { ActivityModule } from './activity/activity.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -31,6 +31,7 @@ import { MemberModule } from './member/member.module';
     SubtaskModule,
     NotificationModule,
     MemberModule,
+    ActivityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

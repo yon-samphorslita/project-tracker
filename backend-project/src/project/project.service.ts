@@ -10,12 +10,14 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { User } from '../user/user.entity';
 import { Status } from '../enums/status.enum';
+import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    private readonly activityService: ActivityService,
   ) {}
 
   // Create a new project
@@ -28,7 +30,16 @@ export class ProjectService {
       user,
       created_at: new Date(),
     });
-    return this.projectRepository.save(project);
+
+    const savedProject = await this.projectRepository.save(project);
+
+    // Log activity
+    await this.activityService.logAction(
+      user.id,
+      `Created project: ${savedProject.p_name}`,
+    );
+
+    return savedProject;
   }
 
   // Find all projects (admin → all, user → own or member)
@@ -105,7 +116,15 @@ export class ProjectService {
     }
 
     Object.assign(project, dto);
-    return this.projectRepository.save(project);
+    const savedProject = await this.projectRepository.save(project);
+
+    // Log update activity
+    await this.activityService.logAction(
+      user.id,
+      `Updated project: ${savedProject.p_name}`,
+    );
+
+    return savedProject;
   }
 
   // Refresh project status based on tasks/subtasks
@@ -159,5 +178,11 @@ export class ProjectService {
     }
 
     await this.projectRepository.remove(project);
+
+    // Log deletion activity
+    await this.activityService.logAction(
+      user.id,
+      `Deleted project: ${project.p_name}`,
+    );
   }
 }

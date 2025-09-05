@@ -10,6 +10,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { User } from '../user/user.entity';
 import { ProjectService } from '../project/project.service';
+import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class TaskService {
@@ -17,6 +18,7 @@ export class TaskService {
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
     private readonly projectService: ProjectService,
+    private readonly activityService: ActivityService,
   ) {}
 
   // Create a new task
@@ -29,38 +31,17 @@ export class TaskService {
 
     const savedTask = await this.taskRepository.save(task);
 
+    // Log creation activity
+    await this.activityService.logAction(
+      user.id,
+      `Created task: ${task.t_name}`,
+    );
+
     if (savedTask.project?.id) {
       await this.projectService.refreshProjectStatus(savedTask.project.id);
     }
 
     return savedTask;
-  }
-
-  // Find all tasks
-  async findAll(userId?: number): Promise<Task[]> {
-    const relations = ['user', 'project', 'subtasks'];
-    if (userId) {
-      return this.taskRepository.find({
-        where: { user: { id: userId } },
-        relations,
-      });
-    }
-    return this.taskRepository.find({ relations });
-  }
-
-  // Find a single task by ID
-  async findOne(id: number, userId?: number, isAdmin = false): Promise<Task> {
-    const task = await this.taskRepository.findOne({
-      where: { id },
-      relations: ['user', 'project', 'subtasks'],
-    });
-
-    if (!task) throw new NotFoundException(`Task with ID ${id} not found`);
-    if (!isAdmin && userId && task.user?.id !== userId) {
-      throw new ForbiddenException('You do not have access to this task');
-    }
-
-    return task;
   }
 
   // Update a task
@@ -69,6 +50,12 @@ export class TaskService {
     Object.assign(task, dto);
 
     const savedTask = await this.taskRepository.save(task);
+
+    // Log update activity
+    await this.activityService.logAction(
+      user.id,
+      `Updated task: ${task.t_name}`,
+    );
 
     if (task.project?.id) {
       await this.projectService.refreshProjectStatus(task.project.id);
@@ -84,9 +71,42 @@ export class TaskService {
 
     await this.taskRepository.remove(task);
 
+    // Log deletion activity
+    await this.activityService.logAction(
+      user.id,
+      `Deleted task: ${task.t_name}`,
+    );
+
     if (projectId) {
       await this.projectService.refreshProjectStatus(projectId);
     }
+  }
+
+  // Find all tasks (optionally filtered by user)
+  async findAll(userId?: number): Promise<Task[]> {
+    const relations = ['user', 'project', 'subtasks'];
+    if (userId) {
+      return this.taskRepository.find({
+        where: { user: { id: userId } },
+        relations,
+      });
+    }
+    return this.taskRepository.find({ relations });
+  }
+
+  // Find a single task
+  async findOne(id: number, userId?: number, isAdmin = false): Promise<Task> {
+    const task = await this.taskRepository.findOne({
+      where: { id },
+      relations: ['user', 'project', 'subtasks'],
+    });
+
+    if (!task) throw new NotFoundException(`Task with ID ${id} not found`);
+    if (!isAdmin && userId && task.user?.id !== userId) {
+      throw new ForbiddenException('You do not have access to this task');
+    }
+
+    return task;
   }
 
   // Find tasks by project

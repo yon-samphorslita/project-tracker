@@ -4,6 +4,7 @@ import AuthPage from '../views/authPage.vue'
 import ProjectList from '@/views/projectList.vue'
 import ProjectPage from '@/views/projectPage.vue'
 import SettingsProfile from '@/views/settingsProfile.vue'
+import ActivityLogs from '@/views/activityLogs.vue'
 import ChangePassword from '@/views/changePassword.vue'
 import ForgotPassword from '@/views/forgotPassword.vue'
 import SettingsLayout from '@/views/settingsLayout.vue'
@@ -23,7 +24,10 @@ const routes = [
     path: '/settings',
     component: SettingsLayout,
     meta: { requiresAuth: true },
-    children: [{ path: 'profile', component: SettingsProfile }],
+    children: [
+      { path: 'profile', component: SettingsProfile },
+      { path: 'activity-logs', component: ActivityLogs },
+    ],
   },
   { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true } },
   { path: '/user', component: UserPage, meta: { requiresAuth: true } },

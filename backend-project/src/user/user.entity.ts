@@ -12,6 +12,7 @@ import { Project } from '../project/project.entity';
 import { Role } from '../enums/role.enum';
 import { Notification } from '../notification/notification.entity';
 import { Member } from 'src/member/member.entity';
+import { ActivityLog } from 'src/activity/activity.entity';
 // import { Event } from 'src/event/event.entity';
 @Entity('users')
 @Unique(['email'])
@@ -70,4 +71,7 @@ export class User {
 
   @OneToMany(() => Member, (member) => member.user)
   members: Member[];
+
+  @OneToMany(() => ActivityLog, (activity) => activity.user)
+  activities: ActivityLog[];
 }
