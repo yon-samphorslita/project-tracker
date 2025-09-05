@@ -102,7 +102,10 @@ export class AuthController {
     if ('email' in updateUserDto) delete updateUserDto.email;
     if ('password' in updateUserDto) delete updateUserDto.password;
 
-    const updatedUser = await this.userService.update(Number(userId), updateUserDto);
+    const updatedUser = await this.userService.update(
+      Number(userId),
+      updateUserDto,
+    );
     if (!updatedUser) throw new NotFoundException('User not found');
     const { password, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
@@ -117,10 +120,20 @@ export class AuthController {
       throw new ForbiddenException('You can only update your password once.');
     }
 
-    const valid = await bcrypt.compare(body.oldPassword, user.password);
+    if (!user.password)
+      throw new ForbiddenException('No password set for this user');
+
+    const valid = await bcrypt.compare(
+      String(body.oldPassword),
+      String(user.password),
+    );
     if (!valid) throw new ForbiddenException('Old password is incorrect');
 
-    await this.authService.updateUserPassword(req.user.id, body.newPassword, true);
+    await this.authService.updateUserPassword(
+      req.user.id,
+      body.newPassword,
+      true,
+    );
     return { message: 'Password updated successfully' };
   }
 
@@ -133,35 +146,42 @@ export class AuthController {
   ) {
     const user = await this.userService.findOne(Number(userId), true);
     if (!user) throw new NotFoundException('User not found');
-    await this.authService.updateUserPassword(Number(userId), body.newPassword, false);
+    await this.authService.updateUserPassword(
+      Number(userId),
+      body.newPassword,
+      false,
+    );
     return { message: 'Password updated successfully by admin' };
   }
 
-  @UseGuards(AuthGuard)
+  // Unauthenticated request OTP
   @Post('request-otp')
-  async requestOtp(@Request() req) {
-    const user = await this.userService.findOne(req.user.id, true);
+  async requestOtp(@Body() body: { email: string }) {
+    const user = await this.userService.findOneByEmail(body.email, true);
     if (!user) throw new NotFoundException('User not found');
-    if (user.password_changed) throw new ForbiddenException('Password has already been changed.');
+    if (user.password_changed)
+      throw new ForbiddenException('Password has already been changed.');
 
-    const otp = await this.authService.generateOtp(req.user.id);
+    const otp = await this.authService.generateOtp(user.id);
+    // optionally send email here
     return { message: 'OTP sent to your email', otp };
   }
 
-  @UseGuards(AuthGuard)
+  // Reset password (unauthenticated, using email + OTP)
   @Post('reset-password')
   async resetPassword(
-    @Request() req,
-    @Body() body: { otp: string; newPassword: string },
+    @Body() body: { email: string; otp: string; newPassword: string },
   ) {
-    const user = await this.userService.findOne(req.user.id, true);
+    // Find user by email
+    const user = await this.userService.findOneByEmail(body.email, true);
     if (!user) throw new NotFoundException('User not found');
-    if (user.password_changed) throw new ForbiddenException('Password has already been changed.');
 
-    const validOtp = await this.authService.verifyOtp(req.user.id, body.otp);
+    // Verify OTP
+    const validOtp = await this.authService.verifyOtp(user.id, body.otp);
     if (!validOtp) throw new ForbiddenException('Invalid or expired OTP');
 
-    await this.authService.updateUserPassword(req.user.id, body.newPassword, true);
+    // Update password
+    await this.authService.updateUserPassword(user.id, body.newPassword, true);
     return { message: 'Password updated successfully' };
   }
 }

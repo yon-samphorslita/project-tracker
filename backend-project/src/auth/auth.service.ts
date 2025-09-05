@@ -27,7 +27,10 @@ export class AuthService {
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    return this.userService.createUser({ ...createUserDto, password: hashedPassword });
+    return this.userService.createUser({
+      ...createUserDto,
+      password: hashedPassword,
+    });
   }
 
   async login(user: User): Promise<{ accessToken: string }> {
@@ -45,7 +48,11 @@ export class AuthService {
     return this.blacklistedTokens.has(token);
   }
 
-  async updateUserPassword(userId: number, newPassword: string, markChanged = true): Promise<User> {
+  async updateUserPassword(
+    userId: number,
+    newPassword: string,
+    markChanged = true,
+  ): Promise<User> {
     return this.userService.updatePassword(userId, newPassword, markChanged);
   }
 
@@ -56,7 +63,10 @@ export class AuthService {
     const otp = randomInt(100000, 999999).toString();
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
 
-    await this.userService.update(userId, { otp_code: otp, otp_expiry: expiry });
+    await this.userService.update(userId, {
+      otp_code: otp,
+      otp_expiry: expiry,
+    });
     await this.emailService.sendOtp(user.email, otp);
 
     return otp;
@@ -72,8 +82,14 @@ export class AuthService {
     const otpExpiry = new Date(user.otp_expiry);
     const now = new Date();
 
-    if (String(user.otp_code).trim() === String(otp).trim() && otpExpiry.getTime() > now.getTime()) {
-      await this.userService.update(userId, { otp_code: null, otp_expiry: null });
+    if (
+      String(user.otp_code).trim() === String(otp).trim() &&
+      otpExpiry.getTime() > now.getTime()
+    ) {
+      await this.userService.update(userId, {
+        otp_code: null,
+        otp_expiry: null,
+      });
       return true;
     }
 

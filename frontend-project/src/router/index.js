@@ -4,7 +4,8 @@ import AuthPage from '../views/authPage.vue'
 import ProjectList from '@/views/projectList.vue'
 import ProjectPage from '@/views/projectPage.vue'
 import SettingsProfile from '@/views/settingsProfile.vue'
-import SettingsPassword from '@/views/settingsPassword.vue'
+import ChangePassword from '@/views/changePassword.vue'
+import ForgotPassword from '@/views/forgotPassword.vue'
 import SettingsLayout from '@/views/settingsLayout.vue'
 import CalendarPage from '@/views/calendarPage.vue'
 import UserPage from '@/views/userPage.vue'
@@ -14,16 +15,15 @@ const routes = [
   { path: '/', redirect: '/login' },
   { path: '/home', component: Home, meta: { requiresAuth: true } },
   { path: '/login', component: AuthPage, name: 'Login' },
+  { path: '/change-password', component: ChangePassword, meta: { requiresAuth: true } },
+  { path: '/forgot-password', component: ForgotPassword },
   { path: '/projects', component: ProjectList, meta: { requiresAuth: true } },
   { path: '/project/:id', component: ProjectPage, props: true, meta: { requiresAuth: true } },
   {
     path: '/settings',
     component: SettingsLayout,
     meta: { requiresAuth: true },
-    children: [
-      { path: 'profile', component: SettingsProfile }, 
-      { path: 'password', component: SettingsPassword },
-    ],
+    children: [{ path: 'profile', component: SettingsProfile }],
   },
   { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true } },
   { path: '/user', component: UserPage, meta: { requiresAuth: true } },
