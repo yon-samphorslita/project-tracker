@@ -24,10 +24,13 @@ export class Member {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne(() => Project, (project) => project.members, {
-    onDelete: 'CASCADE',
-  })
-  project: Project;
+  // @ManyToOne(() => Project, (project) => project.members, {
+  //   onDelete: 'CASCADE',
+  // })
+  // project: Project;
+
+  // @ManyToOne(() => Team, (team) => team.members, { onDelete: 'CASCADE' })
+  // team: Team;
 
   @ManyToOne(() => User, (user) => user.members, { onDelete: 'CASCADE' })
   user: User;

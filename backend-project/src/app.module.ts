@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { SubtaskModule } from './subtask/subtask.module';
 import { NotificationModule } from './notification/notification.module';
 import { MemberModule } from './member/member.module';
+import { GatewayModule } from './gateway/gateway.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }), // <-- here, top-level module import
@@ -31,6 +32,7 @@ import { MemberModule } from './member/member.module';
     SubtaskModule,
     NotificationModule,
     MemberModule,
+    GatewayModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -45,4 +45,29 @@ export class NotificationController {
   remove(@Param('id') id: string) {
     return this.notificationService.remove(+id);
   }
+
+  // Get all notifications for a user
+  @Get('user/:userId')
+  getUserNotifications(@Param('userId') userId: string) {
+    return this.notificationService.findByUser(+userId);
+  }
+
+  // Get unread notifications for a user
+  @Get('user/:userId/unread')
+  getUnreadNotifications(@Param('userId') userId: string) {
+    return this.notificationService.findUnreadByUser(+userId);
+  }
+
+  // Mark one notification as read
+  @Patch(':id/read')
+  markAsRead(@Param('id') id: string) {
+    return this.notificationService.markAsRead(+id);
+  }
+
+  // Mark all notifications as read for a user
+  @Patch('user/:userId/read-all')
+  markAllAsRead(@Param('userId') userId: string) {
+    return this.notificationService.markAllAsRead(+userId);
+  }
+
 }

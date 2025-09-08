@@ -32,4 +32,7 @@ export class CreateTaskDto {
   @IsOptional()
   @IsDateString()
   due_date?: Date;
+  
+  projectId: number;
+  userId: number;
 }
