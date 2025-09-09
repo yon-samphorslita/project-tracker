@@ -12,7 +12,7 @@ import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
 import { Subtask } from './subtask.entity';
 
-@Controller('subtask')
+@Controller('subtasks')
 export class SubtaskController {
   constructor(private readonly subtaskService: SubtaskService) {}
 

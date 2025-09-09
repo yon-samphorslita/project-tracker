@@ -41,8 +41,8 @@ export class User {
   @CreateDateColumn()
   created_at: Date;
 
-  @OneToMany(() => Project, (project) => project.user)
-  projects: Project[];
+  // @OneToMany(() => Project, (project) => project.user)
+  // projects: Project[];
 
   @OneToMany(() => Task, (task) => task.user)
   tasks: Task[];

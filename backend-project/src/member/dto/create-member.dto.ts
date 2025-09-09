@@ -1,13 +1,16 @@
-import { IsEnum, IsInt, IsNotEmpty } from "class-validator";
+import { IsEnum, IsInt, IsNotEmpty, IsNumber } from "class-validator";
 import { Role } from "src/enums/role.enum";
 
 export class CreateMemberDto {
-    // @IsInt()
-    // @IsNotEmpty()
-    // projectId: number;
+    @IsEnum(Role)
+    role: Role;
 
-    // @IsInt()
-    // @IsNotEmpty()
-    // userId: number;
+    @IsNumber()
+    @IsNotEmpty()
+    teamId: number;
+
+    @IsNumber()
+    @IsNotEmpty()
+    userId: number;
 
 }
