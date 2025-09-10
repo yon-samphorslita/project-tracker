@@ -1,5 +1,6 @@
 import { Role } from 'src/enums/role.enum';
 import { Project } from 'src/project/project.entity';
+import { Team } from 'src/team/team.entity';
 import { User } from 'src/user/user.entity';
 import {
   Column,
@@ -24,10 +25,8 @@ export class Member {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne(() => Project, (project) => project.members, {
-    onDelete: 'CASCADE',
-  })
-  project: Project;
+  @ManyToOne(() => Team, (team) => team.members, { onDelete: 'CASCADE' })
+  team: Team;
 
   @ManyToOne(() => User, (user) => user.members, { onDelete: 'CASCADE' })
   user: User;

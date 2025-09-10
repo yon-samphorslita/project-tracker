@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex justify-center items-center h-12">
+  <div class="w-full flex justify-center items-center ">
     <div class="w-full max-w-2xl">
       <input
         type="text"

@@ -1,10 +1,15 @@
 <template>
   <div>
+      <!-- <notification/> -->
+
     <RouterView />
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+  import notification from '@/components/notification.vue';
+
+</script>
 <style>
 body {
   margin: 0;

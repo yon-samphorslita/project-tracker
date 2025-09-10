@@ -51,7 +51,9 @@ export class ProjectService {
     }
 
     return this.projectRepository.find({
-      where: [{ user: { id: userId } }, { members: { user: { id: userId } } }],
+      where: [{ user: { id: userId } }, 
+        // { members: { user: { id: userId } } }
+      ],
       relations: ['members', 'members.user', 'user'],
     });
   }
@@ -67,7 +69,7 @@ export class ProjectService {
         ? { id }
         : [
             { id, user: { id: userId } },
-            { id, members: { user: { id: userId } } },
+            // { id, members: { user: { id: userId } } },
           ],
       relations: ['members', 'members.user', 'user', 'tasks', 'tasks.subtasks'],
     });

@@ -4,8 +4,12 @@
       <span class="ml-5 text-black text-xl md:text-2xl font-bold">{{ menu_item }}</span>
 
       <div class="flex items-center justify-end w-full">
-        <!-- notification icon -->
-        <svg
+
+
+            <div class="relative flex flex-col items-end">
+            <!-- notification icon -->
+                <div @click="toggleNotification" class="notification-bell cursor-pointer flex">
+              <svg
           xmlns="http://www.w3.org/2000/svg"
           class="w-6 h-6 mr-1 md:mr-5 cursor-pointer"
           viewBox="0 0 24 24"
@@ -19,6 +23,15 @@
             <circle cx="12" cy="3" r="1" />
           </g>
         </svg>
+                </div>
+
+                <!-- Notification dropdown -->
+                <Notification 
+                  v-if="showNotification" 
+                  class="absolute top-full right-0 mt-2 z-50 notification-dropdown"
+                />
+            </div>
+            
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="w-6 h-6 mr-1 md:mr-5 cursor-pointer"
@@ -49,10 +62,14 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import profileimg from '@/assets/profile.jpg'
 import { useRouter } from 'vue-router'
-const router = useRouter()
+import Notification from '@/components/notification.vue';
+import { useNotificationStore } from '@/stores/notification';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+const router = useRouter()  
+
 defineProps({
   menu_item: {
     type: String,
@@ -75,6 +92,38 @@ function gotoProfile() {
   router.push('/settings/profile');
   console.log('Navigating to profile page...');
 }
+  const showNotification = ref(false);
+  const store = useNotificationStore();
+
+  const toggleNotification = () => {
+    showNotification.value = !showNotification.value;
+  };
+
+  // close when clicking outside
+  const handleClickOutside = (e: MouseEvent) => {
+    const dropdown = document.querySelector('.notification-dropdown');
+    const bell = document.querySelector('.notification-bell');
+
+    if (
+      showNotification.value &&
+      dropdown &&
+      !dropdown.contains(e.target as Node) &&
+      bell &&
+      !bell.contains(e.target as Node)
+    ) {
+      showNotification.value = false;
+    }
+  };
+  
+  onMounted(() => {
+    store.connect('1')
+    document.addEventListener('click', handleClickOutside);
+  });
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside);
+  });
+
 </script>
 
 <style></style>
