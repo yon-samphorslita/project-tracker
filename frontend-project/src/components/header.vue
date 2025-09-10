@@ -32,7 +32,8 @@
 
         <!-- user profile  -->
         <div
-          class="flex items-center bg-[#C6E7FF] rounded-full px-3 py-1.5 w-[130px] max-w-[150px] truncate"
+          class="flex items-center bg-[#C6E7FF] rounded-full px-3 py-1.5 w-[130px] max-w-[150px] truncate cursor-pointer"
+          @click="gotoProfile"
         >
           <div class="w-8 h-8 rounded-full overflow-hidden mr-2">
             <img :src="profile" alt="Profile Image" />
@@ -48,9 +49,10 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import profileimg from '@/assets/profile.jpg'
-
+import { useRouter } from 'vue-router'
+const router = useRouter()
 defineProps({
   menu_item: {
     type: String,
@@ -69,6 +71,10 @@ defineProps({
     default: profileimg,
   },
 })
+function gotoProfile() {
+  router.push('/settings/profile');
+  console.log('Navigating to profile page...');
+}
 </script>
 
 <style></style>

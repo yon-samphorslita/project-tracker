@@ -12,6 +12,7 @@
               alt="Profile"
               class="w-24 h-24 rounded-full object-cover border"
             />
+            <!-- Upload button only if editing -->
             <label
               v-if="isEditing"
               class="absolute bottom-0 right-0 bg-[#C6E7FF] text-black rounded-full p-2 cursor-pointer hover:bg-blue-400"
@@ -27,6 +28,7 @@
             <p class="text-gray-500">{{ form.email }}</p>
           </div>
         </div>
+        <!-- Edit button -->
         <Button
           v-if="!isEditing"
           @click="startEditing"
@@ -36,15 +38,32 @@
         />
       </div>
 
-      <!-- Editable Form -->
-      <form class="grid gap-6" @submit.prevent>
+      <!-- Read-only info (when not editing) -->
+      <div v-if="!isEditing" class="grid gap-6">
+        <div class="grid grid-cols-2 gap-6">
+          <div>
+            <label class="block text-gray-600 text-sm">First Name</label>
+            <p class="px-4 py-2">{{ form.first_name }}</p>
+          </div>
+          <div>
+            <label class="block text-gray-600 text-sm">Last Name</label>
+            <p class="px-4 py-2">{{ form.last_name }}</p>
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-600 text-sm">Email</label>
+          <p class="px-4 py-2">{{ form.email }}</p>
+        </div>
+      </div>
+
+      <!-- Editable Form (when editing) -->
+      <form v-else class="grid gap-6" @submit.prevent>
         <div class="grid grid-cols-2 gap-6">
           <div>
             <label class="block text-gray-700 mb-1">First Name</label>
             <input
               v-model="form.first_name"
-              :disabled="!isEditing"
-              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200 disabled:bg-gray-100"
+              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
               type="text"
             />
           </div>
@@ -52,8 +71,7 @@
             <label class="block text-gray-700 mb-1">Last Name</label>
             <input
               v-model="form.last_name"
-              :disabled="!isEditing"
-              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200 disabled:bg-gray-100"
+              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
               type="text"
             />
           </div>
@@ -68,13 +86,13 @@
             type="email"
           />
         </div>
-      </form>
 
-      <!-- Action Buttons -->
-      <div v-if="isEditing" class="flex justify-end gap-3 mt-6">
-        <Button @click="cancelEditing" label="Cancel" btn-color="#c70707" btntext="white" />
-        <Button label="Save Changes" @click="saveChanges" btn-color="#c6e7ff" btntext="black" />
-      </div>
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-3 mt-6">
+          <Button @click="cancelEditing" label="Cancel" btn-color="#c70707" btntext="white" />
+          <Button label="Save Changes" @click="saveChanges" btn-color="#c6e7ff" btntext="black" />
+        </div>
+      </form>
     </div>
 
     <div class="mt-4">
