@@ -34,11 +34,11 @@ export class TaskService {
   ) {}
 
   async create(dto: CreateTaskDto, actor: User): Promise<Task> {
-    // Fetch related user (assignee)
-    const assignee = await this.userRepo.findOne({
+    // Fetch related user
+    const user = await this.userRepo.findOne({
       where: { id: dto.userId },
     });
-    if (!assignee) {
+    if (!user) {
       throw new NotFoundException(`User with ID ${dto.userId} not found`);
     }
 
@@ -57,7 +57,7 @@ export class TaskService {
       t_priority: dto.t_priority,
       start_date: dto.start_date,
       due_date: dto.due_date,
-      user: assignee,
+      user,
       project,
     });
 
@@ -74,16 +74,14 @@ export class TaskService {
 
     // Save & send notification
     const notification = await this.notificationService.create({
-      userId: assignee.id,
+      userId: user.id,
       title: 'New Task Assigned',
-      message: `You have been assigned a new task "${savedTask.t_name}" in project "${project.p_name}". Due: ${savedTask.due_date}`,
+      message: `${savedTask.t_name}`,
+      // message: `You have been assigned a new task "${savedTask.t_name}" in project "${project.p_name}". Due: ${savedTask.due_date}`,
       read_status: false,
     });
 
-    this.notificationsGateway.sendNotification(
-      String(assignee.id),
-      notification,
-    );
+    this.notificationsGateway.sendNotification(String(user.id), notification);
 
     return savedTask;
   }
