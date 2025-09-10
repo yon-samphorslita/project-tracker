@@ -3,7 +3,7 @@ import { CreateNotificationDto } from './create-notification.dto';
 import { IsBoolean, IsOptional } from 'class-validator';
 
 export class UpdateNotificationDto extends PartialType(CreateNotificationDto) {
-    @IsBoolean()
-    @IsOptional()
-    read_status?: boolean;
+  @IsBoolean()
+  @IsOptional()
+  read_status?: boolean;
 }

@@ -8,7 +8,6 @@ import { promises } from 'dns';
 
 @Injectable()
 export class TeamService {
-
   constructor(
     @InjectRepository(Team)
     private teamRepository: Repository<Team>,
@@ -19,7 +18,7 @@ export class TeamService {
     return this.teamRepository.save(team);
   }
 
-// returns all teams, including their members & projects.
+  // returns all teams, including their members & projects.
   async findAll(): Promise<Team[]> {
     return this.teamRepository.find({ relations: ['members', 'projects'] });
   }
@@ -30,10 +29,10 @@ export class TeamService {
       relations: ['members', 'projects'],
     });
 
-    if (!team) { 
+    if (!team) {
       throw new NotFoundException(`Team with ID ${id} not found`);
     }
-    
+
     return team;
   }
 
@@ -45,5 +44,6 @@ export class TeamService {
 
   async remove(id: number): Promise<void> {
     const team = await this.findOne(id);
-    await this.teamRepository.remove(team);  }
+    await this.teamRepository.remove(team);
+  }
 }

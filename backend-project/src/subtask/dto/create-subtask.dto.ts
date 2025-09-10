@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsInt } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsInt,
+} from 'class-validator';
 import { Status } from 'src/enums/status.enum';
 
 export class CreateSubtaskDto {

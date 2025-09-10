@@ -5,34 +5,22 @@
 
   <div class="fixed top-[120px] left-[300px] w-[calc(100vw-300px)]">
     <Header />
-    <Button 
-      label="Create New Project" 
-      />
+    <Button label="Create New Project" />
 
     <!-- <notification/> -->
 
     <search />
 
+    <div style="w-full"></div>
+    <Form formTitle="Create Project" :fields="projectFields" endpoint="projects" />
 
-    <div style="w-full">
+    <Form formTitle="Create Task" :fields="taskFields" endpoint="tasks" />
 
-    </div>
-    <Form 
-      formTitle="Create Project" 
-      :fields="projectFields" 
-      endpoint="projects" />
-
-    <Form 
-      formTitle="Create Task" 
-      :fields="taskFields" 
-      endpoint="tasks" />
-
-    <Form 
-      formTitle="Create Subtask" 
-      :fields="subtaskFields" 
-      endpoint="subtask" /> 
-    <div class="fixed top-52 w-[calc(100vw-300px)] h-[calc(100vh-200px)] overflow-y-auto flex flex-col items-center xl:flex-row xl:justify-around xl:w-[calc(100vw-300px)] space-y-5">
-      <kanaban 
+    <Form formTitle="Create Subtask" :fields="subtaskFields" endpoint="subtask" />
+    <div
+      class="fixed top-52 w-[calc(100vw-300px)] h-[calc(100vh-200px)] overflow-y-auto flex flex-col items-center xl:flex-row xl:justify-around xl:w-[calc(100vw-300px)] space-y-5"
+    >
+      <kanaban
         :kanbantasks="Notstarted"
         :kanbanTaskNum="Notstarted.length"
         kanbanTaskStatus="Not started"
@@ -50,23 +38,22 @@
     </div>
   </div>
 
-
   <RouterView />
 </template>
 
 <script setup>
-  import { RouterView } from 'vue-router';
-  import sidebar from '@/components/sidebar.vue';
-  import Header from '@/components/header.vue';
-  import Button from '@/components/button.vue';
-  import search from '@/components/search.vue';
-  import Form from '@/components/form.vue';
-  import kanaban from '@/components/kanban.vue';
-  import notification from '@/components/notification.vue';
-  import profileimg from '@/assets/profile.jpg';
-  import { ref } from 'vue';
+import { RouterView } from 'vue-router'
+import sidebar from '@/components/sidebar.vue'
+import Header from '@/components/header.vue'
+import Button from '@/components/button.vue'
+import search from '@/components/search.vue'
+import Form from '@/components/form.vue'
+import kanaban from '@/components/kanban.vue'
+import notification from '@/components/notification.vue'
+import profileimg from '@/assets/profile.jpg'
+import { ref } from 'vue'
 
-  const showForm = ref(false);
+const showForm = ref(false)
 
 const Teams = [
   { id: 1, name: 'Team A' },

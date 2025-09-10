@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { TeamService } from './team.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
@@ -9,7 +17,7 @@ export class TeamController {
   constructor(private readonly teamService: TeamService) {}
 
   @Post()
-  create(@Body() createTeamDto: CreateTeamDto): Promise<Team>  {
+  create(@Body() createTeamDto: CreateTeamDto): Promise<Team> {
     return this.teamService.create(createTeamDto);
   }
 
@@ -24,7 +32,10 @@ export class TeamController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTeamDto: UpdateTeamDto): Promise<Team> {
+  update(
+    @Param('id') id: string,
+    @Body() updateTeamDto: UpdateTeamDto,
+  ): Promise<Team> {
     return this.teamService.update(+id, updateTeamDto);
   }
 

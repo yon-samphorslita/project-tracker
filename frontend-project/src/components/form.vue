@@ -108,6 +108,7 @@
 <script setup>
 import { ref, reactive, watch } from 'vue'
 import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   formTitle: { type: String, required: true },
@@ -122,7 +123,7 @@ const formData = reactive({})
 const showForm = ref(props.modelValue)
 const submitting = ref(false)
 const errors = reactive({})
-
+const authStore = useAuthStore()
 // Sync props.modelValue
 watch(
   () => props.modelValue,
@@ -184,7 +185,8 @@ function mapPayload() {
         t_priority: formData.priority || 'medium',
         start_date: formData.startDate || null,
         due_date: formData.dueDate || null,
-        project: props.initialData?.project_id || null,
+        projectId: formData.project || props.initialData?.project_id || null,
+        userId: authStore.user?.id,
       }
     case 'subtask':
       return { name: formData.title }

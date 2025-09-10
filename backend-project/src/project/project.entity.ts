@@ -52,9 +52,9 @@ export class Project {
   @OneToMany((type) => Task, (task) => task.project)
   tasks: Task[];
 
-  // @OneToMany((type) => Member, (member) => member.project)
-  // members: Member[];
+  @OneToMany((type) => Member, (member) => member.project)
+  members: Member[];
 
-    @ManyToOne(() => Team, (team) => team.projects, { onDelete: 'SET NULL' })
+  @ManyToOne(() => Team, (team) => team.projects, { onDelete: 'SET NULL' })
   team: Team;
 }

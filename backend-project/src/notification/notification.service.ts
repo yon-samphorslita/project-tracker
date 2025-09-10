@@ -9,16 +9,19 @@ import { User } from 'src/user/user.entity';
 @Injectable()
 export class NotificationService {
   constructor(
-    @InjectRepository(Notification) private notificationRepository: Repository<Notification>,
+    @InjectRepository(Notification)
+    private notificationRepository: Repository<Notification>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
-    
   ) {}
 
   async create(
     createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
-    const user = await this.userRepo.findOne({ where: { id: createNotificationDto.userId } });
-    if (!user) throw new Error(`User with ID ${createNotificationDto.userId} not found`);
+    const user = await this.userRepo.findOne({
+      where: { id: createNotificationDto.userId },
+    });
+    if (!user)
+      throw new Error(`User with ID ${createNotificationDto.userId} not found`);
 
     const notification = this.notificationRepository.create({
       title: createNotificationDto.title,
@@ -58,7 +61,6 @@ export class NotificationService {
       { read_status: true },
     );
   }
-
 
   async findAll(): Promise<Notification[]> {
     return this.notificationRepository.find();

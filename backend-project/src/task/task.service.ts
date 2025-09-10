@@ -80,7 +80,10 @@ export class TaskService {
       read_status: false,
     });
 
-    this.notificationsGateway.sendNotification(String(assignee.id), notification);
+    this.notificationsGateway.sendNotification(
+      String(assignee.id),
+      notification,
+    );
 
     return savedTask;
   }
@@ -134,11 +137,7 @@ export class TaskService {
     return this.taskRepository.find({ relations });
   }
 
-  async findOne(
-    id: number,
-    userId?: number,
-    isAdmin = false,
-  ): Promise<Task> {
+  async findOne(id: number, userId?: number, isAdmin = false): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { id },
       relations: ['user', 'project', 'subtasks'],

@@ -69,5 +69,4 @@ export class NotificationController {
   markAllAsRead(@Param('userId') userId: string) {
     return this.notificationService.markAllAsRead(+userId);
   }
-
 }

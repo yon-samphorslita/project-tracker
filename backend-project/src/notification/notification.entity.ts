@@ -11,7 +11,7 @@ import {
 export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
-  
+
   @Column()
   title: string;
 

@@ -10,7 +10,12 @@ import { NotificationModule } from 'src/notification/notification.module';
 import { ProjectModule } from '../project/project.module';
 import { ActivityModule } from 'src/activity/activity.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([Task, User, Project]), NotificationModule, ProjectModule, ActivityModule],
+  imports: [
+    TypeOrmModule.forFeature([Task, User, Project]),
+    NotificationModule,
+    ProjectModule,
+    ActivityModule,
+  ],
   providers: [TaskService],
   controllers: [TaskController],
   exports: [TaskService],

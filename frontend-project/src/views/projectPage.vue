@@ -280,7 +280,7 @@ function getSubtaskColor(status) {
 // Fetch subtasks
 async function fetchSubtasks(taskId) {
   try {
-    const res = await fetch(`http://localhost:3000/subtask/task/${taskId}`)
+    const res = await fetch(`http://localhost:3000/subtasks/task/${taskId}`)
     return await res.json()
   } catch {
     return []

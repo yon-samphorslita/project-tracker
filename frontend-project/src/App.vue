@@ -1,14 +1,13 @@
 <template>
   <div>
-      <!-- <notification/> -->
+    <!-- <notification/> -->
 
     <RouterView />
   </div>
 </template>
 
 <script setup>
-  import notification from '@/components/notification.vue';
-
+import notification from '@/components/notification.vue'
 </script>
 <style>
 body {
