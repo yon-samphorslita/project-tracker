@@ -61,7 +61,7 @@ export const useNotificationStore = defineStore('notification', {
       if (!this.userId) return;
 
       const res = await axios.get<NotificationPayload[]>(
-        `http://localhost:3000/notification/user/${this.userId}/unread`,
+        `http://localhost:3000/notifications/user/${this.userId}/unread`,
       );
 
       this.notifications = [
@@ -71,7 +71,7 @@ export const useNotificationStore = defineStore('notification', {
     },
 
     async markAsRead(id: number) {
-      await axios.patch(`http://localhost:3000/notification/${id}/read`);
+      await axios.patch(`http://localhost:3000/notifications/${id}/read`);
       this.notifications = this.notifications.map(n =>
         n.id === id ? { ...n, read_status: true } : n
       );
@@ -79,7 +79,7 @@ export const useNotificationStore = defineStore('notification', {
 
     async markAllAsRead() {
       if (!this.userId) return;
-      await axios.patch(`http://localhost:3000/notification/user/${this.userId}/read-all`);
+      await axios.patch(`http://localhost:3000/notifications/user/${this.userId}/read-all`);
       this.notifications = this.notifications.map(n => ({ ...n, read_status: true }));
     },
   },

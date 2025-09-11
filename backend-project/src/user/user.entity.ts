@@ -5,12 +5,13 @@ import {
   OneToMany,
   CreateDateColumn,
   Unique,
+  ManyToOne,
 } from 'typeorm';
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
 import { Role } from '../enums/role.enum';
 import { Notification } from '../notification/notification.entity';
-import { Member } from 'src/member/member.entity';
+import { Team } from 'src/team/team.entity';
 @Entity('users')
 @Unique(['email']) // Ensures that email is unique across users
 export class User {
@@ -50,6 +51,6 @@ export class User {
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
-  @OneToMany(() => Member, (member) => member.user)
-  members: Member[];
+  @ManyToOne(() => Team, (team) => team.members, { nullable: true } )
+  team: Team;
 }
