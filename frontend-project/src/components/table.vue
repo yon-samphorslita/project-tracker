@@ -59,6 +59,11 @@
               {{ formatDate ? formatDate(row[col.key]) : row[col.key] }}
             </template>
 
+            <!-- Progress Bar -->
+            <template v-else-if="col.key === 'progress'">
+<ProgressBar :completed="row.completed" :total="row.total" />
+            </template>
+
             <!-- Default -->
             <template v-else>
               {{ row[col.key] }}
@@ -74,7 +79,7 @@
 
 <script setup>
 import Status from '@/components/status.vue'
-
+import ProgressBar from '@/components/progressBar.vue'
 const props = defineProps({
   data: { type: Array, required: true },
   columns: { type: Array, required: true },

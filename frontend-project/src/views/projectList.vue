@@ -117,8 +117,9 @@ const tableColumns = [
   { key: 'status', label: 'Status' },
   { key: 'start_date', label: 'Start Date' },
   { key: 'due_date', label: 'Due Date' },
-  { key: 'icon', label: 'Assignee' },
+  { key: 'icon', label: 'PM' },
   { key: 'actions', label: 'Actions', slot: 'actions' },
+  { key: 'progress', label: 'Progress' },
 ]
 
 // Sort options
@@ -204,6 +205,8 @@ const mappedFilteredSortedProjects = computed(() =>
     start_date: p.start_date,
     due_date: p.due_date,
     icon: p.assignee?.avatar || null,
+    completed: getCompletedTasks(p.id),
+    total: getTotalTasks(p.id),
   })),
 )
 
