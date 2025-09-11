@@ -1,5 +1,5 @@
-import { Member } from 'src/member/member.entity';
 import { Project } from 'src/project/project.entity';
+import { User } from 'src/user/user.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('teams')
@@ -10,8 +10,11 @@ export class Team {
   @Column()
   name: string;
 
-  @OneToMany(() => Member, (member) => member.team)
-  members: Member[];
+  @OneToMany(() => User, (user) => user.team)
+  pms: User[];
+
+  @OneToMany(() => User, (user) => user.team)
+  members: User[];
 
   @OneToMany(() => Project, (project) => project.team)
   projects: Project[];

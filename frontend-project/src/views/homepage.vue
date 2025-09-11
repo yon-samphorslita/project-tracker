@@ -7,16 +7,32 @@
     <Header />
     <Button label="Create New Project" />
 
+    <!-- <button class="px-4 py-2 bg-blue-500 text-white rounded"
+      @click="showForm = true">
+      + Create Team
+    </button> -->
+
+    <TeamForm />
+
     <!-- <notification/> -->
 
     <search />
 
     <div style="w-full"></div>
-    <Form formTitle="Create Project" :fields="projectFields" endpoint="projects" />
+    <!-- <Form 
+      formTitle="Create Project" 
+      :fields="projectFields" 
+      endpoint="projects" /> -->
 
-    <Form formTitle="Create Task" :fields="taskFields" endpoint="tasks" />
+    <!-- <Form 
+      formTitle="Create Task" 
+      :fields="taskFields" 
+      endpoint="tasks" /> -->
 
-    <Form formTitle="Create Subtask" :fields="subtaskFields" endpoint="subtask" />
+    <!-- <Form 
+      formTitle="Create Subtask" 
+      :fields="subtaskFields" 
+      endpoint="subtask" />  -->
     <div
       class="fixed top-52 w-[calc(100vw-300px)] h-[calc(100vh-200px)] overflow-y-auto flex flex-col items-center xl:flex-row xl:justify-around xl:w-[calc(100vw-300px)] space-y-5"
     >
@@ -50,6 +66,7 @@ import search from '@/components/search.vue'
 import Form from '@/components/form.vue'
 import kanaban from '@/components/kanban.vue'
 import notification from '@/components/notification.vue'
+import TeamForm from '@/components/teamform.vue'
 import profileimg from '@/assets/profile.jpg'
 import { ref } from 'vue'
 

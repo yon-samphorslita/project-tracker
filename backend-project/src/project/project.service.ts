@@ -46,13 +46,13 @@ export class ProjectService {
   async findAll(userId?: number, isAdmin = false): Promise<Project[]> {
     if (isAdmin || !userId) {
       return this.projectRepository.find({
-        relations: ['members', 'members.user', 'user'],
+        relations: ['team', 'team.members', 'team.pms', 'user'],
       });
     }
 
     return this.projectRepository.find({
-      where: [{ user: { id: userId } }, { members: { user: { id: userId } } }],
-      relations: ['members', 'members.user', 'user'],
+      where: [{ user: { id: userId } }, { team: { members: { id: userId } } }],
+      relations: ['team', 'team.members', 'team.pms', 'user'],
     });
   }
 
@@ -67,9 +67,16 @@ export class ProjectService {
         ? { id }
         : [
             { id, user: { id: userId } },
-            { id, members: { user: { id: userId } } },
+            { id, team: { members: { id: userId } } },
           ],
-      relations: ['members', 'members.user', 'user', 'tasks', 'tasks.subtasks'],
+      relations: [
+        'team',
+        'team.members',
+        'team.pms',
+        'user',
+        'tasks',
+        'tasks.subtasks',
+      ],
     });
 
     if (!project) {

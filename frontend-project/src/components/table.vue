@@ -61,7 +61,7 @@
 
             <!-- Progress Bar -->
             <template v-else-if="col.key === 'progress'">
-<ProgressBar :completed="row.completed" :total="row.total" />
+              <ProgressBar :completed="row.completed" :total="row.total" />
             </template>
 
             <!-- Default -->

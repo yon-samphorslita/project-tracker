@@ -5,13 +5,14 @@ import {
   OneToMany,
   CreateDateColumn,
   Unique,
+  ManyToOne,
   DeleteDateColumn,
 } from 'typeorm';
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
 import { Role } from '../enums/role.enum';
 import { Notification } from '../notification/notification.entity';
-import { Member } from 'src/member/member.entity';
+import { Team } from 'src/team/team.entity';
 import { ActivityLog } from 'src/activity/activity.entity';
 // import { Event } from 'src/event/event.entity';
 @Entity('users')
@@ -69,8 +70,8 @@ export class User {
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
-  @OneToMany(() => Member, (member) => member.user)
-  members: Member[];
+  @ManyToOne(() => Team, (team) => team.members, { nullable: true })
+  team: Team;
 
   @OneToMany(() => ActivityLog, (activity) => activity.user)
   activities: ActivityLog[];
