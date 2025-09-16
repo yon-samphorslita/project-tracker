@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/user.entity';
 import { JwtService } from '@nestjs/jwt';
@@ -9,7 +9,7 @@ import { EmailService } from 'src/mail/email.service';
 
 @Injectable()
 export class AuthService {
-  private blacklistedTokens = new Set<string>(); // for demo, use Redis in production
+  private blacklistedTokens = new Set<string>();
 
   constructor(
     private readonly userService: UserService,
@@ -19,10 +19,19 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findOneByEmail(email, true);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      return user;
+
+    if (!user) return null;
+
+    if (!user.active) {
+      throw new UnauthorizedException(
+        'Your account is inactive. Please contact the administrator.',
+      );
     }
-    return null;
+
+    const passwordValid = await bcrypt.compare(password, user.password);
+    if (!passwordValid) return null;
+
+    return user;
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {

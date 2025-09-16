@@ -59,6 +59,7 @@
                 : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
             "
             v-model="formData[field.model]"
+            :min="field.model === 'dueDate' ? formData.startDate : undefined"
           />
 
           <!-- Select input -->

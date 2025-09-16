@@ -10,6 +10,17 @@
         <div class="flex flex-col gap-4">
           <h1 class="text-2xl font-bold">User Management</h1>
 
+          <!-- Overview + Pie -->
+          <div class="flex w-full justify-between gap-4">
+            <div class="grid grid-cols-2 gap-4 flex-1">
+              <OverviewCard title="Total Users" :value="totalUsers" />
+              <OverviewCard title="Active Users" :value="activeUsers" />
+              <OverviewCard title="Inactive Users" :value="inactiveUsers" />
+            </div>
+            <!-- 👇 chart now shows users by role -->
+            <PieChart :data="roleData" :height="280" class="w-[600px]" />
+          </div>
+
           <!-- Actions -->
           <div class="flex justify-between items-center w-full">
             <Button label="+ New User" btn-color="#C6E7FF" btntext="black" @click="openForm" />
@@ -71,10 +82,14 @@ import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'
 import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
+import OverviewCard from '@/components/overviewCard.vue'
+import PieChart from '@/components/pieChart.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
+
 const authStore = useAuthStore()
 const userStore = useUserStore()
+
 const isReady = ref(false)
 const showForm = ref(false)
 const editUserData = ref(null)
@@ -144,6 +159,23 @@ const mappedUsers = computed(() =>
     last_name: u.last_name,
   })),
 )
+
+// Overview stats
+const totalUsers = computed(() => mappedUsers.value.length)
+const activeUsers = computed(() => mappedUsers.value.filter((u) => u.active).length)
+const inactiveUsers = computed(() => totalUsers.value - activeUsers.value)
+
+// Users by role (for chart)
+const roleData = computed(() => {
+  const counts = {}
+  mappedUsers.value.forEach((u) => {
+    counts[u.role] = (counts[u.role] || 0) + 1
+  })
+  return Object.entries(counts).map(([role, value]) => ({
+    type: role,
+    value,
+  }))
+})
 
 const filteredUsers = computed(() => {
   let result = mappedUsers.value

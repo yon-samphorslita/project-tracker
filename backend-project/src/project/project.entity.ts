@@ -5,6 +5,8 @@ import {
   OneToMany,
   CreateDateColumn,
   ManyToOne,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Status } from '../enums/status.enum';
 import { Priority } from '../enums/priority.enum';
@@ -53,4 +55,12 @@ export class Project {
 
   @ManyToOne(() => Team, (team) => team.projects, { onDelete: 'SET NULL' })
   team: Team;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateDates() {
+    if (this.start_date && this.due_date && this.due_date < this.start_date) {
+      throw new Error('Due date cannot be before start date.');
+    }
+  }
 }

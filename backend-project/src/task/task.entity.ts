@@ -5,6 +5,8 @@ import {
   OneToMany,
   ManyToOne,
   CreateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Status } from '../enums/status.enum';
 import { Priority } from '../enums/priority.enum';
@@ -57,4 +59,12 @@ export class Task {
 
   // @OneToMany(() => Event, (event) => event.task)
   // events: Event[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateDates() {
+    if (this.start_date && this.due_date && this.due_date < this.start_date) {
+      throw new Error('Due date cannot be before start date.');
+    }
+  }
 }
