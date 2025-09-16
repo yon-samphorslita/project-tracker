@@ -156,11 +156,30 @@ async function saveChanges() {
   }
 }
 
-function handleImageUpload(e) {
+async function handleImageUpload(e) {
   const file = e.target.files[0]
-  if (file) {
-    form.value.img_url = URL.createObjectURL(file)
-    // TODO: Upload image to backend . localstorage
+  if (!file) return
+
+  // Show a local preview immediately
+  form.value.img_url = URL.createObjectURL(file)
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // Upload to your backend NestJS MinIO endpoint
+    const response = await fetch('http://localhost:3000/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const data = await response.json()
+
+    // Replace local preview with the real public URL
+    form.value.img_url = data.url
+  } catch (err) {
+    console.error('Failed to upload image', err)
+    alert('Image upload failed')
   }
 }
 

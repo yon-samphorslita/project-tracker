@@ -11,6 +11,8 @@ import { SubtaskModule } from './subtask/subtask.module';
 import { NotificationModule } from './notification/notification.module';
 import { TeamModule } from './team/team.module';
 import { ActivityModule } from './activity/activity.module';
+import { MinioModule } from './minio/minio.module';
+import { UploadController } from './upload/upload.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -32,8 +34,9 @@ import { ActivityModule } from './activity/activity.module';
     NotificationModule,
     TeamModule,
     ActivityModule,
+    MinioModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UploadController],
   providers: [AppService],
 })
 export class AppModule {}

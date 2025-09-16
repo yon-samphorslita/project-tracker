@@ -5,7 +5,7 @@
       menu_item="Calendar"
       :username="`${auth.user?.first_name || ''} ${auth.user?.last_name || ''}`.trim()"
       :role="auth.user?.role"
-      :profile="auth.user?.profile || profileFallback"
+      :profile="auth.user?.img_url || profileFallback"
     />
     <div class="container mt-32 ml-[320px] w-3/4 px-1">
       <slot />
