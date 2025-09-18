@@ -11,27 +11,38 @@ import SettingsLayout from '@/views/settingsLayout.vue'
 import CalendarPage from '@/views/calendarPage.vue'
 import UserPage from '@/views/userPage.vue'
 import { useAuthStore } from '@/stores/auth'
+import TeamList from '@/views/teamList.vue'
+import TeamEditPage from '@/views/teamEditPage.vue'
+import TeamDetail from '@/views/teamDetail.vue'
+import UserProfile from '@/views/userProfile.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
-  { path: '/home', component: Home, meta: { requiresAuth: true } },
+  { path: '/home', name: 'Home',component: Home, meta: { requiresAuth: true } },
   { path: '/login', component: AuthPage, name: 'Login' },
   { path: '/change-password', component: ChangePassword, meta: { requiresAuth: true } },
   { path: '/forgot-password', component: ForgotPassword },
-  { path: '/projects', component: ProjectList, meta: { requiresAuth: true } },
-  { path: '/project/:id', component: ProjectPage, props: true, meta: { requiresAuth: true } },
+  { path: '/projects', component: ProjectList, meta: { requiresAuth: true, title: 'Projects' } },
+  { path: '/project/:id', component: ProjectPage, props: true, meta: { requiresAuth: true, title: 'Projects' } },
   {
     path: '/settings',
+    name: 'Settings',
     component: SettingsLayout,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, title:'Settings' },
     children: [
       { path: 'profile', component: SettingsProfile },
       { path: 'activity-logs', component: ActivityLogs },
     ],
   },
-  { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true } },
+  { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true, title: 'Calendar' } },
   { path: '/user', component: UserPage, meta: { requiresAuth: true } },
+  { path: '/user/profile/:id', component: UserProfile, meta: { requiresAuth: true , title: 'Teams'} },
+
+  { path: '/teams', component: TeamList, meta: { requiresAuth: true, title:'Teams' } },
+  { path: '/teams/:id', component: TeamDetail, meta: { requiresAuth: true, title:'Teams' } },
+  { path: '/teams/:id/edit', component: TeamEditPage, meta: { requiresAuth: true, title:'Teams' } }
 ]
+  
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

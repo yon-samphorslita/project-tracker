@@ -1,6 +1,6 @@
 import { Project } from 'src/project/project.entity';
 import { User } from 'src/user/user.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('teams')
 export class Team {
@@ -10,7 +10,8 @@ export class Team {
   @Column()
   name: string;
 
-  @OneToMany(() => User, (user) => user.team)
+  @ManyToMany(() => User, (user) => user.team)
+  @JoinTable({ name: 'team_pms' })
   pms: User[];
 
   @OneToMany(() => User, (user) => user.team)

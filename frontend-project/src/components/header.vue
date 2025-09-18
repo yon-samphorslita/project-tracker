@@ -1,7 +1,7 @@
 <template>
-  <div class="fixed top-0 left-[250px] w-[calc(100vw-250px)] h-[91px] z-50 bg-white">
+  <div class="fixed left-[250px] w-[calc(100vw-250px)] h-[91px] z-50 bg-white">
     <div class="flex items-center h-full mx-6 md:mx-12">
-      <span class="ml-5 text-black text-xl md:text-2xl font-bold">{{ menu_item }}</span>
+      <span class="ml-5 text-black text-xl md:text-2xl font-bold">{{ currentPageTitle }}</span>
 
       <div class="flex items-center justify-end w-full">
         <div class="relative flex flex-col items-end">
@@ -21,6 +21,13 @@
                 <circle cx="12" cy="3" r="1" />
               </g>
             </svg>
+
+            <div
+              v-if="unreadCount > 0"
+              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full"
+            >
+              {{ unreadCount }} 
+            </div>
           </div>
 
           <!-- Notification dropdown -->
@@ -47,11 +54,13 @@
           @click="gotoProfile"
         >
           <div class="w-8 h-8 rounded-full overflow-hidden mr-2">
-            <img :src="profile" alt="Profile Image" />
+            <img :src="user?.img_url" alt="Profile Image" />
           </div>
           <div class="flex flex-col truncate">
-            <span class="text-sm font-medium truncate">{{ username }}</span>
-            <span class="text-xs text-gray-500 truncate">{{ role }}</span>
+            <span class="text-sm font-medium truncate">
+              {{ user ? `${user.first_name} ${user.last_name}` : '' }}
+            </span>
+            <span class="text-xs text-gray-500 truncate">{{ user?.role }}</span>
           </div>
         </div>
       </div>
@@ -61,37 +70,39 @@
 </template>
 
 <script setup lang="ts">
-import profileimg from '@/assets/profile.jpg'
-import { useRouter } from 'vue-router'
+// import profileimg from '@/assets/profile.jpg'
+import { useRoute, useRouter } from 'vue-router'
 import Notification from '@/components/notification.vue'
 import { useNotificationStore } from '@/stores/notification'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useUserStore } from '@/stores/user'
 const router = useRouter()
 
-defineProps({
-  menu_item: {
-    type: String,
-    default: 'Dashboard',
-  },
-  username: {
-    type: String,
-    default: 'Megan Sea',
-  },
-  role: {
-    type: String,
-    default: 'Project Manager',
-  },
-  profile: {
-    type: String,
-    default: profileimg,
-  },
+const route = useRoute()
+const userStore = useUserStore()
+
+// fetch User data from Pinia store 
+const user = computed(() => userStore.currentUser)
+
+onMounted(() => {
+  if (!user.value) {
+    userStore.fetchCurrentUser()
+  }
 })
+
+// fetch Menu Item from route name 
+const currentPageTitle = computed(() => {
+  return route.meta.title  
+})
+
 function gotoProfile() {
   router.push('/settings/profile')
   console.log('Navigating to profile page...')
 }
+// Notification logic
 const showNotification = ref(false)
 const store = useNotificationStore()
+const unreadCount = computed(() => store.notifications.filter(n => !n.read_status).length)
 
 const toggleNotification = () => {
   showNotification.value = !showNotification.value

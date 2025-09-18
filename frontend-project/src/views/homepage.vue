@@ -3,8 +3,8 @@
 <template>
   <sidebar :items="menuItems" />
 
-  <div class="fixed top-[120px] left-[300px] w-[calc(100vw-300px)]">
-    <Header />
+  <div class="fixed  left-[300px] w-[calc(100vw-300px)]">
+    <!-- <Header /> -->
     <Button label="Create New Project" />
 
     <!-- <button class="px-4 py-2 bg-blue-500 text-white rounded"
