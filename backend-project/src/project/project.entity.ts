@@ -13,6 +13,7 @@ import { Priority } from '../enums/priority.enum';
 import { Task } from 'src/task/task.entity';
 import { User } from 'src/user/user.entity';
 import { Team } from 'src/team/team.entity';
+import { Event } from 'src/event/event.entity';
 @Entity('projects')
 export class Project {
   @PrimaryGeneratedColumn()
@@ -56,6 +57,8 @@ export class Project {
   @ManyToOne(() => Team, (team) => team.projects, { onDelete: 'SET NULL' })
   team: Team;
 
+  @OneToMany(() => Event, (event) => event.project)
+  events: Event[];
   @BeforeInsert()
   @BeforeUpdate()
   validateDates() {

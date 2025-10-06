@@ -49,8 +49,8 @@
 
           <!-- Date input -->
           <input
-            v-else-if="field.type === 'date'"
-            type="date"
+            v-else-if="field.type === 'date' || field.type === 'datetime-local'"
+            :type="field.type"
             :id="field.label"
             class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 focus:outline-none"
             :class="
@@ -76,7 +76,7 @@
           >
             <option disabled selected>Select {{ field.label }}</option>
             <option v-for="option in field.options" :key="option.id" :value="option.id">
-              {{ option.name }}
+              {{ option.name || option.p_name }}
             </option>
           </select>
 
@@ -187,6 +187,16 @@ function mapPayload() {
         start_date: formData.startDate || null,
         due_date: formData.dueDate || null,
         projectId: formData.project || props.initialData?.project_id || null,
+        userId: authStore.user?.id,
+      }
+    case 'events':
+      return {
+        e_title: formData.title,
+        e_description: formData.description,
+        start_date: formData.startDate ? new Date(formData.startDate) : null,
+        end_date: formData.endDate ? new Date(formData.endDate) : null,
+        location: formData.location || '',
+        projectId: formData.projectId || null,
         userId: authStore.user?.id,
       }
     case 'subtask':

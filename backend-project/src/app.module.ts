@@ -8,6 +8,7 @@ import { TaskModule } from './task/task.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { SubtaskModule } from './subtask/subtask.module';
+import { EventModule } from './event/event.module';
 import { NotificationModule } from './notification/notification.module';
 import { TeamModule } from './team/team.module';
 import { ActivityModule } from './activity/activity.module';
@@ -31,6 +32,7 @@ import { UploadController } from './upload/upload.controller';
     UserModule,
     AuthModule,
     SubtaskModule,
+    EventModule,
     NotificationModule,
     TeamModule,
     ActivityModule,

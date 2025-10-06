@@ -63,7 +63,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { startOfMonth, endOfMonth, addDays, format, differenceInMinutes } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
-
+import { useEventStore } from '@/stores/event'
 // Props
 const props = defineProps({ monthStartDate: { type: Date, default: () => new Date() } })
 
@@ -85,22 +85,23 @@ const hours = Array.from({ length: 24 }).map((_, i) => {
 
 // Task store
 const taskStore = useTaskStore()
-
+const eventStore = useEventStore()
 // Reactive current time
 const currentTime = ref(new Date())
 let timer
 onMounted(async () => {
-  await taskStore.fetchTasks()
+  await Promise.all([eventStore.fetchEvents(), taskStore.fetchTasks()])
   timer = setInterval(() => (currentTime.value = new Date()), 60000)
 })
 onUnmounted(() => clearInterval(timer))
 
-// --- Helpers ---
 function getItemsForDay(dayDate) {
   const dayStart = new Date(format(dayDate, 'yyyy-MM-dd') + 'T00:00:00')
   const dayEnd = new Date(format(dayDate, 'yyyy-MM-dd') + 'T23:59:59')
 
-  return taskStore.tasks
+  // Tasks for the day
+  const taskItems = taskStore.tasks
+    .filter((t) => t.start_date && t.due_date)
     .filter((t) => {
       const start = new Date(t.start_date)
       const end = new Date(t.due_date)
@@ -115,6 +116,26 @@ function getItemsForDay(dayDate) {
         endTime: endTime > dayEnd ? dayEnd : endTime,
       }
     })
+
+  // Events for the day
+  const eventItems = eventStore.events
+    .filter((e) => e.start_date)
+    .filter((e) => {
+      const start = new Date(e.start_date)
+      const end = e.end_date ? new Date(e.end_date) : start
+      return end > dayStart && start < dayEnd
+    })
+    .map((e) => {
+      const startTime = new Date(e.start_date)
+      const endTime = e.end_date ? new Date(e.end_date) : startTime
+      return {
+        ...e,
+        startTime: startTime < dayStart ? dayStart : startTime,
+        endTime: endTime > dayEnd ? dayEnd : endTime,
+      }
+    })
+
+  return [...taskItems, ...eventItems] // Merge tasks + events
 }
 
 function formatTimeRange(item) {

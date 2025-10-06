@@ -13,7 +13,7 @@ import { Priority } from '../enums/priority.enum';
 import { Project } from 'src/project/project.entity';
 import { User } from 'src/user/user.entity';
 import { Subtask } from 'src/subtask/subtask.entity';
-// import { Event } from 'src/event/event.entity';
+import { Event } from 'src/event/event.entity';
 @Entity('tasks')
 export class Task {
   @PrimaryGeneratedColumn()
@@ -57,8 +57,8 @@ export class Task {
   @OneToMany(() => Subtask, (subtask) => subtask.task)
   subtasks: Subtask[];
 
-  // @OneToMany(() => Event, (event) => event.task)
-  // events: Event[];
+  @OneToMany(() => Event, (event) => event.task)
+  events: Event[];
 
   @BeforeInsert()
   @BeforeUpdate()
