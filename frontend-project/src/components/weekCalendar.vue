@@ -1,5 +1,5 @@
 <template>
-  <div class="min-w-[780px] max-w-[0px] overflow-x-auto border h-[800px] rounded-md">
+  <div class="min-w-[740px] max-w-[0px] overflow-x-auto border h-[800px] rounded-md">
     <!-- Inner grid with dynamic width -->
     <div class="min-w-max relative" :style="{ width: `${monthDays.length * 80 + 80}px` }">
       <!-- Header Row (sticky) -->

@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-h-screen overflow-auto border rounded-md relative flex-1 min-w-[780px]">
+  <div class="w-full max-h-screen overflow-auto border rounded-md relative flex-1 min-w-[740px]">
     <!-- Header -->
     <div class="sticky top-0 z-20 bg-white border-b">
       <div class="ml-2 my-2 font-semibold text-lg">
