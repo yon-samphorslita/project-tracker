@@ -1,46 +1,37 @@
 <template>
   <div class="border border-gray-700/80 rounded-md">
     <div class="p-6 flex flex-col gap-6">
-      <!-- First Row -->
+      <!-- Header Row -->
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
-          <div class="flex flex-col gap-1">
-            <div class="text-lg font-semibold text-gray-900">
-              {{ name || 'Project Name' }}
-            </div>
-            <div class="text-gray-600">
-              {{ detail || 'Detail' }}
-            </div>
+        <div class="flex flex-col gap-1">
+          <div class="text-lg font-semibold text-gray-900">
+            {{ name || 'Project Name' }}
           </div>
         </div>
         <Status :status="status || 'not started'" />
       </div>
 
-      <!-- Dashed Line -->
       <div class="border-t border-dashed border-gray-700/80"></div>
 
-      <!-- Second Row -->
+      <!-- Info Row -->
       <div class="flex justify-between items-center px-2">
         <DescriptionLabel label="Start Date" :description="formatDate(startdate)" />
         <DescriptionLabel label="End Date" :description="formatDate(enddate)" />
-        <DescriptionLabel label="Progress" :description="formatDate(startdate)" />
-        <DescriptionLabel label="Members" :description="formatDate(startdate)" />
+        <DescriptionLabel label="Progress">
+          <ProgressBar :completed="completedTasks" :total="totalTasks" />
+        </DescriptionLabel>
+        <DescriptionLabel label="Members" :description="project?.members || 'None'" />
       </div>
 
-      <!-- Dashed Line -->
       <div class="border-t border-dashed border-gray-700/80"></div>
 
       <!-- Description -->
       <div class="px-2 text-gray-700">
-        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has
-        been the industry's standard dummy text ever since the 1500s, when an unknown printer took a
-        galley of type and scrambled it to make a type specimen book. It has survived not only five
-        centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
+        {{ detail || 'No description provided.' }}
       </div>
     </div>
 
-    <!-- Button -->
+    <!-- View Button -->
     <button
       @click="goToProjectPage"
       class="w-full border-t border-gray-700/80 py-2 text-gray-700 hover:bg-gray-100 transition"
@@ -51,14 +42,18 @@
 </template>
 
 <script setup>
+import { computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useTaskStore } from '@/stores/task'
+import { storeToRefs } from 'pinia'
+
 import Status from './status.vue'
 import DescriptionLabel from './descriptionLabel.vue'
-import { useRouter } from 'vue-router'
+import ProgressBar from './progressBar.vue'
 
 const props = defineProps({
   name: String,
   detail: String,
-  task: Object,
   startdate: String,
   enddate: String,
   status: String,
@@ -66,19 +61,35 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const taskStore = useTaskStore()
+const { tasks } = storeToRefs(taskStore)
+
+// Fetch tasks whenever project changes
+watch(
+  () => props.project,
+  async (newProject) => {
+    if (!newProject?.id) return
+    taskStore.tasks = [] // reset previous tasks
+    await taskStore.fetchTasksByProject(newProject.id)
+  },
+  { immediate: true },
+)
+
+const projectTasks = computed(() => tasks.value.filter((t) => t.project?.id === props.project?.id))
+
+const totalTasks = computed(() => projectTasks.value.length)
+
+const completedTasks = computed(
+  () => projectTasks.value.filter((t) => t.t_status?.toLowerCase() === 'completed').length,
+)
 
 function goToProjectPage() {
-  router.push(`/project/${props.project.id}`)
+  if (props.project?.id) router.push(`/project/${props.project.id}`)
 }
 
-// Format date to dd MMM, yyyy
 function formatDate(dateStr) {
   if (!dateStr) return 'TBD'
   const d = new Date(dateStr)
-  return d.toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+  return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 </script>

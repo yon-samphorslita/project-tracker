@@ -8,7 +8,7 @@ export const useUserStore = defineStore(
   'user',
   () => {
     const users = ref([])
-
+    const currentUser = ref(null)
     async function fetchUsers() {
       try {
         const token = localStorage.getItem('token')
@@ -19,6 +19,34 @@ export const useUserStore = defineStore(
         console.log('Fetched users:', users.value)
       } catch (err) {
         console.error('Error fetching users:', err)
+      }
+    }
+
+    // Fetch logged-in user profile
+    async function fetchCurrentUser() {
+      try {
+        const token = localStorage.getItem('token')
+        const res = await axios.get(`${API_BASE_URL}/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        currentUser.value = res.data
+        console.log('Fetched current user:', currentUser.value)
+      } catch (err) {
+        console.error('Error fetching current user:', err)
+      }
+    }
+
+    // Fetch a user by ID
+    async function fetchUserById(id) {
+      try {
+        const token = localStorage.getItem('token')
+        const res = await axios.get(`${API_BASE_URL}/users/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        return res.data // returns only that user
+      } catch (err) {
+        console.error(`Error fetching user ${id}:`, err)
+        return null
       }
     }
 
@@ -72,6 +100,9 @@ export const useUserStore = defineStore(
       createUser,
       updateUser,
       deleteUser,
+      fetchCurrentUser,
+      currentUser,
+      fetchUserById
     }
   },
   {

@@ -3,8 +3,10 @@
     <!-- Inner grid with dynamic width -->
     <div class="min-w-max relative" :style="{ width: `${monthDays.length * 80 + 80}px` }">
       <!-- Header Row (sticky) -->
-      <div class="grid grid-cols-[80px_repeat(var(--cols),80px)] sticky top-0 z-20 bg-white border-b"
-           :style="{ '--cols': monthDays.length }">
+      <div
+        class="grid grid-cols-[80px_repeat(var(--cols),80px)] sticky top-0 z-20 bg-white border-b"
+        :style="{ '--cols': monthDays.length }"
+      >
         <div class="p-2 bg-white sticky left-0 z-30 border-r"></div>
         <div v-for="day in monthDays" :key="day.date" class="p-2 border-l text-center">
           {{ format(day.date, 'EEE dd') }}
@@ -12,24 +14,40 @@
       </div>
 
       <!-- Hours + Days -->
-      <div class="grid grid-cols-[80px_repeat(var(--cols),80px)]"
-           :style="{ '--cols': monthDays.length }">
+      <div
+        class="grid grid-cols-[80px_repeat(var(--cols),80px)]"
+        :style="{ '--cols': monthDays.length }"
+      >
         <!-- Hours column (sticky) -->
         <div class="flex flex-col sticky left-0 z-10 border-r bg-white">
-          <div v-for="hour in hours" :key="hour" class="h-16 border-b text-sm text-gray-500 flex items-center justify-end mr-1">
+          <div
+            v-for="hour in hours"
+            :key="hour"
+            class="h-16 border-b text-sm text-gray-500 flex items-center justify-end mr-1"
+          >
             {{ hour }}
           </div>
         </div>
 
         <!-- Days columns -->
-        <div v-for="day in monthDays" :key="day.date" class="relative border-l bg-[rgba(198,231,255,0.3)]">
+        <div
+          v-for="day in monthDays"
+          :key="day.date"
+          class="relative border-l bg-[rgba(198,231,255,0.3)]"
+        >
           <div v-for="hour in hours" :key="hour" class="h-16 border-b"></div>
 
           <!-- Tasks -->
-          <div v-for="item in getItemsForDay(day.date)" :key="item.id"
-               class="absolute left-1 right-1 bg-white rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
-               :style="getItemStyle(item)">
-            <span class="block w-full h-[3px] rounded-sm mb-1" :style="{ backgroundColor: getColor(item) }"></span>
+          <div
+            v-for="item in getItemsForDay(day.date)"
+            :key="item.id"
+            class="absolute left-1 right-1 bg-white rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
+            :style="getItemStyle(item)"
+          >
+            <span
+              class="block w-full h-[3px] rounded-sm mb-1"
+              :style="{ backgroundColor: getColor(item) }"
+            ></span>
             <div>
               <div class="font-semibold">{{ item.e_title || item.t_name }}</div>
               <div class="text-gray-500 text-[10px]">{{ formatTimeRange(item) }}</div>
@@ -73,7 +91,7 @@ const currentTime = ref(new Date())
 let timer
 onMounted(async () => {
   await taskStore.fetchTasks()
-  timer = setInterval(() => currentTime.value = new Date(), 60000)
+  timer = setInterval(() => (currentTime.value = new Date()), 60000)
 })
 onUnmounted(() => clearInterval(timer))
 
@@ -83,12 +101,12 @@ function getItemsForDay(dayDate) {
   const dayEnd = new Date(format(dayDate, 'yyyy-MM-dd') + 'T23:59:59')
 
   return taskStore.tasks
-    .filter(t => {
+    .filter((t) => {
       const start = new Date(t.start_date)
       const end = new Date(t.due_date)
       return end > dayStart && start < dayEnd
     })
-    .map(t => {
+    .map((t) => {
       const startTime = new Date(t.start_date)
       const endTime = new Date(t.due_date)
       return {

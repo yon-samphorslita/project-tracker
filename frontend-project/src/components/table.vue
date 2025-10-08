@@ -6,50 +6,43 @@
           <th
             v-for="col in columns"
             :key="col.key"
-            @click="sortBy(col.key)"
-            class="bg-[#C6E7FF] cursor-pointer select-none px-4 py-2 text-left border-t border-b border-gray-200"
+            class="bg-[#C6E7FF] px-4 py-2 text-left border-t border-b border-gray-200"
           >
             {{ col.label }}
-            <span v-if="sortColumn === col.key">
-              {{ sortDirection === 'asc' ? '▲' : '▼' }}
-            </span>
           </th>
         </tr>
       </thead>
 
       <tbody>
-        <tr v-for="(row, rowIndex) in filteredData" :key="rowIndex">
+        <tr v-for="(row, rowIndex) in data" :key="row.id || rowIndex">
           <td
             v-for="col in columns"
             :key="col.key"
             class="px-4 py-2 text-left border-t border-b border-gray-200"
           >
-            <!-- Actions Column -->
+            <!-- Actions slot -->
             <template v-if="col.slot === 'actions'">
               <slot name="actions" :row="row"></slot>
             </template>
 
-            <!-- Priority -->
+            <!-- Priority, Status, Active -->
             <template v-else-if="col.key === 'priority'">
               <Status :priority="row[col.key]" />
             </template>
-
-            <!-- Status -->
             <template v-else-if="col.key === 'status'">
               <Status :status="row[col.key]" />
             </template>
-            <!-- Active Column -->
             <template v-else-if="col.key === 'active'">
               <Status :active="row[col.key]" />
             </template>
 
-            <!-- Assignee / Avatar -->
+            <!-- Icon / Avatar -->
             <template v-else-if="col.key === 'icon'">
               <div class="flex items-center">
                 <img
                   v-if="row[col.key]"
                   :src="row[col.key]"
-                  alt="assignee"
+                  alt="avatar"
                   class="w-8 h-8 rounded-full object-cover border-2 border-gray-300"
                 />
                 <div
@@ -66,65 +59,32 @@
               {{ formatDate ? formatDate(row[col.key]) : row[col.key] }}
             </template>
 
+            <!-- Progress Bar -->
+            <template v-else-if="col.key === 'progress'">
+              <ProgressBar :completed="row.completed" :total="row.total" />
+            </template>
+
             <!-- Default -->
             <template v-else>
-              <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
-                {{ row[col.key] }}
-              </slot>
+              {{ row[col.key] }}
             </template>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <div v-if="!filteredData.length" class="text-center text-gray-500 mt-2">No data found</div>
+    <div v-if="!data.length" class="text-center text-gray-500 mt-2">No data found</div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
 import Status from '@/components/status.vue'
-
+import ProgressBar from '@/components/progressBar.vue'
 const props = defineProps({
   data: { type: Array, required: true },
   columns: { type: Array, required: true },
-  formatDate: { type: Function, required: false },
+  formatDate: { type: Function, default: null },
 })
-
-const searchQuery = ref('')
-const sortColumn = ref(null)
-const sortDirection = ref('asc')
-
-const filteredData = computed(() => {
-  let result = [...props.data]
-
-  if (searchQuery.value) {
-    result = result.filter((row) =>
-      Object.values(row).join(' ').toLowerCase().includes(searchQuery.value.toLowerCase()),
-    )
-  }
-
-  if (sortColumn.value) {
-    result.sort((a, b) => {
-      const valA = a[sortColumn.value]
-      const valB = b[sortColumn.value]
-      if (valA < valB) return sortDirection.value === 'asc' ? -1 : 1
-      if (valA > valB) return sortDirection.value === 'asc' ? 1 : -1
-      return 0
-    })
-  }
-
-  return result
-})
-
-function sortBy(col) {
-  if (sortColumn.value === col) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortColumn.value = col
-    sortDirection.value = 'asc'
-  }
-}
 
 function getInitials(name) {
   if (!name) return ''

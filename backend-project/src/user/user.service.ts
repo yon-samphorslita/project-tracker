@@ -21,7 +21,7 @@ export class UserService {
 
   // Find all users
   async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+    return this.userRepository.find({relations: ['team']});
   }
 
   // Find user by ID
@@ -39,6 +39,8 @@ export class UserService {
             'active',
             'password',
             'password_changed',
+            'otp_code',
+            'otp_expiry',
           ]
         : [
             'id',
@@ -95,6 +97,8 @@ export class UserService {
             'img_url',
             'active',
             'password_changed',
+            'otp_code',
+            'otp_expiry',
           ]
         : [
             'id',

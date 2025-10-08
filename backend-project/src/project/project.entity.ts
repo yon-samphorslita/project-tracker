@@ -10,8 +10,7 @@ import { Status } from '../enums/status.enum';
 import { Priority } from '../enums/priority.enum';
 import { Task } from 'src/task/task.entity';
 import { User } from 'src/user/user.entity';
-import { Member } from 'src/member/member.entity';
-// import { Event } from 'src/event/event.entity';
+import { Team } from 'src/team/team.entity';
 @Entity('projects')
 export class Project {
   @PrimaryGeneratedColumn()
@@ -52,9 +51,6 @@ export class Project {
   @OneToMany((type) => Task, (task) => task.project)
   tasks: Task[];
 
-  // @OneToMany((type) => Event, (event) => event.project)
-  // events: Event[];
-
-  @OneToMany((type) => Member, (member) => member.project)
-  members: Member[];
+  @ManyToOne(() => Team, (team) => team.projects, { onDelete: 'SET NULL' })
+  team: Team;
 }

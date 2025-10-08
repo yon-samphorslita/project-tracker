@@ -12,7 +12,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Notification } from './notification.entity';
 
-@Controller('notification')
+@Controller('notifications')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
@@ -44,5 +44,47 @@ export class NotificationController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.notificationService.remove(+id);
+  }
+
+  // Get all notifications for a user
+  @Get('user/:userId')
+  getUserNotifications(@Param('userId') userId: string) {
+    return this.notificationService.findByUser(+userId);
+  }
+
+  // Get unread notifications for a user
+  @Get('user/:userId/unread')
+  getUnreadNotifications(@Param('userId') userId: string) {
+    return this.notificationService.findUnreadByUser(+userId);
+  }
+
+  // Get read notifications for a user
+  @Get('user/:userId/read')
+  getReadNotifications(@Param('userId') userId: string) {
+    return this.notificationService.findReadByUser(+userId);
+  }
+
+  // Mark one notification as read
+  @Patch(':id/read')
+  markAsRead(@Param('id') id: string) {
+    return this.notificationService.markAsRead(+id);
+  }
+
+  // Mark all notifications as read for a user
+  @Patch('user/:userId/read-all')
+  markAllAsRead(@Param('userId') userId: string) {
+    return this.notificationService.markAllAsRead(+userId);
+  }
+
+  // Soft delete all notifications
+  @Delete('user/:userId/all')
+  async softDeleteAll(@Param('userId') userId: number) {
+    return this.notificationService.softDeleteAll(userId);
+  }
+
+  // soft delete a notification
+  @Delete(':id')
+  async softDeleteOne(@Param('id') id: number) {
+    return this.notificationService.softDeleteOne(id);
   }
 }

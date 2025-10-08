@@ -32,6 +32,12 @@
               required
               class="rounded-[20px] border border-gray-300 p-[10px] focus:outline-none focus:border-blue-500"
             />
+            <a
+              @click.prevent="goToForgotPassword"
+              class="text-blue-500 text-sm mt-1 hover:underline cursor-pointer"
+            >
+              Forgot Password?
+            </a>
           </div>
 
           <button
@@ -63,10 +69,15 @@ const loginForm = ref({
 async function handleLogin() {
   try {
     const user = await auth.login(loginForm.value)
+    if (!user.password_changed) {
+      // Force first-time password change
+      router.push('/change-password')
+      return
+    }
     const role = user.role
 
     if (role === 'admin') {
-      router.push('/settings')
+      router.push('/settings/profile')
     } else if (role === 'project_manager') {
       router.push('/projects')
     } else if (role === 'member') {
@@ -80,5 +91,10 @@ async function handleLogin() {
     console.error(err)
     alert(err.response?.data?.message || 'Login failed')
   }
+}
+
+// Navigate to forgot password page
+function goToForgotPassword() {
+  router.push('/forgot-password')
 }
 </script>

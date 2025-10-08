@@ -18,17 +18,17 @@ export class CreateUserDto {
   @IsString()
   last_name?: string;
 
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Password is required' })
   @IsString()
-  @MinLength(6)
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
   password: string;
 
-  @IsNotEmpty()
-  @IsEmail()
+  @IsNotEmpty({ message: 'Email is required' })
+  @IsEmail({}, { message: 'Email must be valid' })
   email: string;
 
   @IsOptional()
-  @IsEnum(Role)
+  @IsEnum(Role, { message: 'Role must be valid' })
   role?: Role;
 
   @IsOptional()

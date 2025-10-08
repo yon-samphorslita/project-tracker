@@ -4,18 +4,71 @@ import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Notification } from './notification.entity';
+import { User } from 'src/user/user.entity';
 
 @Injectable()
 export class NotificationService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
   async create(
     createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
-    return this.notificationRepository.save(createNotificationDto);
+    const user = await this.userRepo.findOne({
+      where: { id: createNotificationDto.userId },
+    });
+    if (!user)
+      throw new Error(`User with ID ${createNotificationDto.userId} not found`);
+
+    const notification = this.notificationRepository.create({
+      title: createNotificationDto.title,
+      message: createNotificationDto.message,
+      read_status: createNotificationDto.read_status ?? false,
+      user: { id: createNotificationDto.userId } as User,
+    });
+    return this.notificationRepository.save(notification);
+  }
+
+
+  // fetch all notifications 
+  async findByUser(userId: number): Promise<Notification[]> {
+    return this.notificationRepository.find({
+      where: { user: { id: userId } },
+      order: { created_at: 'DESC' }, // newest first
+    });
+  }
+
+  async findUnreadByUser(userId: number): Promise<Notification[]> {
+    return this.notificationRepository.find({
+      where: { user: { id: userId }, read_status: false },
+      order: { id: 'DESC' },
+    });
+  }
+
+  async findReadByUser(userId: number): Promise<Notification[]> {
+    return this.notificationRepository.find({
+      where: { user: { id: userId }, read_status: true },
+      order: { id: 'DESC' },
+    });
+  }
+
+  async markAsRead(id: number): Promise<Notification> {
+    const notification = await this.findOne(id);
+    if (!notification) {
+      throw new NotFoundException(`Notification with id ${id} not found`);
+    }
+    notification.read_status = true;
+    return this.notificationRepository.save(notification);
+  }
+
+  async markAllAsRead(userId: number): Promise<void> {
+    await this.notificationRepository.update(
+      { user: { id: userId }, read_status: false },
+      { read_status: true },
+    );
   }
 
   async findAll(): Promise<Notification[]> {
@@ -39,5 +92,17 @@ export class NotificationService {
     if (result.affected === 0) {
       throw new NotFoundException(`Notification with id ${id} not found`);
     }
+  }
+
+  // Soft delete all notifications for a user
+  async softDeleteAll(userId: number): Promise<void> {
+  await this.notificationRepository.softDelete(
+    { user: { id: userId } },
+  );
+  }
+
+  // Soft delete a single notification
+  async softDeleteOne(id: number): Promise<void> {
+    await this.notificationRepository.softDelete(id); 
   }
 }
