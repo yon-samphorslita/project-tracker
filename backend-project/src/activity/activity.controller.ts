@@ -1,5 +1,4 @@
-// src/activity/activity.controller.ts
-import { Controller, Get, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Request, UseGuards, ForbiddenException } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { ActivityService } from './activity.service';
 import { Role } from '../enums/role.enum';
@@ -12,6 +11,11 @@ export class ActivityController {
   @Get('logs')
   async getLogs(@Request() req) {
     const user = req.user;
-    return this.activityService.getLogs(user.id, user.role === Role.ADMIN);
+
+    if (user.role !== Role.ADMIN) {
+      throw new ForbiddenException('Access denied: admin only');
+    }
+
+    return this.activityService.getLogs();
   }
 }

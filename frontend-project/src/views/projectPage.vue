@@ -206,8 +206,8 @@ const projectFields = [
     ],
     model: 'priority',
   },
-  { type: 'date', label: 'Start Date', model: 'startDate' },
-  { type: 'date', label: 'Due Date', model: 'dueDate' },
+  { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
+  { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
 ]
 
 // Computed

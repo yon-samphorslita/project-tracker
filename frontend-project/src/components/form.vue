@@ -175,8 +175,8 @@ function mapPayload() {
         p_description: formData.description,
         status: formData.status || 'not started',
         priority: formData.priority || 'medium',
-        start_date: formData.startDate || null,
-        due_date: formData.dueDate || null,
+        start_date: formData.startDate ? new Date(formData.startDate) : null,
+        due_date: formData.dueDate ? new Date(formData.dueDate) : null,
       }
     case 'tasks':
       return {
