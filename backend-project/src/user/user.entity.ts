@@ -14,7 +14,7 @@ import { Role } from '../enums/role.enum';
 import { Notification } from '../notification/notification.entity';
 import { Team } from 'src/team/team.entity';
 import { ActivityLog } from 'src/activity/activity.entity';
-// import { Event } from 'src/event/event.entity';
+import { Event } from 'src/event/event.entity';
 @Entity('users')
 @Unique(['email'])
 export class User {
@@ -72,6 +72,9 @@ export class User {
 
   @ManyToOne(() => Team, (team) => team.members, { nullable: true })
   team: Team;
+
+  @OneToMany(() => Event, (event) => event.user)
+  events: Event[];
 
   @OneToMany(() => ActivityLog, (activity) => activity.user)
   activities: ActivityLog[];

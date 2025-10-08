@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as dayjs from 'dayjs';
+
 import { Project } from './project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -33,26 +35,25 @@ export class ProjectService {
 
     const savedProject = await this.projectRepository.save(project);
 
-    // Log activity
     await this.activityService.logAction(
       user.id,
-      `Created project: ${savedProject.p_name}`,
+      `Created project: "${savedProject.p_name}" (Start: ${dayjs(savedProject.start_date).format('MMM D, YYYY')}, Due: ${dayjs(savedProject.due_date).format('MMM D, YYYY')})`,
     );
 
     return savedProject;
   }
 
-  // Find all projects (admin → all, user → own or member)
+  // Find all projects
   async findAll(userId?: number, isAdmin = false): Promise<Project[]> {
+    const relations = ['team', 'team.members', 'team.pms', 'user'];
+
     if (isAdmin || !userId) {
-      return this.projectRepository.find({
-        relations: ['team', 'team.members', 'team.pms', 'user'],
-      });
+      return this.projectRepository.find({ relations });
     }
 
     return this.projectRepository.find({
       where: [{ user: { id: userId } }, { team: { members: { id: userId } } }],
-      relations: ['team', 'team.members', 'team.pms', 'user'],
+      relations,
     });
   }
 
@@ -62,6 +63,15 @@ export class ProjectService {
     userId?: number,
     isAdmin = false,
   ): Promise<Project> {
+    const relations = [
+      'team',
+      'team.members',
+      'team.pms',
+      'user',
+      'tasks',
+      'tasks.subtasks',
+    ];
+
     const project = await this.projectRepository.findOne({
       where: isAdmin
         ? { id }
@@ -69,14 +79,7 @@ export class ProjectService {
             { id, user: { id: userId } },
             { id, team: { members: { id: userId } } },
           ],
-      relations: [
-        'team',
-        'team.members',
-        'team.pms',
-        'user',
-        'tasks',
-        'tasks.subtasks',
-      ],
+      relations,
     });
 
     if (!project) {
@@ -99,15 +102,12 @@ export class ProjectService {
       relations: ['user', 'tasks', 'tasks.subtasks'],
     });
 
-    if (!project) {
+    if (!project)
       throw new NotFoundException(`Project with ID ${id} not found`);
-    }
-
-    if (project.user.id !== user.id && user.role !== 'admin') {
+    if (project.user?.id !== user.id && user.role !== 'admin')
       throw new ForbiddenException('Only owner can modify the project');
-    }
 
-    // Prevent completing project if tasks/subtasks are incomplete
+    // Prevent marking completed if tasks/subtasks are incomplete
     if (dto.status === Status.COMPLETED) {
       const hasIncomplete = project.tasks.some(
         (task) =>
@@ -122,13 +122,18 @@ export class ProjectService {
       }
     }
 
+    // Track changes for logging
+    const changes = this.getChanges(project, dto);
+
+    // Only save and log if there are actual changes
+    if (changes.length === 0) return project;
+
     Object.assign(project, dto);
     const savedProject = await this.projectRepository.save(project);
 
-    // Log update activity
     await this.activityService.logAction(
       user.id,
-      `Updated project: ${savedProject.p_name}`,
+      `Project "${savedProject.p_name}" updated on:\n${changes.join('; \n')}`,
     );
 
     return savedProject;
@@ -151,19 +156,20 @@ export class ProjectService {
   private computeProjectStatus(project: Project): Status {
     if (!project.tasks?.length) return Status.NOT_STARTED;
 
-    const allCompleted = project.tasks.every((task) => {
-      const subtasksCompleted =
-        task.subtasks?.every((sub) => sub.status === Status.COMPLETED) ?? true;
-      return task.t_status === Status.COMPLETED && subtasksCompleted;
-    });
+    const allCompleted = project.tasks.every(
+      (task) =>
+        task.t_status === Status.COMPLETED &&
+        (task.subtasks?.every((sub) => sub.status === Status.COMPLETED) ??
+          true),
+    );
     if (allCompleted) return Status.COMPLETED;
 
-    const allNotStarted = project.tasks.every((task) => {
-      const subtasksNotStarted =
-        task.subtasks?.every((sub) => sub.status === Status.NOT_STARTED) ??
-        true;
-      return task.t_status === Status.NOT_STARTED && subtasksNotStarted;
-    });
+    const allNotStarted = project.tasks.every(
+      (task) =>
+        task.t_status === Status.NOT_STARTED &&
+        (task.subtasks?.every((sub) => sub.status === Status.NOT_STARTED) ??
+          true),
+    );
     if (allNotStarted) return Status.NOT_STARTED;
 
     return Status.IN_PROGRESS;
@@ -176,20 +182,76 @@ export class ProjectService {
       relations: ['user'],
     });
 
-    if (!project) {
+    if (!project)
       throw new NotFoundException(`Project with ID ${id} not found`);
-    }
 
-    if (project.user.id !== user.id && user.role !== 'admin') {
+    // Safely check owner
+    if (project.user && project.user.id !== user.id && user.role !== 'admin') {
       throw new ForbiddenException('Only owner can delete the project');
     }
 
     await this.projectRepository.remove(project);
-
-    // Log deletion activity
     await this.activityService.logAction(
       user.id,
       `Deleted project: ${project.p_name}`,
     );
+  }
+
+  // Helpers
+  private isDateField(key: string): boolean {
+    return ['start_date', 'due_date'].includes(key);
+  }
+
+  private formatFieldName(key: string): string {
+    const map: Record<string, string> = {
+      p_name: 'Name',
+      p_description: 'Description',
+      start_date: 'Start Date',
+      due_date: 'Due Date',
+      status: 'Status',
+    };
+    return (
+      map[key] ||
+      key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    );
+  }
+
+  private formatValue(value: any): string {
+    if (value === null || value === undefined || value === '') return '—';
+    return String(value).replace(/^"|"$/g, '').trim();
+  }
+
+  private getChanges(project: Project, dto: UpdateProjectDto): string[] {
+    const changes: string[] = [];
+    const excludedFields = ['id', 'created_at', 'updated_at', 'user'];
+
+    for (const key of Object.keys(dto)) {
+      if (excludedFields.includes(key)) continue;
+
+      const oldVal = (project as any)[key];
+      const newVal = (dto as any)[key];
+
+      // Handle date fields
+      if (this.isDateField(key)) {
+        const oldDate = dayjs(oldVal).format('YYYY-MM-DD');
+        const newDate = dayjs(newVal).format('YYYY-MM-DD');
+
+        if (oldDate !== newDate) {
+          changes.push(
+            `${this.formatFieldName(key)} from "${dayjs(oldVal).format('MMMM D, YYYY')}" to "${dayjs(newVal).format('MMMM D, YYYY')}"`,
+          );
+        }
+        continue;
+      }
+
+      // Handle other fields
+      if (oldVal !== newVal) {
+        changes.push(
+          `${this.formatFieldName(key)} from "${this.formatValue(oldVal)}" to "${this.formatValue(newVal)}"`,
+        );
+      }
+    }
+
+    return changes;
   }
 }

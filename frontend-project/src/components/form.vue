@@ -49,8 +49,8 @@
 
           <!-- Date input -->
           <input
-            v-else-if="field.type === 'date'"
-            type="date"
+            v-else-if="field.type === 'date' || field.type === 'datetime-local'"
+            :type="field.type"
             :id="field.label"
             class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 focus:outline-none"
             :class="
@@ -59,6 +59,7 @@
                 : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
             "
             v-model="formData[field.model]"
+            :min="field.model === 'dueDate' ? formData.startDate : undefined"
           />
 
           <!-- Select input -->
@@ -75,7 +76,7 @@
           >
             <option disabled selected>Select {{ field.label }}</option>
             <option v-for="option in field.options" :key="option.id" :value="option.id">
-              {{ option.name }}
+              {{ option.name || option.p_name }}
             </option>
           </select>
 
@@ -175,8 +176,8 @@ function mapPayload() {
         team : formData.team_id ? { id: formData.team_id } : null,
         status: formData.status || 'not started',
         priority: formData.priority || 'medium',
-        start_date: formData.startDate || null,
-        due_date: formData.dueDate || null,
+        start_date: formData.startDate ? new Date(formData.startDate) : null,
+        due_date: formData.dueDate ? new Date(formData.dueDate) : null,
       }
     case 'tasks':
       return {
@@ -184,9 +185,19 @@ function mapPayload() {
         t_description: formData.description,
         t_status: formData.status || 'not started',
         t_priority: formData.priority || 'medium',
-        start_date: formData.startDate || null,
-        due_date: formData.dueDate || null,
+        start_date: formData.startDate ? new Date(formData.startDate) : null,
+        due_date: formData.dueDate ? new Date(formData.dueDate) : null,
         projectId: formData.project || props.initialData?.project_id || null,
+        userId: authStore.user?.id,
+      }
+    case 'events':
+      return {
+        e_title: formData.title,
+        e_description: formData.description,
+        start_date: formData.startDate ? new Date(formData.startDate) : null,
+        end_date: formData.endDate ? new Date(formData.endDate) : null,
+        location: formData.location || '',
+        projectId: formData.projectId || null,
         userId: authStore.user?.id,
       }
     case 'subtask':

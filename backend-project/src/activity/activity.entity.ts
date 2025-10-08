@@ -1,4 +1,3 @@
-// src/activity/activity.entity.ts
 import {
   Entity,
   Column,
@@ -14,7 +13,7 @@ export class ActivityLog {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.activities)
+  @ManyToOne(() => User, (user) => user.activities, { eager: true })
   @JoinColumn({ name: 'userId' })
   user: User;
 

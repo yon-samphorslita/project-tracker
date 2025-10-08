@@ -119,6 +119,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
+import { useSubtaskStore } from '@/stores/subtask'
 
 import ProjectLayout from './projectLayout.vue'
 import DescriptionLabel from '@/components/descriptionLabel.vue'
@@ -135,6 +136,7 @@ import Form from '@/components/form.vue'
 const route = useRoute()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
+const subtaskStore = useSubtaskStore()
 
 // Reactive state
 const activeOption = ref('Kanban')
@@ -158,7 +160,7 @@ const tableColumns = ref([
   { key: 'actions', label: 'Actions', slot: 'actions' },
 ])
 
-// Form fields
+// Task form fields
 const taskFields = [
   { type: 'text', label: 'Task Name', placeholder: 'Enter task name', model: 'title' },
   {
@@ -167,8 +169,8 @@ const taskFields = [
     placeholder: 'Enter description',
     model: 'description',
   },
-  { type: 'date', label: 'Start Date', model: 'startDate' },
-  { type: 'date', label: 'Due Date', model: 'dueDate' },
+  { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
+  { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
   {
     type: 'select',
     label: 'Priority',
@@ -206,8 +208,8 @@ const projectFields = [
     ],
     model: 'priority',
   },
-  { type: 'date', label: 'Start Date', model: 'startDate' },
-  { type: 'date', label: 'Due Date', model: 'dueDate' },
+  { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
+  { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
 ]
 
 // Computed
@@ -277,18 +279,9 @@ function getSubtaskColor(status) {
   }
 }
 
-// Fetch subtasks
-async function fetchSubtasks(taskId) {
-  try {
-    const res = await fetch(`http://localhost:3000/subtasks/task/${taskId}`)
-    return await res.json()
-  } catch {
-    return []
-  }
-}
-
 // Fetch tasks with subtasks
 async function fetchProjectTasks(projectId) {
+  // Clear old tasks for this project
   taskStore.tasks = taskStore.tasks.filter((t) => String(t.project?.id) !== String(projectId))
   await taskStore.fetchTasksByProject(projectId)
 
@@ -296,7 +289,11 @@ async function fetchProjectTasks(projectId) {
     taskStore.tasks
       .filter((t) => String(t.project?.id) === String(projectId))
       .map(async (task) => {
-        const subtasks = await fetchSubtasks(task.id)
+        let subtasks = await subtaskStore.fetchByTask(task.id)
+
+        // Ensure subtasks is an array
+        if (!Array.isArray(subtasks)) subtasks = []
+
         return {
           id: task.id,
           taskname: task.t_name,
@@ -319,7 +316,7 @@ async function fetchProjectTasks(projectId) {
   )
 }
 
-// Project selection
+// Set current project and fetch tasks
 async function setCurrentProject() {
   if (!projectStore.projects.length) await projectStore.fetchProjects()
   const selectedProject = projectStore.projects.find((p) => p.id === Number(route.params.id))
@@ -375,7 +372,7 @@ async function deleteTask(row) {
   if (!task) return
   if (confirm(`Are you sure you want to delete task "${row.name}"?`)) {
     await taskStore.deleteTask(task.id)
-    fetchProjectTasks(projectStore.current.id)
+    await fetchProjectTasks(projectStore.current.id)
   }
 }
 

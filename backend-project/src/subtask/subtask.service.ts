@@ -21,7 +21,10 @@ export class SubtaskService {
   }
 
   async findOne(id: number): Promise<Subtask | null> {
-    return this.subtaskRepository.findOne({ where: { id } });
+    return this.subtaskRepository.findOne({
+      where: { id },
+      relations: ['task', 'task.user'],
+    });
   }
 
   async update(
@@ -41,7 +44,7 @@ export class SubtaskService {
   async findByTaskId(taskId: number): Promise<Subtask[]> {
     return this.subtaskRepository.find({
       where: { task: { id: taskId } },
-      relations: ['task'],
+      relations: ['task', 'task.user'],
     });
   }
 }

@@ -3,32 +3,43 @@
     <div class="container flex flex-col gap-4">
       <div class="flex font-semibold text-2xl">All Projects</div>
 
-      <!-- Header: Create + Search + Filter -->
-      <div class="flex justify-between items-center w-full">
-        <Button
-          label="+ New Project"
-          btn-color="#C6E7FF"
-          btntext="black"
-          @click="showForm = true"
-        />
-        <Form
-          v-model:modelValue="showForm"
-          formTitle="Create Project"
-          :fields="projectFields"
-          endpoint="projects"
-          @submitted="onProjectCreated"
-        />
-        <div class="flex gap-4 items-center">
-          <Search @update="searchQuery = $event" />
-          <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
-        </div>
-      </div>
-
       <!-- Loading -->
       <div v-if="!isReady" class="text-center py-4 text-gray-500">Loading projects...</div>
 
-      <!-- Admin Table -->
-      <div v-if="isReady && userRole === 'admin'" class="h-[600px] overflow-y-auto">
+      <!-- Admin Dashboard -->
+      <div v-if="isReady && userRole === 'admin'" class="flex flex-col gap-4">
+        <!-- Overview & PieChart -->
+        <div class="flex w-full justify-between gap-4">
+          <div class="grid grid-cols-2 gap-4 flex-1">
+            <OverviewCard title="Total Projects" :value="totalProjects" />
+            <OverviewCard title="Overdue Projects" :value="overdueProjects" />
+            <OverviewCard title="Completed Projects" :value="completedProjects" />
+          </div>
+          <PieChart :data="statusData" :height="280" class="w-[600px]" />
+        </div>
+
+        <!-- Header: Create + Search + Filter -->
+        <div class="flex justify-between items-center w-full gap-4">
+          <Button
+            label="+ New Project"
+            btn-color="#C6E7FF"
+            btntext="black"
+            @click="showForm = true"
+          />
+          <Form
+            v-model:modelValue="showForm"
+            formTitle="Create Project"
+            :fields="projectFields"
+            endpoint="projects"
+            @submitted="onProjectCreated"
+          />
+          <div class="flex gap-4 items-center">
+            <Search @update="searchQuery = $event" />
+            <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
+          </div>
+        </div>
+
+        <!-- Projects Table -->
         <Table
           :data="mappedFilteredSortedProjects"
           :columns="tableColumns"
@@ -52,6 +63,7 @@
           </template>
         </Table>
 
+        <!-- Edit Project Form -->
         <Form
           v-model:modelValue="showEditProjectForm"
           formTitle="Edit Project"
@@ -62,21 +74,45 @@
         />
       </div>
 
-      <!-- Project Cards for non-admin users -->
-      <div v-else-if="isReady" class="flex flex-col gap-4 h-[600px] overflow-y-auto">
-        <ProjectCard
-          v-for="project in filteredSortedProjects"
-          :key="project.id"
-          :project="project"
-          :name="project.p_name"
-          :detail="project.p_description"
-          :startdate="project.start_date"
-          :enddate="project.due_date"
-          :status="project.status"
-          :members="project.assignee?.name || 'None'"
-          :completedTasks="getCompletedTasks(project.id)"
-          :totalTasks="getTotalTasks(project.id)"
-        />
+      <!-- Non-Admin Project Cards -->
+      <div v-else-if="isReady" class="flex flex-col gap-4">
+        <!-- Header -->
+        <div class="flex justify-between items-center w-full gap-4">
+          <Button
+            label="+ New Project"
+            btn-color="#C6E7FF"
+            btntext="black"
+            @click="showForm = true"
+          />
+          <Form
+            v-model:modelValue="showForm"
+            formTitle="Create Project"
+            :fields="projectFields"
+            endpoint="projects"
+            @submitted="onProjectCreated"
+          />
+          <div class="flex gap-4 items-center">
+            <Search @update="searchQuery = $event" />
+            <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
+          </div>
+        </div>
+
+        <!-- Project Cards -->
+        <div class="h-[600px] overflow-y-auto gap-4 flex flex-col">
+          <ProjectCard
+            v-for="project in filteredSortedProjects"
+            :key="project.id"
+            :project="project"
+            :name="project.p_name"
+            :detail="project.p_description"
+            :startdate="project.start_date"
+            :enddate="project.due_date"
+            :status="project.status"
+            :members="project.assignee?.name || 'None'"
+            :completedTasks="getCompletedTasks(project.id)"
+            :totalTasks="getTotalTasks(project.id)"
+          />
+        </div>
       </div>
     </div>
   </ProjectLayout>
@@ -91,6 +127,8 @@ import Filter from '@/components/filter.vue'
 import Table from '@/components/table.vue'
 import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'
+import PieChart from '@/components/pieChart.vue'
+import OverviewCard from '@/components/overviewCard.vue'
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
 import { useAuthStore } from '@/stores/auth'
@@ -111,20 +149,18 @@ const selectedSort = ref('')
 const isReady = ref(false)
 const userRole = computed(() => authStore.user?.role || 'user')
 
-// Table columns
+// Table & Sort Options
 const tableColumns = [
   { key: 'name', label: 'Project Name' },
   { key: 'description', label: 'Description' },
   { key: 'priority', label: 'Priority' },
   { key: 'status', label: 'Status' },
+  { key: 'progress', label: 'Progress' },
   { key: 'start_date', label: 'Start Date' },
   { key: 'due_date', label: 'Due Date' },
   { key: 'icon', label: 'PM' },
   { key: 'actions', label: 'Actions', slot: 'actions' },
-  { key: 'progress', label: 'Progress' },
 ]
-
-// Sort options
 const sortOptions = [
   { value: 'priority-High', label: 'Priority (High → Low)' },
   { value: 'priority-Low', label: 'Priority (Low → High)' },
@@ -132,15 +168,13 @@ const sortOptions = [
   { value: 'due-latest', label: 'Due (Latest first)' },
 ]
 
-// Teams for forms
+// Teams & Form Fields
 const Teams = [
   // { id: 1, name: 'Team A' },
   // { id: 2, name: 'Team B' },
   // { id: 3, name: 'Team C' },
 ]
-
-// Form fields
-const projectFields = computed(() =>[
+const projectFields = [
   { type: 'text', label: 'Project Title', placeholder: 'Enter project title', model: 'title' },
   {
     type: 'textarea',
@@ -167,9 +201,9 @@ const projectFields = computed(() =>[
     ],
     model: 'priority',
   },
-  { type: 'date', label: 'Start Date', model: 'startDate' },
-  { type: 'date', label: 'Due Date', model: 'dueDate' },
-])
+  { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
+  { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
+]
 
 // Helpers
 const formatDate = (dateStr) =>
@@ -182,7 +216,7 @@ const formatDate = (dateStr) =>
       })
 const priorityValue = (priority) => ({ high: 3, medium: 2, low: 1 })[priority?.toLowerCase()] || 0
 
-// Computed filtered & sorted projects
+// Computed: Filtered & Sorted Projects
 const filteredSortedProjects = computed(() => {
   let list = [...projectStore.projects]
   if (searchQuery.value) {
@@ -204,7 +238,6 @@ const filteredSortedProjects = computed(() => {
       return list
   }
 })
-
 const mappedFilteredSortedProjects = computed(() =>
   filteredSortedProjects.value.map((p) => ({
     id: p.id,
@@ -220,7 +253,7 @@ const mappedFilteredSortedProjects = computed(() =>
   })),
 )
 
-// Task counts
+// Task helpers
 const getTotalTasks = (projectId) =>
   taskStore.tasks.filter((t) => String(t.project?.id) === String(projectId)).length
 const getCompletedTasks = (projectId) =>
@@ -228,7 +261,7 @@ const getCompletedTasks = (projectId) =>
     (t) => String(t.project?.id) === String(projectId) && t.t_status?.toLowerCase() === 'completed',
   ).length
 
-// Fetch data
+// Fetch data on mount
 onMounted(async () => {
   if (!authStore.user) await authStore.fetchProfile()
   await teamStore.fetchTeams()
@@ -238,14 +271,13 @@ onMounted(async () => {
   isReady.value = true
 })
 
-// Sorting
+// Sorting handler
 const applySort = (option) => {
   selectedSort.value = option
 }
 
 // Project actions
 const onProjectCreated = (project) => projectStore.projects.push(project)
-
 const editProject = (row) => {
   const project = projectStore.projects.find((p) => p.id === row.id)
   if (!project) return
@@ -263,7 +295,6 @@ const editProject = (row) => {
   }
   showEditProjectForm.value = true
 }
-
 const deleteProject = async (row) => {
   const project = projectStore.projects.find((p) => p.id === row.id)
   if (!project) return
@@ -271,11 +302,40 @@ const deleteProject = async (row) => {
     await projectStore.deleteProject(project.id)
   }
 }
-
 const onEditProjectSubmitted = (updatedProject) => {
   projectStore.projects = projectStore.projects.map((p) =>
     p.id === updatedProject.id ? updatedProject : p,
   )
   showEditProjectForm.value = false
 }
+
+const totalProjects = computed(() => projectStore.projects.length)
+const overdueProjects = computed(() => {
+  const today = new Date()
+  return projectStore.projects.filter(
+    (p) => new Date(p.due_date) < today && p.status?.toLowerCase() !== 'completed',
+  ).length
+})
+const completedProjects = computed(
+  () => projectStore.projects.filter((p) => p.status?.toLowerCase() === 'completed').length,
+)
+const statusData = computed(() => {
+  const summary = { 'Not Started': 0, 'In Progress': 0, Completed: 0 }
+  projectStore.projects.forEach((p) => {
+    switch (p.status?.toLowerCase()) {
+      case 'not started':
+        summary['Not Started']++
+        break
+      case 'in progress':
+        summary['In Progress']++
+        break
+      case 'completed':
+        summary['Completed']++
+        break
+      default:
+        summary['Not Started']++
+    }
+  })
+  return Object.entries(summary).map(([type, value]) => ({ type, value }))
+})
 </script>

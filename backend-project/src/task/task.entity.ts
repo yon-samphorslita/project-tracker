@@ -5,13 +5,15 @@ import {
   OneToMany,
   ManyToOne,
   CreateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Status } from '../enums/status.enum';
 import { Priority } from '../enums/priority.enum';
 import { Project } from 'src/project/project.entity';
 import { User } from 'src/user/user.entity';
 import { Subtask } from 'src/subtask/subtask.entity';
-// import { Event } from 'src/event/event.entity';
+import { Event } from 'src/event/event.entity';
 @Entity('tasks')
 export class Task {
   @PrimaryGeneratedColumn()
@@ -55,6 +57,14 @@ export class Task {
   @OneToMany(() => Subtask, (subtask) => subtask.task)
   subtasks: Subtask[];
 
-  // @OneToMany(() => Event, (event) => event.task)
-  // events: Event[];
+  @OneToMany(() => Event, (event) => event.task)
+  events: Event[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateDates() {
+    if (this.start_date && this.due_date && this.due_date < this.start_date) {
+      throw new Error('Due date cannot be before start date.');
+    }
+  }
 }
