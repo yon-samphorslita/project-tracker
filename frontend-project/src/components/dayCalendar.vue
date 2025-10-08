@@ -37,8 +37,10 @@
               :style="{ backgroundColor: getColor(item) }"
             ></div>
             <div>
-              <div class="font-semibold">{{ item.e_title || item.t_name }}</div>
-              <div>{{ item.e_description || item.t_description || item.location }}</div>
+              <div class="font-semibold">{{ item.e_title || item.t_name || item.name }}</div>
+              <div>
+                {{ item.e_description || item.t_description || item.location || item.description }}
+              </div>
             </div>
           </div>
           <div class="text-gray-500 text-[10px]">
@@ -55,7 +57,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { format, parseISO } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
-
+import { useSubtaskStore } from '@/stores/subtask'
 const props = defineProps({
   day: { type: Date, default: () => new Date() },
 })
@@ -75,7 +77,7 @@ function toLocal(dateStr) {
 
 const taskStore = useTaskStore()
 const eventStore = useEventStore()
-
+const subtaskStore = useSubtaskStore()
 // Combined list of tasks and events
 const items = computed(() => {
   const tasks = taskStore.tasks.map((t) => ({
@@ -92,8 +94,15 @@ const items = computed(() => {
     start: e.start_date ? toLocal(e.start_date) : null,
     end: e.end_date ? toLocal(e.end_date) : null,
     title: e.e_title,
-    description: e.e_description,
+    description: e.e_description || e.location,
     type: 'event',
+  }))
+
+  const subtasks = subtaskStore.subtasks.map((s) => ({
+    ...s,
+    title: s.name,
+    description: s.description,
+    type: 'task',
   }))
 
   return [...tasks, ...events]

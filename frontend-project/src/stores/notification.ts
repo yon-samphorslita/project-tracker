@@ -40,6 +40,7 @@ export const useNotificationStore = defineStore('notification', {
     notifications: [] as NotificationPayload[],
     socket: null as Socket | null,
     userId: null as string | null,
+    notificationsEnabled: localStorage.getItem('notificationsEnabled') === 'true' || false,
   }),
   actions: {
     async connect(userId: string) {
@@ -55,6 +56,21 @@ export const useNotificationStore = defineStore('notification', {
       })
 
       await this.fetchUnreadNotifications()
+    },
+
+    toggleNotifications(enabled: boolean) {
+      this.notificationsEnabled = enabled
+      localStorage.setItem('notificationsEnabled', String(enabled))
+
+      if (!enabled && this.socket) {
+        console.log('Notifications turned OFF')
+        this.socket.off('notification')
+      } else if (enabled && this.socket && this.userId) {
+        console.log('Notifications turned ON')
+        this.socket.on('notification', (payload: NotificationPayload) => {
+          this.notifications.unshift(payload)
+        })
+      }
     },
 
     async fetchUnreadNotifications() {

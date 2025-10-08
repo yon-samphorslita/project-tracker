@@ -184,8 +184,8 @@ function mapPayload() {
         t_description: formData.description,
         t_status: formData.status || 'not started',
         t_priority: formData.priority || 'medium',
-        start_date: formData.startDate || null,
-        due_date: formData.dueDate || null,
+        start_date: formData.startDate ? new Date(formData.startDate) : null,
+        due_date: formData.dueDate ? new Date(formData.dueDate) : null,
         projectId: formData.project || props.initialData?.project_id || null,
         userId: authStore.user?.id,
       }

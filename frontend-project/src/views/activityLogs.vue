@@ -4,12 +4,7 @@
 
     <div class="flex items-center w-full mb-4">
       <Search @update="searchQuery = $event" />
-      <Filter
-        class="min-w-fit"
-        title="Sort / Filter"
-        :options="sortOptions"
-        @select="applySort"
-      />
+      <Filter class="min-w-fit" title="Sort / Filter" :options="sortOptions" @select="applySort" />
       <Button
         label="Export CSV"
         btn-color="green"
@@ -61,7 +56,7 @@ const tableData = computed(() =>
       user: log.user?.email || 'N/A',
       action: log.action,
       createdAt: new Date(log.createdAt).toLocaleString(),
-    }))
+    })),
 )
 
 // Sorting options

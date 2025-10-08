@@ -14,6 +14,7 @@ import { Project } from 'src/project/project.entity';
 import { NotificationService } from 'src/notification/notification.service';
 import { ProjectService } from '../project/project.service';
 import { ActivityService } from 'src/activity/activity.service';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class TaskService {
@@ -66,7 +67,7 @@ export class TaskService {
     // Log creation
     await this.activityService.logAction(
       actor.id,
-      `Created task: ${savedTask.t_name}`,
+      `Created task: "${savedTask.t_name}" (Project: "${project.p_name}", Due: ${dayjs(savedTask.due_date).format('MMM D, YYYY')})`,
     );
 
     // Refresh project status
@@ -88,19 +89,22 @@ export class TaskService {
 
   async update(id: number, dto: UpdateTaskDto, actor: User): Promise<Task> {
     const task = await this.findOne(id, actor.id, actor.role === 'admin');
-    Object.assign(task, dto);
+    if (!task)
+      throw new NotFoundException(`Task with ID ${id} not found or no access`);
 
+    const changes = this.getChanges(task, dto);
+    if (changes.length === 0) return task; // no changes
+
+    Object.assign(task, dto);
     const savedTask = await this.taskRepository.save(task);
 
-    // Log update
     await this.activityService.logAction(
       actor.id,
-      `Updated task: ${savedTask.t_name}`,
+      `Task "${savedTask.t_name}" updated on:\n${changes.join('; \n')}`,
     );
 
-    if (savedTask.project?.id) {
+    if (savedTask.project?.id)
       await this.projectService.refreshProjectStatus(savedTask.project.id);
-    }
 
     return savedTask;
   }
@@ -163,5 +167,51 @@ export class TaskService {
     }
 
     return query.getMany();
+  }
+  private getChanges(task: Task, dto: UpdateTaskDto): string[] {
+    const changes: string[] = [];
+
+    // Compare string fields
+    if (dto.t_name && dto.t_name !== task.t_name) {
+      changes.push(`Name from "${task.t_name}" to "${dto.t_name}"`);
+    }
+
+    if (dto.t_description && dto.t_description !== task.t_description) {
+      changes.push(`Description updated`);
+    }
+
+    if (dto.t_priority && dto.t_priority !== task.t_priority) {
+      changes.push(`Priority from "${task.t_priority}" to "${dto.t_priority}"`);
+    }
+
+    // Compare date fields (using dayjs for clarity)
+    if (
+      dto.start_date &&
+      dayjs(dto.start_date).isValid() &&
+      !dayjs(dto.start_date).isSame(task.start_date)
+    ) {
+      changes.push(
+        `Start Date from "${dayjs(task.start_date).format('MMM D, YYYY')}" to "${dayjs(dto.start_date).format('MMM D, YYYY')}"`,
+      );
+    }
+
+    if (
+      dto.due_date &&
+      dayjs(dto.due_date).isValid() &&
+      !dayjs(dto.due_date).isSame(task.due_date)
+    ) {
+      changes.push(
+        `Due Date from "${dayjs(task.due_date).format('MMM D, YYYY')}" to "${dayjs(dto.due_date).format('MMM D, YYYY')}"`,
+      );
+    }
+
+    // Compare assigned user if included
+    if (dto.userId && task.user && dto.userId !== task.user.id) {
+      changes.push(
+        `Assigned user changed from "${task.user.id}" to "${dto.userId}"`,
+      );
+    }
+
+    return changes;
   }
 }

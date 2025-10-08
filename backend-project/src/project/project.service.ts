@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
@@ -19,7 +23,10 @@ export class ProjectService {
   ) {}
 
   // Create a new project
-  async createProject(createProjectDto: CreateProjectDto, user: User): Promise<Project> {
+  async createProject(
+    createProjectDto: CreateProjectDto,
+    user: User,
+  ): Promise<Project> {
     const project = this.projectRepository.create({
       ...createProjectDto,
       user,
@@ -28,7 +35,10 @@ export class ProjectService {
 
     const savedProject = await this.projectRepository.save(project);
 
-    await this.activityService.logAction(user.id, `Created project: ${savedProject.p_name}`);
+    await this.activityService.logAction(
+      user.id,
+      `Created project: "${savedProject.p_name}" (Start: ${dayjs(savedProject.start_date).format('MMM D, YYYY')}, Due: ${dayjs(savedProject.due_date).format('MMM D, YYYY')})`,
+    );
 
     return savedProject;
   }
@@ -42,16 +52,17 @@ export class ProjectService {
     }
 
     return this.projectRepository.find({
-      where: [
-        { user: { id: userId } },
-        { team: { members: { id: userId } } },
-      ],
+      where: [{ user: { id: userId } }, { team: { members: { id: userId } } }],
       relations,
     });
   }
 
   // Find a single project by ID
-  async findOne(id: number, userId?: number, isAdmin = false): Promise<Project> {
+  async findOne(
+    id: number,
+    userId?: number,
+    isAdmin = false,
+  ): Promise<Project> {
     const relations = [
       'team',
       'team.members',
@@ -72,20 +83,27 @@ export class ProjectService {
     });
 
     if (!project) {
-      throw new NotFoundException(`Project with ID ${id} not found or access denied`);
+      throw new NotFoundException(
+        `Project with ID ${id} not found or access denied`,
+      );
     }
 
     return project;
   }
 
   // Update a project
-  async update(id: number, dto: UpdateProjectDto, user: User): Promise<Project> {
+  async update(
+    id: number,
+    dto: UpdateProjectDto,
+    user: User,
+  ): Promise<Project> {
     const project = await this.projectRepository.findOne({
       where: { id },
       relations: ['user', 'tasks', 'tasks.subtasks'],
     });
 
-    if (!project) throw new NotFoundException(`Project with ID ${id} not found`);
+    if (!project)
+      throw new NotFoundException(`Project with ID ${id} not found`);
     if (project.user?.id !== user.id && user.role !== 'admin')
       throw new ForbiddenException('Only owner can modify the project');
 
@@ -115,7 +133,7 @@ export class ProjectService {
 
     await this.activityService.logAction(
       user.id,
-      `Project "${savedProject.p_name}" updated on:\n${changes.join('; ')}`,
+      `Project "${savedProject.p_name}" updated on:\n${changes.join('; \n')}`,
     );
 
     return savedProject;
@@ -141,14 +159,16 @@ export class ProjectService {
     const allCompleted = project.tasks.every(
       (task) =>
         task.t_status === Status.COMPLETED &&
-        (task.subtasks?.every((sub) => sub.status === Status.COMPLETED) ?? true),
+        (task.subtasks?.every((sub) => sub.status === Status.COMPLETED) ??
+          true),
     );
     if (allCompleted) return Status.COMPLETED;
 
     const allNotStarted = project.tasks.every(
       (task) =>
         task.t_status === Status.NOT_STARTED &&
-        (task.subtasks?.every((sub) => sub.status === Status.NOT_STARTED) ?? true),
+        (task.subtasks?.every((sub) => sub.status === Status.NOT_STARTED) ??
+          true),
     );
     if (allNotStarted) return Status.NOT_STARTED;
 
@@ -162,12 +182,19 @@ export class ProjectService {
       relations: ['user'],
     });
 
-    if (!project) throw new NotFoundException(`Project with ID ${id} not found`);
-    if (project.user.id !== user.id && user.role !== 'admin')
+    if (!project)
+      throw new NotFoundException(`Project with ID ${id} not found`);
+
+    // Safely check owner
+    if (project.user && project.user.id !== user.id && user.role !== 'admin') {
       throw new ForbiddenException('Only owner can delete the project');
+    }
 
     await this.projectRepository.remove(project);
-    await this.activityService.logAction(user.id, `Deleted project: ${project.p_name}`);
+    await this.activityService.logAction(
+      user.id,
+      `Deleted project: ${project.p_name}`,
+    );
   }
 
   // Helpers
@@ -183,7 +210,10 @@ export class ProjectService {
       due_date: 'Due Date',
       status: 'Status',
     };
-    return map[key] || key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return (
+      map[key] ||
+      key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    );
   }
 
   private formatValue(value: any): string {
@@ -208,7 +238,7 @@ export class ProjectService {
 
         if (oldDate !== newDate) {
           changes.push(
-            `${this.formatFieldName(key)} from "${dayjs(oldVal).format('MMMM D, YYYY')}" to "${dayjs(newVal).format('MMMM D, YYYY')}"`
+            `${this.formatFieldName(key)} from "${dayjs(oldVal).format('MMMM D, YYYY')}" to "${dayjs(newVal).format('MMMM D, YYYY')}"`,
           );
         }
         continue;
@@ -217,7 +247,7 @@ export class ProjectService {
       // Handle other fields
       if (oldVal !== newVal) {
         changes.push(
-          `${this.formatFieldName(key)} from "${this.formatValue(oldVal)}" to "${this.formatValue(newVal)}"`
+          `${this.formatFieldName(key)} from "${this.formatValue(oldVal)}" to "${this.formatValue(newVal)}"`,
         );
       }
     }

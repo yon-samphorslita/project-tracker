@@ -1,4 +1,10 @@
-import { Controller, Get, Request, UseGuards, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Request,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { ActivityService } from './activity.service';
 import { Role } from '../enums/role.enum';

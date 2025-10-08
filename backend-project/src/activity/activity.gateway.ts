@@ -11,7 +11,7 @@ interface AdminSocket extends Socket {
   userRole?: string;
 }
 
-@WebSocketGateway({namespace: 'activity', cors: true })
+@WebSocketGateway({ namespace: 'activity', cors: true })
 @Injectable()
 export class ActivityGateway
   implements OnGatewayConnection, OnGatewayDisconnect
