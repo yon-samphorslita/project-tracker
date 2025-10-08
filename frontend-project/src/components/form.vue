@@ -172,6 +172,7 @@ function mapPayload() {
       return {
         p_name: formData.title,
         p_description: formData.description,
+        team : formData.team_id ? { id: formData.team_id } : null,
         status: formData.status || 'not started',
         priority: formData.priority || 'medium',
         start_date: formData.startDate || null,

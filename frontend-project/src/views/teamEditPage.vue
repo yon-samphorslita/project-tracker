@@ -62,7 +62,7 @@
 </template>
 
 <script setup>
-import TeamLayout from './teamLayout.vue'
+import TeamLayout from './pageLayout.vue'
 import { onMounted, ref } from 'vue'
 import { useTeamStore } from '@/stores/team'
 import { useRoute, useRouter } from 'vue-router'

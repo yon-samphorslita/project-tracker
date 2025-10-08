@@ -4,21 +4,23 @@
   <sidebar :items="menuItems" />
 
   <div class="fixed  left-[300px] w-[calc(100vw-300px)]">
-    <!-- <Header /> -->
-    <Button label="Create New Project" />
+    <Header />
+    <notificationPage/>
+
+    <!-- <Button label="Create New Project" /> -->
 
     <!-- <button class="px-4 py-2 bg-blue-500 text-white rounded"
       @click="showForm = true">
       + Create Team
     </button> -->
 
-    <TeamForm />
+    <!-- <TeamForm /> -->
 
     <!-- <notification/> -->
 
-    <search />
+    <!-- <search /> -->
 
-    <div style="w-full"></div>
+    <!-- <div style="w-full"></div> -->
     <!-- <Form 
       formTitle="Create Project" 
       :fields="projectFields" 
@@ -33,7 +35,7 @@
       formTitle="Create Subtask" 
       :fields="subtaskFields" 
       endpoint="subtask" />  -->
-    <div
+    <!-- <div
       class="fixed top-52 w-[calc(100vw-300px)] h-[calc(100vh-200px)] overflow-y-auto flex flex-col items-center xl:flex-row xl:justify-around xl:w-[calc(100vw-300px)] space-y-5"
     >
       <kanaban
@@ -51,7 +53,7 @@
         :kanbanTaskNum="Completed.length"
         kanbanTaskStatus="Completed"
       />
-    </div>
+    </div> -->
   </div>
 
   <RouterView />
@@ -67,6 +69,7 @@ import Form from '@/components/form.vue'
 import kanaban from '@/components/kanban.vue'
 import notification from '@/components/notification.vue'
 import TeamForm from '@/components/teamform.vue'
+import notificationPage from './notificationPage.vue'
 import profileimg from '@/assets/profile.jpg'
 import { ref } from 'vue'
 

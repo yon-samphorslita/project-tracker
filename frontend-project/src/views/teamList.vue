@@ -17,8 +17,8 @@
             />
 
             <div class="flex gap-4 items-center">
-            <Search @update="searchQuery = $event" />
-            <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
+              <Search @update="searchQuery = $event" />
+              <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
             </div>
         </div>
 
@@ -38,7 +38,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import TeamLayout from './teamLayout.vue'
+import TeamLayout from './pageLayout.vue'
 import teamCard from '@/components/teamCard.vue'
 import teamform from '@/components/teamform.vue'
 import Search from '@/components/search.vue'
@@ -61,7 +61,7 @@ const sortOptions = [
 ]
 
 
-// Computed filtered & sorted projects
+// Computed filtered & sorted Teams
 const filteredSortedTeams = computed(() => {
   let list = [...teams.value]
   console.log('Teams:', list)

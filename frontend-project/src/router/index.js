@@ -15,6 +15,8 @@ import TeamList from '@/views/teamList.vue'
 import TeamEditPage from '@/views/teamEditPage.vue'
 import TeamDetail from '@/views/teamDetail.vue'
 import UserProfile from '@/views/userProfile.vue'
+import NotificationPage from '@/views/notificationPage.vue'
+import Taskpage from '@/views/taskpage.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -40,7 +42,11 @@ const routes = [
 
   { path: '/teams', component: TeamList, meta: { requiresAuth: true, title:'Teams' } },
   { path: '/teams/:id', component: TeamDetail, meta: { requiresAuth: true, title:'Teams' } },
-  { path: '/teams/:id/edit', component: TeamEditPage, meta: { requiresAuth: true, title:'Teams' } }
+  { path: '/teams/:id/edit', component: TeamEditPage, meta: { requiresAuth: true, title:'Teams' } },
+
+  { path: '/notifications', component: NotificationPage, meta: { requiresAuth: true, title:'Notifications' } },
+  { path: '/task', component: Taskpage, meta: { requiresAuth: true, title:'Tasks' } },
+
 ]
   
 

@@ -9,7 +9,7 @@
           <div @click="toggleNotification" class="notification-bell cursor-pointer flex">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-6 h-6 mr-1 md:mr-5 cursor-pointer"
+              class="w-6 h-6 mr-1 md:mr-5 cursor-pointer bg-pink-00" 
               viewBox="0 0 24 24"
             >
               <g fill="none" stroke="currentColor" stroke-width="2.5">
@@ -24,7 +24,7 @@
 
             <div
               v-if="unreadCount > 0"
-              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full"
+              class="absolute -top-2 right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full"
             >
               {{ unreadCount }} 
             </div>
@@ -124,8 +124,15 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 }
 
-onMounted(() => {
-  store.connect('1')
+onMounted(async () => {
+  // store.connect('1')
+  if (!user.value) {
+    await userStore.fetchCurrentUser()
+  }
+
+  if (user.value?.id) {
+    store.connect(String(user.value.id))
+  }
   document.addEventListener('click', handleClickOutside)
 })
 

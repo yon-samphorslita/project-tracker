@@ -32,16 +32,25 @@ export class NotificationService {
     return this.notificationRepository.save(notification);
   }
 
+
+  // fetch all notifications 
   async findByUser(userId: number): Promise<Notification[]> {
     return this.notificationRepository.find({
       where: { user: { id: userId } },
-      order: { id: 'DESC' }, // newest first
+      order: { created_at: 'DESC' }, // newest first
     });
   }
 
   async findUnreadByUser(userId: number): Promise<Notification[]> {
     return this.notificationRepository.find({
       where: { user: { id: userId }, read_status: false },
+      order: { id: 'DESC' },
+    });
+  }
+
+  async findReadByUser(userId: number): Promise<Notification[]> {
+    return this.notificationRepository.find({
+      where: { user: { id: userId }, read_status: true },
       order: { id: 'DESC' },
     });
   }
@@ -83,5 +92,17 @@ export class NotificationService {
     if (result.affected === 0) {
       throw new NotFoundException(`Notification with id ${id} not found`);
     }
+  }
+
+  // Soft delete all notifications for a user
+  async softDeleteAll(userId: number): Promise<void> {
+  await this.notificationRepository.softDelete(
+    { user: { id: userId } },
+  );
+  }
+
+  // Soft delete a single notification
+  async softDeleteOne(id: number): Promise<void> {
+    await this.notificationRepository.softDelete(id); 
   }
 }

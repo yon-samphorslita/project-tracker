@@ -58,6 +58,12 @@ export class NotificationController {
     return this.notificationService.findUnreadByUser(+userId);
   }
 
+  // Get read notifications for a user
+  @Get('user/:userId/read')
+  getReadNotifications(@Param('userId') userId: string) {
+    return this.notificationService.findReadByUser(+userId);
+  }
+
   // Mark one notification as read
   @Patch(':id/read')
   markAsRead(@Param('id') id: string) {
@@ -68,5 +74,17 @@ export class NotificationController {
   @Patch('user/:userId/read-all')
   markAllAsRead(@Param('userId') userId: string) {
     return this.notificationService.markAllAsRead(+userId);
+  }
+
+  // Soft delete all notifications
+  @Delete('user/:userId/all')
+  async softDeleteAll(@Param('userId') userId: number) {
+    return this.notificationService.softDeleteAll(userId);
+  }
+
+  // soft delete a notification
+  @Delete(':id')
+  async softDeleteOne(@Param('id') id: number) {
+    return this.notificationService.softDeleteOne(id);
   }
 }

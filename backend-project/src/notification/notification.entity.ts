@@ -2,6 +2,7 @@ import { User } from 'src/user/user.entity';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -23,6 +24,10 @@ export class Notification {
 
   @CreateDateColumn()
   created_at: Date;
+
+  // @Column({ type: 'timestamp', nullable: true })
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deleted_at: Date | null;
 
   @ManyToOne(() => User, (user) => user.notifications, { onDelete: 'CASCADE' })
   user: User;

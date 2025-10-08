@@ -94,11 +94,13 @@ import Form from '@/components/form.vue'
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
 import { useAuthStore } from '@/stores/auth'
+import { useTeamStore } from '@/stores/team'
 
 // Stores
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
+const teamStore = useTeamStore()
 
 // State
 const showForm = ref(false)
@@ -132,13 +134,13 @@ const sortOptions = [
 
 // Teams for forms
 const Teams = [
-  { id: 1, name: 'Team A' },
-  { id: 2, name: 'Team B' },
-  { id: 3, name: 'Team C' },
+  // { id: 1, name: 'Team A' },
+  // { id: 2, name: 'Team B' },
+  // { id: 3, name: 'Team C' },
 ]
 
 // Form fields
-const projectFields = [
+const projectFields = computed(() =>[
   { type: 'text', label: 'Project Title', placeholder: 'Enter project title', model: 'title' },
   {
     type: 'textarea',
@@ -146,7 +148,15 @@ const projectFields = [
     placeholder: 'Enter description',
     model: 'description',
   },
-  { type: 'select', label: 'Assignee', options: Teams, model: 'assignee' },
+  { 
+    type: 'select', 
+    label: 'Assignee', 
+    options: teamStore.teams.map(team => ({ 
+        id: team.id, 
+        name: team.name 
+    })),
+    model: 'team_id' 
+  },
   {
     type: 'select',
     label: 'Priority',
@@ -159,7 +169,7 @@ const projectFields = [
   },
   { type: 'date', label: 'Start Date', model: 'startDate' },
   { type: 'date', label: 'Due Date', model: 'dueDate' },
-]
+])
 
 // Helpers
 const formatDate = (dateStr) =>
@@ -221,6 +231,7 @@ const getCompletedTasks = (projectId) =>
 // Fetch data
 onMounted(async () => {
   if (!authStore.user) await authStore.fetchProfile()
+  await teamStore.fetchTeams()
   await projectStore.fetchProjects()
   taskStore.tasks = []
   for (const p of projectStore.projects) await taskStore.fetchTasksByProject(p.id)
@@ -246,7 +257,9 @@ const editProject = (row) => {
     dueDate: project.due_date,
     priority: project.priority,
     status: project.status,
-    assignee: project.assignee?.id || null,
+    // assignee: project.assignee?.id || null,
+    team_id: project.team?.id || null
+
   }
   showEditProjectForm.value = true
 }
