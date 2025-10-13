@@ -102,7 +102,7 @@ export const useUserStore = defineStore(
       deleteUser,
       fetchCurrentUser,
       currentUser,
-      fetchUserById
+      fetchUserById,
     }
   },
   {

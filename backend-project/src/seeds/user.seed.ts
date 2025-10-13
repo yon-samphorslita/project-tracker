@@ -13,35 +13,29 @@ export const createInitialAdmin = async (dataSource: DataSource) => {
     const userRepository = dataSource.getRepository(User);
     console.log('User repository obtained');
 
-    // Find existing admin
-    let admin = await userRepository.findOne({ where: { role: Role.ADMIN } });
+    // Check if admin already exists
+    const existingAdmin = await userRepository.findOne({
+      where: { role: Role.ADMIN },
+    });
 
-    if (admin) {
-      // Update existing admin
-      admin = {
-        ...admin,
-        first_name: 'System',
-        last_name: 'Admin',
-        email: 'admin@email.com',
-        password: await bcrypt.hash('admin123', 10),
-      };
-      await userRepository.save(admin);
-      console.log(`Admin updated: ${admin.email}`);
+    if (existingAdmin) {
+      console.log(`Admin already exists: ${existingAdmin.email}`);
       return;
     }
 
-    // Create new admin
-    admin = userRepository.create({
+    // Create new admin if none exists
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const newAdmin = userRepository.create({
       first_name: 'System',
       last_name: 'Admin',
       email: 'admin@email.com',
-      password: await bcrypt.hash('admin123', 10),
+      password: hashedPassword,
       role: Role.ADMIN,
       active: true,
     });
 
-    await userRepository.save(admin);
-    console.log(`Initial admin created: ${admin.email} / admin123`);
+    await userRepository.save(newAdmin);
+    console.log(`Initial admin created: ${newAdmin.email} / admin123`);
   } catch (err) {
     console.error('Failed to create admin:', err);
   }

@@ -44,7 +44,13 @@ export class TeamService {
   /** GET ALL TEAMS */
   async findAll(): Promise<Team[]> {
     return this.teamRepository.find({
-      relations: ['pms', 'members', 'projects'],
+      relations: [
+        'pms',
+        'members',
+        'projects',
+        'projects.tasks',
+        'projects.tasks.subtasks',
+      ],
     });
   }
 
@@ -95,7 +101,9 @@ export class TeamService {
 
     // Remove members: set user's team to null
     if (dto.removeMembers?.length) {
-      await this.userRepository.update(dto.removeMembers, { team: null as any});
+      await this.userRepository.update(dto.removeMembers, {
+        team: null as any,
+      });
     }
 
     // Return updated team with relations

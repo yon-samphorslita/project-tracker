@@ -33,7 +33,10 @@ export class TeamController {
   }
 
   @Patch(':id')
-  async update( @Param('id', ParseIntPipe) id: number, @Body() updateTeamDto: UpdateTeamDto ): Promise<Team>  {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTeamDto: UpdateTeamDto,
+  ): Promise<Team> {
     return this.teamService.update(id, updateTeamDto);
   }
 

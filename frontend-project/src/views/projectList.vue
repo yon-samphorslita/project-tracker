@@ -1,6 +1,6 @@
 <template>
   <ProjectLayout>
-    <div class="container flex flex-col gap-4">
+    <div class="container flex flex-col gap-4 pt-6">
       <div class="flex font-semibold text-2xl">All Projects</div>
 
       <!-- Loading -->
@@ -47,6 +47,12 @@
         >
           <template #actions="{ row }">
             <div class="flex gap-2">
+              <img
+                src="../assets/icons/view.svg"
+                alt="View"
+                class="cursor-pointer"
+                @click="viewProject(row)"
+              />
               <img
                 src="../assets/icons/edit.svg"
                 alt="Edit"
@@ -120,7 +126,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import ProjectLayout from './projectLayout.vue'
+import ProjectLayout from './pageLayout.vue'
 import ProjectCard from '@/components/projectCard.vue'
 import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
@@ -148,6 +154,12 @@ const searchQuery = ref('')
 const selectedSort = ref('')
 const isReady = ref(false)
 const userRole = computed(() => authStore.user?.role || 'user')
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const viewProject = (row) => {
+  router.push(`/project/${row.id}`)
+}
 
 // Table & Sort Options
 const tableColumns = [
@@ -182,14 +194,14 @@ const projectFields = [
     placeholder: 'Enter description',
     model: 'description',
   },
-  { 
-    type: 'select', 
-    label: 'Assignee', 
-    options: teamStore.teams.map(team => ({ 
-        id: team.id, 
-        name: team.name 
+  {
+    type: 'select',
+    label: 'Assignee',
+    options: teamStore.teams.map((team) => ({
+      id: team.id,
+      name: team.name,
     })),
-    model: 'team_id' 
+    model: 'team_id',
   },
   {
     type: 'select',
@@ -290,8 +302,7 @@ const editProject = (row) => {
     priority: project.priority,
     status: project.status,
     // assignee: project.assignee?.id || null,
-    team_id: project.team?.id || null
-
+    team_id: project.team?.id || null,
   }
   showEditProjectForm.value = true
 }

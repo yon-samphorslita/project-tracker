@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/homepage.vue'
-import AuthPage from '../views/authPage.vue'
+import AuthPage from '../views/authentication/authPage.vue'
 import ProjectList from '@/views/projectList.vue'
 import ProjectPage from '@/views/projectPage.vue'
-import SettingsProfile from '@/views/settingsProfile.vue'
-import ActivityLogs from '@/views/activityLogs.vue'
-import notificationsSettings from '@/views/notificationSettings.vue'
-import ChangePassword from '@/views/changePassword.vue'
-import ForgotPassword from '@/views/forgotPassword.vue'
-import SettingsLayout from '@/views/settingsLayout.vue'
+import SettingsProfile from '@/views/settings/settingsProfile.vue'
+import ActivityLogs from '@/views/settings/activityLogs.vue'
+import SettingsPage from '@/views/settings/settingsPage.vue'
+import ChangePassword from '@/views/authentication/changePassword.vue'
+import ForgotPassword from '@/views/authentication/forgotPassword.vue'
+import SettingsLayout from '@/views/settings/settingsLayout.vue'
 import CalendarPage from '@/views/calendarPage.vue'
 import UserPage from '@/views/userPage.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -18,39 +18,55 @@ import TeamDetail from '@/views/teamDetail.vue'
 import UserProfile from '@/views/userProfile.vue'
 import NotificationPage from '@/views/notificationPage.vue'
 import Taskpage from '@/views/taskpage.vue'
-
+import GetHelp from '@/views/settings/getHelp.vue'
 const routes = [
   { path: '/', redirect: '/login' },
-  { path: '/home', name: 'Home',component: Home, meta: { requiresAuth: true } },
+  { path: '/home', name: 'Home', component: Home, meta: { requiresAuth: true } },
   { path: '/login', component: AuthPage, name: 'Login' },
   { path: '/change-password', component: ChangePassword, meta: { requiresAuth: true } },
   { path: '/forgot-password', component: ForgotPassword },
   { path: '/projects', component: ProjectList, meta: { requiresAuth: true, title: 'Projects' } },
-  { path: '/project/:id', component: ProjectPage, props: true, meta: { requiresAuth: true, title: 'Projects' } },
+  {
+    path: '/project/:id',
+    component: ProjectPage,
+    props: true,
+    meta: { requiresAuth: true, title: 'Projects' },
+  },
   {
     path: '/settings',
     name: 'Settings',
     component: SettingsLayout,
-    meta: { requiresAuth: true, title:'Settings' },
+    meta: { requiresAuth: true, title: 'Settings' },
     children: [
+      { path: '', component: SettingsPage },
       { path: 'profile', component: SettingsProfile },
       { path: 'activity-logs', component: ActivityLogs },
-      { path: 'notifications', component: notificationsSettings },
     ],
   },
+  { path: '/help', component: GetHelp, meta: { requiresAuth: true, title: 'Get Help' } },
   { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true, title: 'Calendar' } },
-  { path: '/user', component: UserPage, meta: { requiresAuth: true } },
-  { path: '/user/profile/:id', component: UserProfile, meta: { requiresAuth: true , title: 'Teams'} },
+  { path: '/user', component: UserPage, meta: { requiresAuth: true, title: 'User' } },
+  {
+    path: '/user/profile/:id',
+    component: UserProfile,
+    meta: { requiresAuth: true, title: 'Teams' },
+  },
 
-  { path: '/teams', component: TeamList, meta: { requiresAuth: true, title:'Teams' } },
-  { path: '/teams/:id', component: TeamDetail, meta: { requiresAuth: true, title:'Teams' } },
-  { path: '/teams/:id/edit', component: TeamEditPage, meta: { requiresAuth: true, title:'Teams' } },
+  { path: '/teams', component: TeamList, meta: { requiresAuth: true, title: 'Teams' } },
+  { path: '/teams/:id', component: TeamDetail, meta: { requiresAuth: true, title: 'Teams' } },
+  {
+    path: '/teams/:id/edit',
+    component: TeamEditPage,
+    meta: { requiresAuth: true, title: 'Teams' },
+  },
 
-  { path: '/notifications', component: NotificationPage, meta: { requiresAuth: true, title:'Notifications' } },
-  { path: '/task', component: Taskpage, meta: { requiresAuth: true, title:'Tasks' } },
-
+  {
+    path: '/notifications',
+    component: NotificationPage,
+    meta: { requiresAuth: true, title: 'Notifications' },
+  },
+  { path: '/task', component: Taskpage, meta: { requiresAuth: true, title: 'Tasks' } },
 ]
-  
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

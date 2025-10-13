@@ -1,6 +1,6 @@
 <template>
   <CalendarLayout>
-    <div class="flex justify-between w-full gap-4">
+    <div class="flex justify-between w-full gap-4 pt-6">
       <!-- Left Sidebar -->
       <div class="container border border-1 w-fit p-4 flex flex-col gap-4 rounded-md">
         <!-- View Option -->
@@ -73,7 +73,7 @@ import { format } from 'date-fns'
 import { useEventStore } from '@/stores/event'
 import { useProjectStore } from '@/stores/project'
 import Form from '@/components/form.vue'
-import CalendarLayout from './calendarLayout.vue'
+import CalendarLayout from './pageLayout.vue'
 import MonthCalendar from '@/components/monthCalendar.vue'
 import WeekCalendar from '@/components/weekCalendar.vue'
 import DayCalendar from '@/components/dayCalendar.vue'

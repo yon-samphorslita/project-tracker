@@ -159,11 +159,9 @@ export class AuthController {
   async requestOtp(@Body() body: { email: string }) {
     const user = await this.userService.findOneByEmail(body.email, true);
     if (!user) throw new NotFoundException('User not found');
-    if (user.password_changed)
-      throw new ForbiddenException('Password has already been changed.');
 
     const otp = await this.authService.generateOtp(user.id);
-    // optionally send email here
+    // Optionally send email here
     return { message: 'OTP sent to your email', otp };
   }
 

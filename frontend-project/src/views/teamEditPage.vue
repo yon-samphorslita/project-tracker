@@ -1,7 +1,6 @@
 <template>
   <TeamLayout>
-
-    <div class="flex flex-col gap-4 mt-6 ">
+    <div class="flex flex-col gap-4 mt-6">
       <h1 class="text-2xl font-bold">Editing Team Information</h1>
 
       <div v-if="team">
@@ -38,26 +37,13 @@
           placeholder="Select team members"
           :close-on-select="false"
         />
-
       </div>
 
-      <div class="flex gap-16 mt-10 ">
-        <button 
-          class="px-4 py-2 bg-blue-500 text-white rounded"
-          @click="saveChanges"
-        >
-          Save
-        </button>
-        <button 
-          class="px-4 py-2 bg-gray-400 text-white rounded"
-          @click="goBack"
-        >
-          Cancel
-        </button>
+      <div class="flex gap-16 mt-10">
+        <button class="px-4 py-2 bg-blue-500 text-white rounded" @click="saveChanges">Save</button>
+        <button class="px-4 py-2 bg-gray-400 text-white rounded" @click="goBack">Cancel</button>
       </div>
-
     </div>
-      
   </TeamLayout>
 </template>
 
@@ -93,30 +79,27 @@ async function fetchCandidates() {
     const res = await axios.get('http://localhost:3000/users')
 
     pmCandidates.value = res.data
-      .filter(u => u.role === 'project_manager')
-      .map(u => ({ ...u, fullName: `${u.first_name} ${u.last_name}` }))
+      .filter((u) => u.role === 'project_manager')
+      .map((u) => ({ ...u, fullName: `${u.first_name} ${u.last_name}` }))
 
     memberCandidates.value = res.data
-      .filter(
-        u => u.role === 'member' && 
-        (!u.team || u.team.id === team.value.id)
-      )
-      .map(u => ({ ...u, fullName: `${u.first_name} ${u.last_name}` }))
+      .filter((u) => u.role === 'member' && (!u.team || u.team.id === team.value.id))
+      .map((u) => ({ ...u, fullName: `${u.first_name} ${u.last_name}` }))
   } catch (err) {
     console.error('Error fetching candidates:', err)
   }
 }
 
 async function saveChanges() {
-  const currentPms = team.value.pmIds.map(pm => pm.id)
-  const currentMembers = team.value.memberIds.map(m => m.id)
+  const currentPms = team.value.pmIds.map((pm) => pm.id)
+  const currentMembers = team.value.memberIds.map((m) => m.id)
 
   // calculate diffs
-  const addedPms = currentPms.filter(id => !existingPms.value.includes(id))
-  const removedPms = existingPms.value.filter(id => !currentPms.includes(id))
+  const addedPms = currentPms.filter((id) => !existingPms.value.includes(id))
+  const removedPms = existingPms.value.filter((id) => !currentPms.includes(id))
 
-  const addedMembers = currentMembers.filter(id => !existingMembers.value.includes(id))
-  const removedMembers = existingMembers.value.filter(id => !currentMembers.includes(id))
+  const addedMembers = currentMembers.filter((id) => !existingMembers.value.includes(id))
+  const removedMembers = existingMembers.value.filter((id) => !currentMembers.includes(id))
 
   await teamStore.updateTeam(team.value.id, {
     name: team.value.name,
@@ -138,18 +121,16 @@ onMounted(async () => {
   team.value.id = data.id
   team.value.name = data.name
 
-  existingPms.value = data.pms?.map(p => p.id) || []
-  existingMembers.value = data.members?.map(m => m.id) || []
+  existingPms.value = data.pms?.map((p) => p.id) || []
+  existingMembers.value = data.members?.map((m) => m.id) || []
 
   await fetchCandidates()
 
-  team.value.pmIds = pmCandidates.value
-    .filter(pm => existingPms.value.includes(pm.id))
-    // .map(pm => ({ ...pm }))
+  team.value.pmIds = pmCandidates.value.filter((pm) => existingPms.value.includes(pm.id))
+  // .map(pm => ({ ...pm }))
 
-  team.value.memberIds = memberCandidates.value
-    .filter(m => existingMembers.value.includes(m.id))
-    // .map(m => ({ ...m }))
+  team.value.memberIds = memberCandidates.value.filter((m) => existingMembers.value.includes(m.id))
+  // .map(m => ({ ...m }))
 
   console.log('Fetched team:', team.value)
 })

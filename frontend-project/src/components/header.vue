@@ -1,7 +1,9 @@
 <template>
   <div class="fixed left-[250px] w-[calc(100vw-250px)] h-[91px] z-50 bg-white">
     <div class="flex items-center h-full mx-6 md:mx-12">
-      <span class="ml-5 text-black text-xl md:text-2xl font-bold">{{ currentPageTitle }}</span>
+      <span class="ml-5 text-black text-xl md:text-2xl font-bold w-full">{{
+        currentPageTitle
+      }}</span>
 
       <div class="flex items-center justify-end w-full">
         <div class="relative flex flex-col items-end">
@@ -9,24 +11,23 @@
           <div @click="toggleNotification" class="notification-bell cursor-pointer flex">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-6 h-6 mr-1 md:mr-5 cursor-pointer bg-pink-00" 
+              class="w-6 h-6 mr-1 md:mr-5 cursor-pointer bg-pink-00"
+              width="24px"
+              height="24px"
               viewBox="0 0 24 24"
             >
-              <g fill="none" stroke="currentColor" stroke-width="2.5">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M6 19v-9a6 6 0 0 1 6-6v0a6 6 0 0 1 6 6v9M6 19h12M6 19H4m14 0h2m-9 3h2"
-                />
-                <circle cx="12" cy="3" r="1" />
-              </g>
+              <path
+                fill="currentColor"
+                fill-rule="evenodd"
+                d="M12 1a2 2 0 0 0-1.98 2.284A7 7 0 0 0 5 10v8H4a1 1 0 1 0 0 2h16a1 1 0 1 0 0-2h-1v-8a7 7 0 0 0-5.02-6.716Q14 3.144 14 3a2 2 0 0 0-2-2m2 21a1 1 0 0 1-1 1h-2a1 1 0 1 1 0-2h2a1 1 0 0 1 1 1"
+                clip-rule="evenodd"
+              />
             </svg>
-
             <div
               v-if="unreadCount > 0"
               class="absolute -top-2 right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full"
             >
-              {{ unreadCount }} 
+              {{ unreadCount }}
             </div>
           </div>
 
@@ -36,11 +37,12 @@
             class="absolute top-full right-0 mt-2 z-50 notification-dropdown"
           />
         </div>
-
+        <!-- help -->
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="w-6 h-6 mr-1 md:mr-5 cursor-pointer"
           viewBox="0 0 24 24"
+          @click="router.push('/help')"
         >
           <path
             fill="currentColor"
@@ -60,7 +62,7 @@
             <span class="text-sm font-medium truncate">
               {{ user ? `${user.first_name} ${user.last_name}` : '' }}
             </span>
-            <span class="text-xs text-gray-500 truncate">{{ user?.role }}</span>
+            <span class="text-xs text-gray-500 truncate">{{ Role }}</span>
           </div>
         </div>
       </div>
@@ -81,7 +83,7 @@ const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
-// fetch User data from Pinia store 
+// fetch User data from Pinia store
 const user = computed(() => userStore.currentUser)
 
 onMounted(() => {
@@ -90,9 +92,9 @@ onMounted(() => {
   }
 })
 
-// fetch Menu Item from route name 
+// fetch Menu Item from route name
 const currentPageTitle = computed(() => {
-  return route.meta.title  
+  return route.meta.title
 })
 
 function gotoProfile() {
@@ -102,7 +104,7 @@ function gotoProfile() {
 // Notification logic
 const showNotification = ref(false)
 const store = useNotificationStore()
-const unreadCount = computed(() => store.notifications.filter(n => !n.read_status).length)
+const unreadCount = computed(() => store.notifications.filter((n) => !n.read_status).length)
 
 const toggleNotification = () => {
   showNotification.value = !showNotification.value
@@ -138,6 +140,18 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
+})
+const Role = computed(() => {
+  switch (user.value?.role) {
+    case 'admin':
+      return 'Admin'
+    case 'project_manager':
+      return 'Project Manager'
+    case 'member':
+      return ''
+    default:
+      return user.value?.role || ''
+  }
 })
 </script>
 

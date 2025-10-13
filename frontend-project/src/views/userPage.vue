@@ -76,7 +76,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import UserLayout from './userLayout.vue'
+import UserLayout from './pageLayout.vue'
 import Table from '@/components/table.vue'
 import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'

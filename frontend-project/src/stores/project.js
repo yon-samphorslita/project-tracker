@@ -58,6 +58,7 @@ export const useProjectStore = defineStore(
             Authorization: `Bearer ${token}`,
           },
         })
+        current.value = response.data
         return response.data
       } catch (error) {
         console.error(`Error fetching project ${id}:`, error)

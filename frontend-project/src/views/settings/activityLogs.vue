@@ -1,0 +1,140 @@
+<template>
+  <div v-if="isAdmin">
+    <h1 class="text-2xl font-bold mb-6">Activity Logs</h1>
+
+    <div class="flex items-center w-full mb-4">
+      <Search @update="searchQuery = $event" />
+      <Filter class="min-w-fit" title="Sort / Filter" :options="sortOptions" @select="applySort" />
+      <Button
+        label="Export CSV"
+        btn-color="green"
+        class="ml-auto text-white px-4 py-2 rounded hover:bg-green-600 transition"
+        @click="exportToCSV"
+      />
+    </div>
+
+    <div class="overflow-x-auto bg-white shadow rounded-2xl p-8">
+      <GenericTable :data="tableData" :columns="columns" />
+    </div>
+  </div>
+
+  <div v-else class="text-center mt-20 text-gray-500">Access denied. Admins only.</div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { io } from 'socket.io-client'
+import axios from 'axios'
+import GenericTable from '@/components/table.vue'
+import Search from '@/components/search.vue'
+import Filter from '@/components/filter.vue'
+import Button from '@/components/button.vue'
+
+const auth = useAuthStore()
+const router = useRouter()
+
+const logs = ref([])
+const searchQuery = ref('')
+const isAdmin = computed(() => auth.user?.role === 'admin')
+
+// Table columns
+const columns = computed(() => [
+  { key: 'index', label: '#' },
+  { key: 'user', label: 'User' },
+  { key: 'action', label: 'Action' },
+  { key: 'createdAt', label: 'Time' },
+])
+
+// Table data
+const tableData = computed(() =>
+  logs.value
+    .filter((log) => log.action.toLowerCase().includes(searchQuery.value.toLowerCase()))
+    .map((log, index) => ({
+      id: log.id,
+      index: index + 1,
+      user: log.user?.email || 'N/A',
+      action: log.action,
+      createdAt: new Date(log.createdAt).toLocaleString(),
+    })),
+)
+
+// Sorting
+const sortOptions = [
+  { label: 'Newest First', value: 'desc' },
+  { label: 'Oldest First', value: 'asc' },
+]
+function applySort(option) {
+  if (!option) return
+  logs.value.sort((a, b) => {
+    const dateA = new Date(a.createdAt)
+    const dateB = new Date(b.createdAt)
+    return option.value === 'desc' ? dateB - dateA : dateA - dateB
+  })
+}
+
+// Fetch logs
+async function fetchLogs() {
+  try {
+    const res = await axios.get('http://localhost:3000/activity/logs', {
+      headers: { Authorization: `Bearer ${auth.token}` },
+    })
+    logs.value = res.data
+  } catch (err) {
+    console.error(err)
+    alert(err.response?.data?.message || 'Failed to fetch logs')
+  }
+}
+
+// WebSocket
+let socket
+function setupSocket() {
+  socket = io('http://localhost:3000/activity', {
+    auth: { role: 'admin', token: auth.token },
+    transports: ['websocket', 'polling'],
+  })
+  socket.on('connect', () => console.log('Connected to activity WebSocket'))
+  socket.on('activityLog', (log) => logs.value.unshift(log))
+}
+
+// Export CSV
+function exportToCSV() {
+  if (!logs.value.length) return alert('No logs to export.')
+
+  const csvRows = []
+  csvRows.push(columns.value.map((col) => col.label).join(','))
+
+  tableData.value.forEach((row) => {
+    const values = columns.value.map((col) => {
+      const val = row[col.key]
+      return typeof val === 'string' ? `"${val.replace(/"/g, '""')}"` : val
+    })
+    csvRows.push(values.join(','))
+  })
+
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `activity_logs_${Date.now()}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+// Lifecycle
+onMounted(() => {
+  if (!isAdmin.value) {
+    alert('You do not have permission to access this page.')
+    router.push('/dashboard')
+    return
+  }
+  fetchLogs()
+  setupSocket()
+})
+
+onBeforeUnmount(() => {
+  if (socket) socket.disconnect()
+})
+</script>

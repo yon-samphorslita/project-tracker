@@ -1,37 +1,34 @@
 <template>
-    <TaskLayout>
-        <div class="flex flex-col gap-4">
+  <TaskLayout>
+    <div class="flex flex-col gap-4">
+      <!-- Header (New team button , search, filter + Table header) -->
+      <div class="flex flex-col gap-4 pt-5 bg-white">
+        <div class="flex justify-between items-center">
+          <Button
+            label="+ New Team"
+            btn-color="#C6E7FF"
+            btntext="black"
+            @click="showTaskForm = true"
+          />
+          <taskform
+            v-model:modelValue="showTaskForm"
+            formTitle="Create Task"
+            :fields="taskFields"
+            endpoint="tasks"
+          />
 
-          <!-- Header (New team button , search, filter + Table header) -->
-          <div class="flex flex-col gap-4 pt-5 bg-white">
-            <div class="flex justify-between items-center">
-              <Button
-                label="+ New Team"
-                btn-color="#C6E7FF"
-                btntext="black"
-                @click="showTaskForm = true"
-              />
-              <taskform 
-                v-model:modelValue="showTaskForm"
-                formTitle="Create Task" 
-                :fields="taskFields" 
-                endpoint="tasks"
-              />
-
-              <div class="flex gap-4 items-center">
-                <Search @update="searchQuery = $event" />
-                <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
-              </div>
-            </div>
-
+          <div class="flex gap-4 items-center">
+            <Search @update="searchQuery = $event" />
+            <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
           </div>
-
-          <div class="flex flex-col gap-3 border rounded-2xl p-4 bg-white h-full">
-          <TaskCard :tasks="taskList" @edit-task="handleEdit" @delete-task="handleDelete" />
-          </div>
-
         </div>
-    </TaskLayout>
+      </div>
+
+      <div class="flex flex-col gap-3 border rounded-2xl p-4 bg-white h-full">
+        <TaskCard :tasks="taskList" @edit-task="handleEdit" @delete-task="handleDelete" />
+      </div>
+    </div>
+  </TaskLayout>
 </template>
 
 <script setup lang="ts">
@@ -43,8 +40,7 @@ import Filter from '@/components/filter.vue'
 import taskform from '@/components/form.vue'
 import { onMounted, ref } from 'vue'
 
-
-// state 
+// state
 const showTaskForm = ref(false)
 const searchQuery = ref('')
 const selectedSort = ref('')
@@ -53,7 +49,7 @@ const sortOptions = [
   { value: 'alphabetical-desc', label: 'Alphabetical Order (Z → A)' },
   { value: 'date-asc', label: 'Date Created (Oldest First)' },
   { value: 'date-desc', label: 'Date Created (Newest First)' },
-]   
+]
 
 const taskFields = [
   { type: 'text', label: 'Task Title', placeholder: 'Enter task title', model: 'title' },
@@ -64,14 +60,14 @@ const taskFields = [
     model: 'description',
   },
   // { type: 'select', label: 'Assignee', options: Members, model: 'assignee' },
-  //   { 
-  //   type: 'select', 
-  //   label: 'Assignee', 
-  //   options: teamStore.teams.map(team => ({ 
-  //       id: team.id, 
-  //       name: team.name 
+  //   {
+  //   type: 'select',
+  //   label: 'Assignee',
+  //   options: teamStore.teams.map(team => ({
+  //       id: team.id,
+  //       name: team.name
   //   })),
-  //   model: 'team_id' 
+  //   model: 'team_id'
   // },
   {
     type: 'select',
@@ -94,7 +90,7 @@ const taskList = ref([
     projectname: 'Website Redesign',
     due_date: '2025-10-15',
     priority: 'High',
-    status: 'Completed'
+    status: 'Completed',
   },
   {
     id: 2,
@@ -102,7 +98,7 @@ const taskList = ref([
     projectname: 'Website Redesign',
     due_date: '2025-10-15',
     priority: 'High',
-    status: 'In Progress'
+    status: 'In Progress',
   },
   {
     id: 3,
@@ -110,7 +106,7 @@ const taskList = ref([
     projectname: 'Backend Refactor',
     due_date: '2025-10-20',
     priority: 'Low',
-    status: 'Not Started'
+    status: 'Not Started',
   },
   {
     id: 4,
@@ -118,10 +114,9 @@ const taskList = ref([
     projectname: 'E-Commerce Platform',
     due_date: '2025-10-25',
     priority: 'Medium',
-    status: 'In Progress'
-  }
+    status: 'In Progress',
+  },
 ])
-
 
 function handleEdit(id: number) {
   console.log('Edit task ID:', id)
@@ -145,7 +140,7 @@ function handleDelete(id: number) {
 //     list.sort((a, b) => a.name.localeCompare(b.name))
 //   } else if (selectedSort.value === 'alphabetical-desc') {
 //     list.sort((a, b) => b.name.localeCompare(a.name))
-//   }    
+//   }
 
 //   return list
 // })
@@ -154,5 +149,4 @@ function handleDelete(id: number) {
 const applySort = (option) => {
   selectedSort.value = option
 }
-
 </script>

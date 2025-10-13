@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
-
+import { useUserStore } from './user'
 const API_BASE_URL = 'http://localhost:3000'
 
 export const useAuthStore = defineStore(
@@ -59,6 +59,8 @@ export const useAuthStore = defineStore(
       try {
         const response = await api.get('/auth/profile')
         user.value = response.data
+        const userStore = useUserStore()
+        userStore.currentUser = response.data
         return user.value
       } catch (err) {
         if (err.response?.status === 401) logout()
@@ -79,6 +81,8 @@ export const useAuthStore = defineStore(
       if (!token.value) return null
       const response = await api.patch('/auth/profile', updateUserDto)
       user.value = response.data
+      const userStore = useUserStore()
+      userStore.currentUser = response.data
       return user.value
     }
 

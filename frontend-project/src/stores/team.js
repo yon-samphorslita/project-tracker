@@ -63,13 +63,12 @@ export const useTeamStore = defineStore('team', () => {
     }
   }
 
-  return { 
-    teams, 
-    fetchTeams, 
+  return {
+    teams,
+    fetchTeams,
     fetchTeam,
-    addTeam, 
-    updateTeam, 
-    deleteTeam 
+    addTeam,
+    updateTeam,
+    deleteTeam,
   }
-
 })

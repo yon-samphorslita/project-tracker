@@ -32,8 +32,7 @@ export class NotificationService {
     return this.notificationRepository.save(notification);
   }
 
-
-  // fetch all notifications 
+  // fetch all notifications
   async findByUser(userId: number): Promise<Notification[]> {
     return this.notificationRepository.find({
       where: { user: { id: userId } },
@@ -96,13 +95,11 @@ export class NotificationService {
 
   // Soft delete all notifications for a user
   async softDeleteAll(userId: number): Promise<void> {
-  await this.notificationRepository.softDelete(
-    { user: { id: userId } },
-  );
+    await this.notificationRepository.softDelete({ user: { id: userId } });
   }
 
   // Soft delete a single notification
   async softDeleteOne(id: number): Promise<void> {
-    await this.notificationRepository.softDelete(id); 
+    await this.notificationRepository.softDelete(id);
   }
 }

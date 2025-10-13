@@ -3,9 +3,9 @@
 <template>
   <sidebar :items="menuItems" />
 
-  <div class="fixed  left-[300px] w-[calc(100vw-300px)]">
+  <div class="fixed left-[300px] w-[calc(100vw-300px)]">
     <Header />
-    <notificationPage/>
+    <notificationPage />
 
     <!-- <Button label="Create New Project" /> -->
 
