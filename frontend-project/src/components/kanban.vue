@@ -36,7 +36,7 @@
         <!-- task header  -->
         <div class="flex justify-between items-center">
           <div class="font-medium text-gray-800 truncate">
-            {{ kanban.taskname }}
+            {{ kanban.title }}
           </div>
           <div class="flex justify-between w-12 md:w-14 gap-1 md:gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24">
@@ -71,7 +71,11 @@
             {{ kanban.taskpriority }}
           </div>
           <div class="w-8 h-8 rounded-full overflow-hidden">
-            <img :src="kanban.user" alt="Profile Image" class="object-cover w-full h-full" />
+            <img
+              :src="kanban.user?.img_url"
+              alt="Profile Image"
+              class="object-cover w-full h-full"
+            />
           </div>
         </div>
         <hr class="my-1 border-gray-300" />
@@ -118,8 +122,8 @@ const statusColor = computed(() => {
 })
 
 const getPriorityColors = (priority) => {
-  priority = priority.toLowerCase()
-  switch (priority) {
+  const p = (priority || '').toLowerCase() // fallback to empty string
+  switch (p) {
     case 'high':
       return { background: 'lightgreen', color: 'green' }
     case 'medium':

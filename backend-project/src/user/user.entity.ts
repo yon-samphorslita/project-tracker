@@ -7,6 +7,7 @@ import {
   Unique,
   ManyToOne,
   DeleteDateColumn,
+  ManyToMany,
 } from 'typeorm';
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
@@ -72,6 +73,8 @@ export class User {
 
   @ManyToOne(() => Team, (team) => team.members, { nullable: true })
   team: Team;
+  @ManyToMany(() => Team, (team) => team.pms)
+  pmTeams: Team[];
 
   @OneToMany(() => Event, (event) => event.user)
   events: Event[];

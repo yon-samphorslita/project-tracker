@@ -45,7 +45,14 @@ export class ProjectService {
 
   // Find all projects
   async findAll(userId?: number, isAdmin = false): Promise<Project[]> {
-    const relations = ['team', 'team.members', 'team.pms', 'user'];
+    const relations = [
+      'team',
+      'team.members',
+      'team.pms',
+      'user',
+      'tasks',
+      'tasks.user',
+    ];
 
     if (isAdmin || !userId) {
       return this.projectRepository.find({ relations });

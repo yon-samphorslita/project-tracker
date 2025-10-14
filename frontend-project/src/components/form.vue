@@ -74,7 +74,7 @@
             "
             v-model="formData[field.model]"
           >
-            <option disabled selected>Select {{ field.label }}</option>
+            <option value="">Select {{ field.label }}</option>
             <option v-for="option in field.options" :key="option.id" :value="option.id">
               {{ option.name || option.p_name }}
             </option>
@@ -138,8 +138,13 @@ watch(
   (data) => {
     if (!data) return
     Object.keys(data).forEach((key) => {
-      formData[key] =
-        key === 'startDate' || key === 'dueDate' ? data[key]?.split('T')[0] || '' : data[key]
+      if (key === 'startDate' || key === 'dueDate') {
+        formData[key] = data[key]?.split('T')[0] || ''
+      } else if (key === 'user') {
+        formData.user = data.user || '' // make sure it's empty string if null
+      } else {
+        formData[key] = data[key]
+      }
     })
   },
   { immediate: true },
@@ -188,7 +193,7 @@ function mapPayload() {
         start_date: formData.startDate ? new Date(formData.startDate) : null,
         due_date: formData.dueDate ? new Date(formData.dueDate) : null,
         projectId: formData.project || props.initialData?.project_id || null,
-        userId: authStore.user?.id,
+        userId: formData.user || authStore.user?.id || null,
       }
     case 'events':
       return {

@@ -1,0 +1,153 @@
+<template>
+  <div class="flex flex-col gap-6 mt-6">
+    <div class="flex justify-between gap-2 items-center">
+      <TypeList v-model:activeOption="activeOption" class="w-fit" />
+      <Button label="+ New Task" btn-color="#C6E7FF" btntext="black" @click="showTaskForm = true" />
+      <Form
+        v-model:modelValue="showTaskForm"
+        formTitle="Create Task"
+        :fields="taskFields"
+        endpoint="tasks"
+        :initialData="{ project_id: project.id }"
+        @submitted="handleTaskCreated"
+      />
+      <Search @update="searchQuery = $event" class="w-[50%]" />
+    </div>
+
+    <div class="flex gap-4 mt-4">
+      <template v-if="activeOption === 'Kanban'">
+        <Kanban
+          v-for="status in ['Not Started', 'In Progress', 'Completed']"
+          :key="status"
+          :kanbantasks="filteredTasksByStatus(status)"
+          :kanbanTaskStatus="status"
+          :kanbanTaskNum="filteredTasksByStatus(status).length"
+          @editTask="editTask"
+          @deleteTask="$emit('onTaskDeleted', $event)"
+        />
+      </template>
+
+      <template v-else-if="activeOption === 'Gantt'">
+        <GanttChart :rows="ganttRows" :format-date="formatDate" />
+      </template>
+
+      <template v-else-if="activeOption === 'Table'">
+        <Table :data="filteredTasksWithSubtasks" :columns="tableColumns" :format-date="formatDate">
+          <template #actions="{ row }">
+            <div class="flex gap-2">
+              <img
+                src="../assets/icons/edit.svg"
+                alt="Edit"
+                class="cursor-pointer"
+                @click="editTask(row)"
+              />
+              <img
+                src="../assets/icons/delete.svg"
+                alt="Delete"
+                class="cursor-pointer"
+                @click="$emit('onTaskDeleted', row)"
+              />
+            </div>
+          </template>
+        </Table>
+      </template>
+    </div>
+
+    <!-- Edit Task Form -->
+    <Form
+      v-if="showEditTaskForm"
+      v-model:modelValue="showEditTaskForm"
+      formTitle="Edit Task"
+      :fields="taskFields"
+      :initialData="editTaskData"
+      endpoint="tasks"
+      @submitted="handleTaskUpdated"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import Table from '@/components/table.vue'
+import Kanban from '@/components/kanban.vue'
+import GanttChart from '@/components/gantt.vue'
+import Search from '@/components/search.vue'
+import TypeList from '@/components/typeList.vue'
+import Button from '@/components/button.vue'
+import Form from '@/components/form.vue'
+
+const props = defineProps({
+  project: Object,
+  tasks: Array,
+  TeamMembers: Array,
+  tableColumns: Array,
+  taskFields: Array,
+})
+
+const emit = defineEmits(['onTaskCreated', 'onTaskUpdated', 'onTaskDeleted'])
+
+const activeOption = ref('Table')
+const showTaskForm = ref(false)
+const showEditTaskForm = ref(false)
+const editTaskData = ref({})
+const searchQuery = ref('')
+
+const filteredTasksWithSubtasks = computed(() => {
+  const q = searchQuery.value.toLowerCase()
+  return props.tasks.filter(
+    (t) =>
+      t.title.toLowerCase().includes(q) ||
+      (t.description && t.description.toLowerCase().includes(q)),
+  )
+})
+
+const filteredTasksByStatus = (status) =>
+  filteredTasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === status.toLowerCase())
+
+const ganttRows = computed(() =>
+  filteredTasksWithSubtasks.value.map((t) => ({
+    label: t.title,
+    tasks: [
+      {
+        name: t.title,
+        start: t.start_date ? new Date(t.start_date) : new Date(),
+        end: t.due_date ? new Date(t.due_date) : new Date(),
+        color: t.status?.toLowerCase() === 'completed' ? '#8BD3B7' : '#FFD966',
+        icon: t.user?.img_url || null,
+      },
+    ],
+  })),
+)
+
+function formatDate(dateStr) {
+  if (!dateStr) return 'TBD'
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+// ------------------ TASK ACTIONS ------------------
+function handleTaskCreated(taskData) {
+  emit('onTaskCreated', taskData)
+}
+
+function editTask(row) {
+  editTaskData.value = {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    startDate: row.start_date,
+    dueDate: row.due_date,
+    priority: row.priority,
+    user: row.user?.id || null,
+  }
+  showEditTaskForm.value = true
+}
+
+function handleTaskUpdated(taskData) {
+  emit('onTaskUpdated', taskData)
+  showEditTaskForm.value = false
+}
+</script>
