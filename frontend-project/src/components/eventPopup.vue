@@ -55,7 +55,7 @@
           <!-- Description -->
           <div v-if="event.description || event.e_description">
             <span class="font-medium text-gray-600">Description:</span>
-              {{ event.description || event.e_description }}
+            {{ event.description || event.e_description }}
           </div>
         </div>
       </div>
@@ -108,7 +108,7 @@ watch(
     } else {
       document.body.style.overflow = ''
     }
-  }
+  },
 )
 
 onUnmounted(() => {

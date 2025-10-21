@@ -65,7 +65,10 @@ export class TaskService {
       read_status: false,
     });
 
-    this.notificationsGateway.sendNotification(String(assignee.id), notification);
+    this.notificationsGateway.sendNotification(
+      String(assignee.id),
+      notification,
+    );
 
     return savedTask;
   }
@@ -103,7 +106,10 @@ export class TaskService {
 
     await this.taskRepository.remove(task);
 
-    await this.activityService.logAction(actor.id, `Deleted task: ${task.t_name}`);
+    await this.activityService.logAction(
+      actor.id,
+      `Deleted task: ${task.t_name}`,
+    );
 
     if (projectId) {
       await this.projectService.refreshProjectStatus(projectId);
@@ -130,7 +136,8 @@ export class TaskService {
     });
     if (!task) throw new NotFoundException(`Task with ID ${id} not found`);
 
-    const isPM = task.project?.team?.pms?.some((pm) => pm.id === userId) ?? false;
+    const isPM =
+      task.project?.team?.pms?.some((pm) => pm.id === userId) ?? false;
 
     if (!isAdmin && !isPM && userId && task.user?.id !== userId) {
       throw new ForbiddenException('You do not have access to this task');
@@ -189,7 +196,7 @@ export class TaskService {
       changes.push(
         `Start Date from "${dayjs(task.start_date).format('MMM D, YYYY')}" to "${dayjs(
           dto.start_date,
-        ).format('MMM D, YYYY')}"`
+        ).format('MMM D, YYYY')}"`,
       );
     }
     if (
@@ -200,11 +207,13 @@ export class TaskService {
       changes.push(
         `Due Date from "${dayjs(task.due_date).format('MMM D, YYYY')}" to "${dayjs(
           dto.due_date,
-        ).format('MMM D, YYYY')}"`
+        ).format('MMM D, YYYY')}"`,
       );
     }
     if (dto.userId && task.user && dto.userId !== task.user.id) {
-      changes.push(`Assigned user changed from "${task.user.id}" to "${dto.userId}"`);
+      changes.push(
+        `Assigned user changed from "${task.user.id}" to "${dto.userId}"`,
+      );
     }
 
     return changes;
@@ -218,11 +227,18 @@ export class TaskService {
     const assignee = await this.userRepo.findOne({ where: { id: userId } });
     if (!assignee) throw new NotFoundException('User not found');
 
-    const teamMembers = [...(project.team?.members || []), ...(project.team?.pms || [])];
+    const teamMembers = [
+      ...(project.team?.members || []),
+      ...(project.team?.pms || []),
+    ];
 
     const isPM = project.team?.pms?.some((pm) => pm.id === actor.id) ?? false;
 
-    if (!teamMembers.some((m) => m.id === assignee.id) && !isPM && actor.role !== 'admin') {
+    if (
+      !teamMembers.some((m) => m.id === assignee.id) &&
+      !isPM &&
+      actor.role !== 'admin'
+    ) {
       throw new ForbiddenException('User must be a member of the project team');
     }
 

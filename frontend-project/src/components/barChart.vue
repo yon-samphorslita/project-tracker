@@ -47,9 +47,7 @@ const fetchTeamWorkload = async () => {
     // adapt to your actual task structure
     const user = task.user || task.assigned_to || null
     const memberName =
-      user?.first_name && user?.last_name
-        ? `${user.first_name} ${user.last_name}`
-        : null
+      user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : null
 
     if (memberName && workload[memberName]) {
       workload[memberName].total += 1
@@ -115,10 +113,9 @@ const renderChart = () => {
       //   },
       // },
       scales: {
-  x: { stacked: true, title: { display: true, text: 'Team Members' } },
-  y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Tasks' } },
-}
-
+        x: { stacked: true, title: { display: true, text: 'Team Members' } },
+        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Tasks' } },
+      },
     },
   })
 }

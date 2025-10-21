@@ -46,7 +46,11 @@ export class EventService {
     return this.eventRepository.find({ relations: ['user', 'project'] });
   }
 
-  async findOne(id: number, userId?: number, projectId?: number): Promise<Event> {
+  async findOne(
+    id: number,
+    userId?: number,
+    projectId?: number,
+  ): Promise<Event> {
     const event = await this.eventRepository.findOne({
       where: { id },
       relations: ['user', 'project'],

@@ -52,11 +52,7 @@
 
         <div class="flex gap-6 mt-6">
           <PieChart :data="statusData" :height="250" class="flex-1" />
-          <BarChart
-            :projectId="project.id"
-            :teamId="project.team?.id"
-            class="flex-1"
-          />
+          <BarChart :projectId="project.id" :teamId="project.team?.id" class="flex-1" />
         </div>
       </template>
 
@@ -119,7 +115,12 @@ const userRole = computed(() => authStore.user?.role || 'user')
 // ------------------ FORM FIELDS ------------------
 const projectFields = computed(() => [
   { type: 'text', label: 'Project Title', model: 'title', placeholder: 'Enter project title' },
-  { type: 'textarea', label: 'Description', model: 'description', placeholder: 'Enter description' },
+  {
+    type: 'textarea',
+    label: 'Description',
+    model: 'description',
+    placeholder: 'Enter description',
+  },
   {
     type: 'select',
     label: 'Team',
@@ -142,7 +143,12 @@ const projectFields = computed(() => [
 
 const taskFields = computed(() => [
   { type: 'text', label: 'Task Name', model: 'title', placeholder: 'Enter task name' },
-  { type: 'textarea', label: 'Description', model: 'description', placeholder: 'Enter description' },
+  {
+    type: 'textarea',
+    label: 'Description',
+    model: 'description',
+    placeholder: 'Enter description',
+  },
   { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
   { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
   {
@@ -155,7 +161,14 @@ const taskFields = computed(() => [
     ],
     model: 'priority',
   },
-  { type: 'select', label: 'Assignee', options: TeamMembers.value, model: 'user', valueKey: 'id', labelKey: 'name' },
+  {
+    type: 'select',
+    label: 'Assignee',
+    options: TeamMembers.value,
+    model: 'user',
+    valueKey: 'id',
+    labelKey: 'name',
+  },
 ])
 
 // ------------------ TABLE CONFIG ------------------
@@ -172,9 +185,18 @@ const tableColumns = ref([
 
 // ------------------ COMPUTED METRICS ------------------
 const totalTasks = computed(() => tasksWithSubtasks.value.length)
-const completedTasks = computed(() => tasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === 'completed').length)
-const overdueTasks = computed(() => tasksWithSubtasks.value.filter((t) => new Date(t.due_date) < new Date() && t.status?.toLowerCase() !== 'completed').length)
-const progressPercent = computed(() => totalTasks.value ? Math.round((completedTasks.value / totalTasks.value) * 100) : 0)
+const completedTasks = computed(
+  () => tasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === 'completed').length,
+)
+const overdueTasks = computed(
+  () =>
+    tasksWithSubtasks.value.filter(
+      (t) => new Date(t.due_date) < new Date() && t.status?.toLowerCase() !== 'completed',
+    ).length,
+)
+const progressPercent = computed(() =>
+  totalTasks.value ? Math.round((completedTasks.value / totalTasks.value) * 100) : 0,
+)
 
 const statusData = computed(() => {
   const summary = { 'Not Started': 0, 'In Progress': 0, Completed: 0 }
@@ -189,7 +211,7 @@ const statusData = computed(() => {
 
 // ------------------ FETCH FUNCTIONS ------------------
 async function fetchProjectTasks(projectId) {
-    tasksWithSubtasks.value = [] // clear old data first
+  tasksWithSubtasks.value = [] // clear old data first
   await taskStore.fetchTasksByProject(projectId)
   const visibleTasks = taskStore.tasks.filter((t) => {
     if (userRole.value === 'admin') return true
@@ -201,32 +223,31 @@ async function fetchProjectTasks(projectId) {
   tasksWithSubtasks.value = await Promise.all(
     visibleTasks.map(async (task) => {
       const subtasksData = await subtaskStore.fetchByTask(task.id)
-const subtasks = Array.isArray(subtasksData)
-  ? subtasksData
-  : subtasksData
-  ? Object.values(subtasksData)
-  : []
+      const subtasks = Array.isArray(subtasksData)
+        ? subtasksData
+        : subtasksData
+          ? Object.values(subtasksData)
+          : []
 
-return {
-  id: task.id,
-  title: task.t_name,
-  description: task.t_description,
-  priority: task.t_priority || 'none',
-  status: task.t_status || 'Not Started',
-  start_date: task.start_date,
-  due_date: task.due_date,
-  icon: task.user?.img_url || null,
-  user: task.user || authStore.user,
-  subtasks: subtasks.map((st) => ({
-    name: st.name,
-    start: new Date(st.start_date || task.start_date),
-    end: new Date(st.due_date || task.due_date),
-    status: st.status,
-    color: st.status === 'completed' ? '#8BD3B7' : '#FFD966',
-    icon: st.user_avatar || null,
-  })),
-}
-
+      return {
+        id: task.id,
+        title: task.t_name,
+        description: task.t_description,
+        priority: task.t_priority || 'none',
+        status: task.t_status || 'Not Started',
+        start_date: task.start_date,
+        due_date: task.due_date,
+        icon: task.user?.img_url || null,
+        user: task.user || authStore.user,
+        subtasks: subtasks.map((st) => ({
+          name: st.name,
+          start: new Date(st.start_date || task.start_date),
+          end: new Date(st.due_date || task.due_date),
+          status: st.status,
+          color: st.status === 'completed' ? '#8BD3B7' : '#FFD966',
+          icon: st.user_avatar || null,
+        })),
+      }
     }),
   )
 }

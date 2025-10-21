@@ -24,7 +24,11 @@
         </div>
 
         <!-- Events & Tasks (max 3 shown) -->
-        <div v-for="(item, i) in day.items.slice(0, 2)" :key="i" class="truncate text-xs p-1 my-1 border rounded bg-white shadow-sm flex items-center">
+        <div
+          v-for="(item, i) in day.items.slice(0, 2)"
+          :key="i"
+          class="truncate text-xs p-1 my-1 border rounded bg-white shadow-sm flex items-center"
+        >
           <!-- Color bar -->
           <span
             class="rounded-md w-[2px] h-4 p-[1px] mr-1"
@@ -37,10 +41,7 @@
         </div>
 
         <!-- +N More indicator -->
-        <div
-          v-if="day.items.length > 3"
-          class="text-xs text-gray-500 italic mt-1 ml-1"
-        >
+        <div v-if="day.items.length > 3" class="text-xs text-gray-500 italic mt-1 ml-1">
           +{{ day.items.length - 3 }} more
         </div>
       </div>

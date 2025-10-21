@@ -164,6 +164,7 @@ function getColor(item) {
     if (item.project?.priority?.toUpperCase() === 'LOW') return '#C6E7FF'
     if (item.project?.priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
     if (item.project?.priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
-  }  return '#FFE578'
+  }
+  return '#FFE578'
 }
 </script>

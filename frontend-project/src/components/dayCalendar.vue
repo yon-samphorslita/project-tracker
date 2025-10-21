@@ -62,18 +62,17 @@
     </div>
   </div>
   <teleport to="body">
-
-  <EventPopup
-  :visible="showEventPopup"
-  :event="selectedEvent"
-  :item-top="popupItemTop"
-  :item-left="popupItemLeft"
-  :item-width="popupItemWidth"
-  :container-top="containerTop"
-  :container-height="containerHeight"
-  @close="showEventPopup = false"
-/>
-</teleport>
+    <EventPopup
+      :visible="showEventPopup"
+      :event="selectedEvent"
+      :item-top="popupItemTop"
+      :item-left="popupItemLeft"
+      :item-width="popupItemWidth"
+      :container-top="containerTop"
+      :container-height="containerHeight"
+      @close="showEventPopup = false"
+    />
+  </teleport>
 </template>
 
 <script setup>

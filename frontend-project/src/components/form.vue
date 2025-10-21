@@ -13,7 +13,14 @@
           v-for="(field, index) in fields"
           :key="field.label"
           class="w-full"
-          :class="{ 'col-span-2': field.type === 'text' || field.type === 'email' || field.type === 'password' || field.type === 'textarea' || isSingleInput(index, field.type) }"
+          :class="{
+            'col-span-2':
+              field.type === 'text' ||
+              field.type === 'email' ||
+              field.type === 'password' ||
+              field.type === 'textarea' ||
+              isSingleInput(index, field.type),
+          }"
         >
           <label :for="field.label" class="block mb-2 text-[#34495e] font-medium">
             {{ field.label }}

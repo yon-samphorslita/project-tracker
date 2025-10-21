@@ -12,15 +12,12 @@
               alt="Profile"
               class="w-24 h-24 rounded-full object-cover border"
             />
-            <!-- Upload button only if editing -->
             <label
               v-if="isEditing"
               class="absolute bottom-0 right-0 bg-[#C6E7FF] text-black rounded-full p-2 cursor-pointer hover:bg-blue-400"
             >
               <input type="file" accept="image/*" class="hidden" @change="handleImageUpload" />
-              <span class="text-xs">
-                <img src="../../assets/icons/camera.svg" alt="Upload" />
-              </span>
+              <img src="../../assets/icons/camera.svg" alt="Upload" class="w-4 h-4" />
             </label>
           </div>
           <div>
@@ -28,7 +25,6 @@
             <p class="text-gray-500">{{ form.email }}</p>
           </div>
         </div>
-        <!-- Edit button -->
         <Button
           v-if="!isEditing"
           @click="startEditing"
@@ -38,7 +34,7 @@
         />
       </div>
 
-      <!-- Read-only info (when not editing) -->
+      <!-- Read-only info -->
       <div v-if="!isEditing" class="grid gap-6">
         <div class="grid grid-cols-2 gap-6">
           <div>
@@ -56,8 +52,8 @@
         </div>
       </div>
 
-      <!-- Editable Form (when editing) -->
-      <form v-else class="grid gap-6" @submit.prevent>
+      <!-- Editable Form -->
+      <form v-else class="grid gap-6" @submit.prevent="saveChanges">
         <div class="grid grid-cols-2 gap-6">
           <div>
             <label class="block text-gray-700 mb-1">First Name</label>
@@ -87,10 +83,9 @@
           />
         </div>
 
-        <!-- Action Buttons -->
         <div class="flex justify-end gap-3 mt-6">
           <Button @click="cancelEditing" label="Cancel" btn-color="#c70707" btntext="white" />
-          <Button label="Save Changes" @click="saveChanges" btn-color="#c6e7ff" btntext="black" />
+          <Button label="Save Changes" btn-color="#c6e7ff" btntext="black" />
         </div>
       </form>
     </div>
@@ -106,6 +101,7 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import Button from '@/components/button.vue'
+
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -114,12 +110,6 @@ const form = ref({
   last_name: '',
   email: '',
   img_url: '',
-})
-
-const passwordForm = ref({
-  oldPassword: '',
-  newPassword: '',
-  confirmPassword: '',
 })
 
 const isEditing = ref(false)
@@ -160,23 +150,21 @@ async function handleImageUpload(e) {
   const file = e.target.files[0]
   if (!file) return
 
-  // Show a local preview immediately
   form.value.img_url = URL.createObjectURL(file)
 
   try {
     const formData = new FormData()
     formData.append('file', file)
 
-    // Upload to your backend NestJS MinIO endpoint
     const response = await fetch('http://localhost:3000/upload', {
       method: 'POST',
       body: formData,
     })
-
     const data = await response.json()
-
-    // Replace local preview with the real public URL
-    form.value.img_url = data.url
+    const uploadedUrl = `http://localhost:3000/upload/images/${data.filename}`
+    form.value.img_url = uploadedUrl
+    await authStore.updateProfile({ img_url: uploadedUrl })
+    alert('Profile picture updated!')
   } catch (err) {
     console.error('Failed to upload image', err)
     alert('Image upload failed')
@@ -185,7 +173,7 @@ async function handleImageUpload(e) {
 
 async function logout() {
   try {
-    await authStore.logout() // wait for backend logout and clearing state
+    await authStore.logout()
   } catch (err) {
     console.error('Logout failed', err)
   } finally {

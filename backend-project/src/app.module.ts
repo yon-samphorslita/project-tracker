@@ -12,7 +12,6 @@ import { EventModule } from './event/event.module';
 import { NotificationModule } from './notification/notification.module';
 import { TeamModule } from './team/team.module';
 import { ActivityModule } from './activity/activity.module';
-import { MinioModule } from './minio/minio.module';
 import { UploadController } from './upload/upload.controller';
 @Module({
   imports: [
@@ -36,7 +35,6 @@ import { UploadController } from './upload/upload.controller';
     NotificationModule,
     TeamModule,
     ActivityModule,
-    MinioModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService],

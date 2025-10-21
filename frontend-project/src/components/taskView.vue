@@ -28,8 +28,18 @@
         <Table :data="filteredTasksWithSubtasks" :columns="tableColumns" :format-date="formatDate">
           <template #actions="{ row }">
             <div class="flex gap-2">
-              <img src="../assets/icons/edit.svg" alt="Edit" class="cursor-pointer" @click="editTask(row)" />
-              <img src="../assets/icons/delete.svg" alt="Delete" class="cursor-pointer" @click="$emit('onTaskDeleted', row)" />
+              <img
+                src="../assets/icons/edit.svg"
+                alt="Edit"
+                class="cursor-pointer"
+                @click="editTask(row)"
+              />
+              <img
+                src="../assets/icons/delete.svg"
+                alt="Delete"
+                class="cursor-pointer"
+                @click="$emit('onTaskDeleted', row)"
+              />
             </div>
           </template>
         </Table>
@@ -77,14 +87,12 @@ const searchQuery = ref('')
 const filteredTasksWithSubtasks = computed(() => {
   const q = searchQuery.value.toLowerCase()
   return props.tasks.filter(
-    (t) => t.title?.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q)
+    (t) => t.title?.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q),
   )
 })
 
 const filteredTasksByStatus = (status) =>
-  filteredTasksWithSubtasks.value.filter(
-    (t) => t.status?.toLowerCase() === status.toLowerCase()
-  )
+  filteredTasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === status.toLowerCase())
 
 // ------------------ GANTT VIEW ------------------
 const ganttRows = computed(() =>

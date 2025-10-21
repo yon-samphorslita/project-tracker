@@ -56,7 +56,7 @@
           @click="gotoProfile"
         >
           <div class="w-8 h-8 rounded-full overflow-hidden mr-2">
-            <img :src="user?.img_url" alt="Profile Image" />
+            <img :src="user?.img_url" alt="Profile Image" class="w-8 h-8 object-cover" />
           </div>
           <div class="flex flex-col truncate">
             <span class="text-sm font-medium truncate">
