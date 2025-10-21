@@ -37,7 +37,7 @@
       >
         <!-- Task Label -->
         <div
-          class="sticky left-0 z-10 w-[240px] flex items-center h-20 bg-white border-r border-gray-800 rounded-bl-md"
+          class="sticky left-0  w-[240px] flex items-center h-20 bg-white border-r border-gray-800 rounded-bl-md"
         >
           <div class="p-2.5">{{ row.label }}</div>
         </div>

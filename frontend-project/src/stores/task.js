@@ -35,24 +35,27 @@ export const useTaskStore = defineStore(
     }
 
     // Fetch tasks by project
-    const fetchTasksByProject = async (projectId) => {
-      if (!projectId) return
-      loading.value = true
-      error.value = null
-      try {
-        const res = await axios.get(`${API_BASE_URL}/tasks/project/${projectId}`, {
-          headers: getAuthHeaders(),
-        })
-        const newTasks = Array.isArray(res.data) ? res.data : res.data?.data || []
-        // Remove old tasks for this project and add new ones
-        tasks.value = tasks.value.filter((t) => String(t.project?.id) !== String(projectId))
-        tasks.value.push(...newTasks)
-      } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to fetch tasks for project'
-      } finally {
-        loading.value = false
-      }
-    }
+const fetchTasksByProject = async (projectId) => {
+  if (!projectId) return
+  loading.value = true
+  error.value = null
+  try {
+    const res = await axios.get(`${API_BASE_URL}/tasks/project/${projectId}`, {
+      headers: getAuthHeaders(),
+    })
+
+    const newTasks = Array.isArray(res.data)
+      ? res.data
+      : res.data?.data || []
+
+    // Only store the current project's tasks
+    tasks.value = newTasks
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Failed to fetch tasks for project'
+  } finally {
+    loading.value = false
+  }
+}
 
     const fetchTask = async (id) => {
       error.value = null

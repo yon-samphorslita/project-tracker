@@ -14,7 +14,7 @@ Chart.register(...registerables)
 
 const props = defineProps({
   projectId: { type: Number, required: true },
-  teamId: { type: Number, required: true }, // add teamId to know which members to show
+  teamId: { type: Number, required: true },
 })
 
 const canvasRef = ref(null)
@@ -26,46 +26,60 @@ const teamWorkloadData = ref([])
 const teamMembers = ref([])
 
 const fetchTeamWorkload = async () => {
-  // Fetch team members first
+  // 1️⃣ Fetch team members
   const team = await teamStore.fetchTeam(props.teamId)
   if (!team) return
-  teamMembers.value = [...(team.members || []), ...(team.pms || [])] // flatten PMs + members
+  teamMembers.value = [...(team.members || []), ...(team.pms || [])]
 
-  // Fetch tasks for this project
+  // 2️⃣ Fetch project tasks
   await taskStore.fetchTasksByProject(props.projectId)
   const tasks = taskStore.tasks.filter((t) => t.project?.id === props.projectId)
 
-  // Initialize workload for all members (0 tasks)
+  // 3️⃣ Initialize workload structure
   const workload = {}
   teamMembers.value.forEach((member) => {
     const name = `${member.first_name} ${member.last_name}`
-    workload[name] = 0
+    workload[name] = { total: 0, completed: 0 }
   })
 
-  // Count tasks per assigned member
+  // 4️⃣ Count tasks per assigned member
   tasks.forEach((task) => {
-    const name =
-      task.assigned_to?.first_name && task.assigned_to?.last_name
-        ? `${task.assigned_to.first_name} ${task.assigned_to.last_name}`
+    // adapt to your actual task structure
+    const user = task.user || task.assigned_to || null
+    const memberName =
+      user?.first_name && user?.last_name
+        ? `${user.first_name} ${user.last_name}`
         : null
-    if (name && workload[name] !== undefined) {
-      workload[name] += 1
+
+    if (memberName && workload[memberName]) {
+      workload[memberName].total += 1
+      if ((task.t_status || task.status || '').toLowerCase() === 'completed') {
+        workload[memberName].completed += 1
+      }
     }
   })
 
-  // Prepare data for chart
-  teamWorkloadData.value = Object.entries(workload).map(([member, count]) => ({ member, count }))
+  // 5️⃣ Prepare chart data
+  const totalData = []
+  const completedData = []
+  const labels = []
+
+  Object.entries(workload).forEach(([name, { total, completed }]) => {
+    labels.push(name)
+    totalData.push(total)
+    completedData.push(completed)
+  })
+
+  teamWorkloadData.value = { labels, totalData, completedData }
 
   renderChart()
 }
 
 const renderChart = () => {
   if (!canvasRef.value) return
-
-  const labels = teamWorkloadData.value.map((d) => d.member)
-  const counts = teamWorkloadData.value.map((d) => d.count)
-
   if (chartInstance) chartInstance.destroy()
+
+  const { labels, totalData, completedData } = teamWorkloadData.value
 
   chartInstance = new Chart(canvasRef.value, {
     type: 'bar',
@@ -73,9 +87,15 @@ const renderChart = () => {
       labels,
       datasets: [
         {
-          label: 'Tasks Assigned',
-          data: counts,
-          backgroundColor: '#4F46E5',
+          label: 'Completed Tasks',
+          data: completedData,
+          backgroundColor: '#8BD3B7',
+          borderRadius: 4,
+        },
+        {
+          label: 'Total Tasks',
+          data: totalData,
+          backgroundColor: '#C6E7FF',
           borderRadius: 4,
         },
       ],
@@ -83,11 +103,22 @@ const renderChart = () => {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { title: { display: true, text: 'Assignee' } },
-        y: { beginAtZero: true, title: { display: true, text: 'Tasks' }, ticks: { stepSize: 1 } },
+      plugins: {
+        legend: { display: true, position: 'bottom' },
       },
+      // scales: {
+      //   x: { title: { display: true, text: 'Team Members' } },
+      //   y: {
+      //     beginAtZero: true,
+      //     title: { display: true, text: 'Tasks' },
+      //     ticks: { stepSize: 1 },
+      //   },
+      // },
+      scales: {
+  x: { stacked: true, title: { display: true, text: 'Team Members' } },
+  y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Tasks' } },
+}
+
     },
   })
 }
@@ -98,10 +129,3 @@ onBeforeUnmount(() => {
   if (chartInstance) chartInstance.destroy()
 })
 </script>
-
-<style scoped>
-canvas {
-  width: 100%;
-  height: 100%;
-}
-</style>

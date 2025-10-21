@@ -77,20 +77,14 @@ import { useRoute, useRouter } from 'vue-router'
 import Notification from '@/components/notification.vue'
 import { useNotificationStore } from '@/stores/notification'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 
 const route = useRoute()
-const userStore = useUserStore()
+const authStore = useAuthStore()
 
 // fetch User data from Pinia store
-const user = computed(() => userStore.currentUser)
-
-onMounted(() => {
-  if (!user.value) {
-    userStore.fetchCurrentUser()
-  }
-})
+const user = computed(() => authStore.user)
 
 // fetch Menu Item from route name
 const currentPageTitle = computed(() => {
@@ -129,7 +123,7 @@ const handleClickOutside = (e: MouseEvent) => {
 onMounted(async () => {
   // store.connect('1')
   if (!user.value) {
-    await userStore.fetchCurrentUser()
+    await authStore.user()
   }
 
   if (user.value?.id) {

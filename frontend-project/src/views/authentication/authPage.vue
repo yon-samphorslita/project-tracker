@@ -81,7 +81,7 @@ async function handleLogin() {
     } else if (role === 'project_manager') {
       router.push('/projects')
     } else if (role === 'member') {
-      router.push('/member-dashboard')
+      router.push('/task')
     } else {
       router.push('/home')
     }

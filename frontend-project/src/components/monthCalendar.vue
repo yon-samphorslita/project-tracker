@@ -23,12 +23,8 @@
           {{ day.date.getDate() }}
         </div>
 
-        <!-- Events & Tasks -->
-        <div
-          v-for="(item, i) in day.items"
-          :key="i"
-          class="truncate text-xs p-1 my-1 border rounded bg-white shadow-sm flex items-center"
-        >
+        <!-- Events & Tasks (max 3 shown) -->
+        <div v-for="(item, i) in day.items.slice(0, 2)" :key="i" class="truncate text-xs p-1 my-1 border rounded bg-white shadow-sm flex items-center">
           <!-- Color bar -->
           <span
             class="rounded-md w-[2px] h-4 p-[1px] mr-1"
@@ -38,6 +34,14 @@
           <!-- Time + Title -->
           <span class="text-[rgba(56,56,56,0.8)]">{{ item.time || item.start_time || '' }}</span>
           - {{ item.title || item.t_name }}
+        </div>
+
+        <!-- +N More indicator -->
+        <div
+          v-if="day.items.length > 3"
+          class="text-xs text-gray-500 italic mt-1 ml-1"
+        >
+          +{{ day.items.length - 3 }} more
         </div>
       </div>
     </div>
@@ -134,8 +138,9 @@ function isToday(date) {
 // Colors for events/tasks
 function getColor(item) {
   if (item.type === 'event') {
-    // Color events by project or default
-    return '#FFE578'
+    if (item.project?.priority?.toUpperCase() === 'LOW') return '#C6E7FF'
+    if (item.project?.priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
+    if (item.project?.priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
   }
 
   if (item.type === 'task') {

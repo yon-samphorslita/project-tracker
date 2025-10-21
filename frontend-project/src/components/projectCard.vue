@@ -20,7 +20,20 @@
         <DescriptionLabel label="Progress">
           <ProgressBar :completed="completedTasks" :total="totalTasks" />
         </DescriptionLabel>
-        <DescriptionLabel label="Members" :description="project?.members || 'None'" />
+<DescriptionLabel label="Members">
+  <div class="flex -space-x-2">
+    <template v-if="project?.team?.members?.length">
+      <img
+        v-for="member in project.team.members"
+        :key="member.id"
+        :src="member.img_url"
+        :alt="member.first_name"
+        class="w-8 h-8 rounded-full border-2 border-white"
+      />
+    </template>
+    <span v-else class="text-gray-400">None</span>
+  </div>
+</DescriptionLabel>
       </div>
 
       <div class="border-t border-dashed border-gray-700/80"></div>

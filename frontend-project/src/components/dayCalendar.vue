@@ -24,12 +24,23 @@
         <!-- Hour lines -->
         <div v-for="hour in hours" :key="hour" class="h-12 border-b"></div>
 
+        <!-- Current Time Dashed Line -->
+        <div
+          v-if="isToday(day)"
+          class="absolute left-0 right-0 border-t-2 border-dashed border-red-400 z-10"
+          :style="{ top: `${currentTimePosition}px` }"
+        >
+          <!-- Optional small dot -->
+          <div class="absolute -left-1 top-[-3px] w-2 h-2 bg-red-400 rounded-full"></div>
+        </div>
+
         <!-- Events + Tasks -->
         <div
           v-for="(item, idx) in getItemsForDay(day)"
           :key="idx"
           class="absolute flex justify-between gap-4 left-1 right-1 bg-white rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
           :style="getItemStyle(item)"
+          @click="openEventPopup(item, $event)"
         >
           <div class="flex gap-2">
             <div
@@ -50,14 +61,55 @@
       </div>
     </div>
   </div>
+  <teleport to="body">
+
+  <EventPopup
+  :visible="showEventPopup"
+  :event="selectedEvent"
+  :item-top="popupItemTop"
+  :item-left="popupItemLeft"
+  :item-width="popupItemWidth"
+  :container-top="containerTop"
+  :container-height="containerHeight"
+  @close="showEventPopup = false"
+/>
+</teleport>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, isSameDay } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
 import { useSubtaskStore } from '@/stores/subtask'
+import EventPopup from './eventPopup.vue'
+
+const selectedEvent = ref(null)
+const showEventPopup = ref(false)
+const popupItemTop = ref(0)
+const popupItemHeight = ref(0)
+const containerTop = ref(0)
+const containerHeight = ref(0)
+const popupItemLeft = ref(0)
+const popupItemWidth = ref(0)
+
+function openEventPopup(item, event) {
+  selectedEvent.value = item
+
+  const rect = event.currentTarget.getBoundingClientRect()
+
+  // Compute center position of the clicked element
+  const centerX = rect.left + rect.width / 2 + window.scrollX
+  const centerY = rect.top + rect.height / 2 + window.scrollY
+
+  popupItemLeft.value = centerX
+  popupItemTop.value = centerY
+  popupItemWidth.value = rect.width
+  popupItemHeight.value = rect.height
+
+  showEventPopup.value = true
+}
+
 const props = defineProps({
   day: { type: Date, default: () => new Date() },
 })
@@ -69,7 +121,6 @@ const hours = Array.from({ length: 24 }).map((_, i) => {
   return `${hour12} ${ampm}`
 })
 
-// Convert backend ISO (UTC) to local Date
 function toLocal(dateStr) {
   if (!dateStr) return null
   return parseISO(dateStr)
@@ -78,7 +129,7 @@ function toLocal(dateStr) {
 const taskStore = useTaskStore()
 const eventStore = useEventStore()
 const subtaskStore = useSubtaskStore()
-// Combined list of tasks and events
+
 const items = computed(() => {
   const tasks = taskStore.tasks.map((t) => ({
     ...t,
@@ -113,13 +164,33 @@ onMounted(async () => {
   await Promise.all([taskStore.fetchTasks(), eventStore.fetchEvents()])
 })
 
-// Format time range
+// Current Time Dashed Line Logic
+const currentTimePosition = ref(0)
+const HOUR_HEIGHT_PX = 48 // 12 rows of 48px = 1hr = 3rem in Tailwind h-12
+const minuteToPx = HOUR_HEIGHT_PX / 60
+
+function updateCurrentTimePosition() {
+  const now = new Date()
+  const mins = now.getHours() * 60 + now.getMinutes()
+  currentTimePosition.value = mins * minuteToPx
+}
+
+onMounted(() => {
+  updateCurrentTimePosition()
+  const interval = setInterval(updateCurrentTimePosition, 60000) // update every minute
+  onUnmounted(() => clearInterval(interval))
+})
+
+// Show only for today
+function isToday(date) {
+  return isSameDay(new Date(), date)
+}
+
 function formatTimeRange(item) {
   if (!item.start || !item.end) return ''
   return `${format(item.start, 'HH:mm')} - ${format(item.end, 'HH:mm')}`
 }
 
-// Filter items for the day
 function getItemsForDay(selectedDay) {
   const dayStart = new Date(selectedDay)
   dayStart.setHours(0, 0, 0, 0)
@@ -132,7 +203,6 @@ function getItemsForDay(selectedDay) {
   })
 }
 
-// Calculate style for display
 function getItemStyle(item) {
   if (!item.start || !item.end) return { top: '0', height: '0.25rem' }
 
@@ -160,9 +230,12 @@ function getItemStyle(item) {
   }
 }
 
-// Color coding
 function getColor(item) {
-  if (item.type === 'event') return '#FFE578'
+  if (item.type === 'event') {
+    if (item.project?.priority?.toUpperCase() === 'LOW') return '#C6E7FF'
+    if (item.project?.priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
+    if (item.project?.priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
+  }
   if (item.type === 'task') {
     switch (item.t_priority?.toUpperCase()) {
       case 'LOW':

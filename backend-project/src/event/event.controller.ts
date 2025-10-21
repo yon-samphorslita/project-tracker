@@ -26,14 +26,14 @@ export class EventController {
   @Get()
   findAll(@Request() req): Promise<Event[]> {
     if (req.user.role === 'admin') return this.eventService.findAll();
-    return this.eventService.findAll(req.user.id);
+    return this.eventService.findAll(req.user.id, req.project.id);
   }
 
   @Get(':id')
   @UseGuards(EventGuard)
   findOne(@Param('id') id: string, @Request() req): Promise<Event> {
     const eventId = +id;
-    return this.eventService.findOne(eventId, req.user.id);
+    return this.eventService.findOne(eventId, req.user.id, req.project.id);
   }
 
   @Post()

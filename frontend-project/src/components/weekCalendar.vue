@@ -160,7 +160,10 @@ function getColor(item) {
     if (item.t_priority.toUpperCase() === 'MEDIUM') return '#FFD5DB'
     if (item.t_priority.toUpperCase() === 'HIGH') return '#FF8A5B'
   }
-  if (item.t_status && item.t_status.toLowerCase() === 'completed') return '#A3E635'
-  return '#FFE578'
+  if (item.type === 'event') {
+    if (item.project?.priority?.toUpperCase() === 'LOW') return '#C6E7FF'
+    if (item.project?.priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
+    if (item.project?.priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
+  }  return '#FFE578'
 }
 </script>

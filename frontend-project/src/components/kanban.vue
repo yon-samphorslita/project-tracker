@@ -64,11 +64,11 @@
           <div
             class="px-2 py-1 rounded-md text-sm"
             :style="{
-              background: getPriorityColors(kanban.taskpriority).background,
-              color: getPriorityColors(kanban.taskpriority).color,
+              background: getPriorityColors(kanban.priority).background,
+              color: getPriorityColors(kanban.priority).color,
             }"
           >
-            {{ kanban.taskpriority }}
+            {{ kanban.priority }}
           </div>
           <div class="w-8 h-8 rounded-full overflow-hidden">
             <img
@@ -81,7 +81,7 @@
         <hr class="my-1 border-gray-300" />
         <div class="flex items-center text-sm text-gray-700">
           <div class="font-semibold mr-2">Due:</div>
-          <div>2 Mar,2025</div>
+          <div>{{ kanban.due_date }}</div>
         </div>
       </div>
     </div>

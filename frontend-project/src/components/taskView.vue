@@ -1,19 +1,12 @@
 <template>
-  <div class="flex flex-col gap-6 mt-6">
+  <div class="flex flex-col gap-6 mt-2">
+    <!-- Header Controls -->
     <div class="flex justify-between gap-2 items-center">
-      <TypeList v-model:activeOption="activeOption" class="w-fit" />
-      <Button label="+ New Task" btn-color="#C6E7FF" btntext="black" @click="showTaskForm = true" />
-      <Form
-        v-model:modelValue="showTaskForm"
-        formTitle="Create Task"
-        :fields="taskFields"
-        endpoint="tasks"
-        :initialData="{ project_id: project.id }"
-        @submitted="handleTaskCreated"
-      />
-      <Search @update="searchQuery = $event" class="w-[50%]" />
+      <TypeList v-model:activeOption="activeOption" />
+      <Search @update="searchQuery = $event" />
     </div>
 
+    <!-- Task Views -->
     <div class="flex gap-4 mt-4">
       <template v-if="activeOption === 'Kanban'">
         <Kanban
@@ -35,18 +28,8 @@
         <Table :data="filteredTasksWithSubtasks" :columns="tableColumns" :format-date="formatDate">
           <template #actions="{ row }">
             <div class="flex gap-2">
-              <img
-                src="../assets/icons/edit.svg"
-                alt="Edit"
-                class="cursor-pointer"
-                @click="editTask(row)"
-              />
-              <img
-                src="../assets/icons/delete.svg"
-                alt="Delete"
-                class="cursor-pointer"
-                @click="$emit('onTaskDeleted', row)"
-              />
+              <img src="../assets/icons/edit.svg" alt="Edit" class="cursor-pointer" @click="editTask(row)" />
+              <img src="../assets/icons/delete.svg" alt="Delete" class="cursor-pointer" @click="$emit('onTaskDeleted', row)" />
             </div>
           </template>
         </Table>
@@ -73,7 +56,6 @@ import Kanban from '@/components/kanban.vue'
 import GanttChart from '@/components/gantt.vue'
 import Search from '@/components/search.vue'
 import TypeList from '@/components/typeList.vue'
-import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'
 
 const props = defineProps({
@@ -87,31 +69,32 @@ const props = defineProps({
 const emit = defineEmits(['onTaskCreated', 'onTaskUpdated', 'onTaskDeleted'])
 
 const activeOption = ref('Table')
-const showTaskForm = ref(false)
 const showEditTaskForm = ref(false)
 const editTaskData = ref({})
 const searchQuery = ref('')
 
+// ------------------ FILTERING ------------------
 const filteredTasksWithSubtasks = computed(() => {
   const q = searchQuery.value.toLowerCase()
   return props.tasks.filter(
-    (t) =>
-      t.title.toLowerCase().includes(q) ||
-      (t.description && t.description.toLowerCase().includes(q)),
+    (t) => t.title?.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q)
   )
 })
 
 const filteredTasksByStatus = (status) =>
-  filteredTasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === status.toLowerCase())
+  filteredTasksWithSubtasks.value.filter(
+    (t) => t.status?.toLowerCase() === status.toLowerCase()
+  )
 
+// ------------------ GANTT VIEW ------------------
 const ganttRows = computed(() =>
   filteredTasksWithSubtasks.value.map((t) => ({
     label: t.title,
     tasks: [
       {
         name: t.title,
-        start: t.start_date ? new Date(t.start_date) : new Date(),
-        end: t.due_date ? new Date(t.due_date) : new Date(),
+        start: new Date(t.start_date || Date.now()),
+        end: new Date(t.due_date || Date.now()),
         color: t.status?.toLowerCase() === 'completed' ? '#8BD3B7' : '#FFD966',
         icon: t.user?.img_url || null,
       },
@@ -128,11 +111,7 @@ function formatDate(dateStr) {
   })
 }
 
-// ------------------ TASK ACTIONS ------------------
-function handleTaskCreated(taskData) {
-  emit('onTaskCreated', taskData)
-}
-
+// ------------------ EDIT TASK ------------------
 function editTask(row) {
   editTaskData.value = {
     id: row.id,

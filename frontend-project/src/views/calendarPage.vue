@@ -103,7 +103,7 @@ const eventFields = computed(() => [
   { model: 'endDate', label: 'End Date & Time', type: 'datetime-local', required: true },
   { model: 'location', label: 'Location', type: 'text' },
   {
-    model: 'projectId',
+    model: 'project',
     label: 'Project',
     type: 'select',
     options: projectStore.projects, // now reactive
