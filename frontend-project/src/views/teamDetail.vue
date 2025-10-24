@@ -14,11 +14,17 @@
         <div class="border rounded-lg p-6 bg-white shadow-sm">
             <h2 class="text-xl font-semibold mb-4">{{ team.name }}</h2>
 
+            <div>
+              <div class="text-lg font-semibold mt-5 mb-2">Description</div>
+              <div class="pl-4 mb-6 text-lg text-gray-700">{{ team.description || 'No description provided.' }}</div>
+            </div>
+
             <!-- Project Manager  -->
             <div class="border rounded mb-3">
               <button
                 @click="toggleAccordion('pms')"
                 class="w-full text-left px-4 py-2 font-semibold bg-gray-100 hover:bg-gray-200 flex justify-between items-center"
+                :style="{ backgroundColor: getColorFromId(team.id) }"
               >
                 Project Managers ({{ team.pms.length }})
                 <span>
@@ -76,8 +82,9 @@
               <button
                 @click="toggleAccordion('members')"
                 class="w-full text-left px-4 py-2 font-semibold bg-gray-100 hover:bg-gray-200 flex justify-between items-center"
+                :style="{ backgroundColor: getColorFromId(team.id) }"
               >
-                Team Member ({{ team.members.length }})
+                Team Member ({{ allMembers.length }})
                 <span>
                   <svg
                     v-if="openSections.includes('members')"
@@ -110,7 +117,7 @@
 
                 <div class="flex flex-col gap-2">
                   <div
-                      v-for="member in team.members"
+                      v-for="member in allMembers"
                       :key="member.id"
                       class="flex items-center gap-3 border rounded-lg px-3 py-2 shadow-sm bg-gray-50 hover:bg-gray-100"
                       @click="gotoProfile(member.id)"
@@ -132,6 +139,7 @@
             <div class="border rounded mb-3">
               <button
                 @click="toggleAccordion('projects')"
+                :style="{ backgroundColor: getColorFromId(team.id) }"
                 class="w-full text-left px-4 py-2 font-semibold bg-gray-100 hover:bg-gray-200 flex justify-between items-center"
               >
                 Assigned Project ({{ team.projects.length }})
@@ -188,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import TeamLayout from './pageLayout.vue'
 import ProjectCard from '@/components/projectCard.vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -207,13 +215,27 @@ const teamStore = useTeamStore()
 // define state 
 const teamId = route.params.id as string
 const team = ref({ 
+    id: 0,
     name: '', 
+    description: '',
     pms: [] as any[], 
+    mainMembers: [] as any[],
     members: [] as any[],
     projects: [] as any[]
 })
 const isReady = ref(false)
-const openSections = ref<string[]>([])
+// const openSections = ref<string[]>([])
+const openSections = ref<string[]>(['pms', 'members', 'projects'])
+
+
+const allMembers = computed(() => {
+  const map = new Map<number, any>()
+
+  for (const m of team.value.mainMembers || []) map.set(m.id, m)
+  for (const m of team.value.members || []) map.set(m.id, m)
+
+  return Array.from(map.values())
+})
 
 function toggleAccordion(section: string) {
   if (openSections.value.includes(section)) {   // Close the section if it's already open
@@ -236,6 +258,11 @@ function getCompletedTasks(projectId: number) {
 
 function getTotalTasks(projectId: number) {
   return taskStore.tasks.filter(t => t.project?.id === projectId).length
+}
+
+function getColorFromId(id: number) {
+  const colors = ['#ffe4ef', '#f2d9ff', '#fbf8cc', '#bde0fe', '#f85c6a', '#daffcc', '#ffe5ec']
+  return colors[id % colors.length]
 }
 
 

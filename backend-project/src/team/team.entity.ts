@@ -10,12 +10,22 @@ export class Team {
   @Column()
   name: string;
 
+  @Column()
+  description: string;
+
+  // PMs (Many-to-Many)
   @ManyToMany(() => User, (user) => user.team)
   @JoinTable({ name: 'team_pms' })
   pms: User[];
 
-  @OneToMany(() => User, (user) => user.team)
+  // Secondary Members (Many-to-Many)
+  @ManyToMany(() => User, (user) => user.secondaryTeams)
+  @JoinTable({ name: 'user_teams' })
   members: User[];
+
+  // Users who have this team as main
+  @OneToMany(() => User, (user) => user.team)
+  mainMembers: User[];
 
   @OneToMany(() => Project, (project) => project.team)
   projects: Project[];

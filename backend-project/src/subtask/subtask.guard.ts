@@ -15,9 +15,9 @@ export class SubtaskGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user?.id) {
-      throw new ForbiddenException('User not authenticated');
-    }
+    console.log('SubtaskGuard - User:', user);
+    if (!user?.id) throw new ForbiddenException('User not authenticated');
+    
 
     // Check if the route has a subtask ID
     const subtaskId = request.params.id ? +request.params.id : null;
@@ -33,8 +33,8 @@ export class SubtaskGuard implements CanActivate {
       }
 
       // Only allow if user owns the parent task/project
-      const task = await subtask.task;
-      if (task.user !== user.id && user.role !== 'admin') {
+      const task = subtask.task;
+      if (task.user.id !== user.id && user.role !== 'admin') {
         throw new ForbiddenException(
           'You are not authorized to access this subtask',
         );
@@ -46,22 +46,36 @@ export class SubtaskGuard implements CanActivate {
 
     // For routes like task/:taskId, you could optionally check task ownership
     const taskId = request.params.taskId ? +request.params.taskId : null;
+    // if (taskId) {
+    //   const subtasks = await this.subtaskService.findByTaskId(taskId);
+    //   if (!subtasks) throw new NotFoundException('Task not found');
+
+    //   // Admin bypass
+    //   if (user.role === 'admin') return true;
+
+    //   // Check if user owns the task
+    //   if (subtasks.length > 0 && subtasks[0].task.user !== user.id) {
+    //     throw new ForbiddenException(
+    //       'You are not authorized to access subtasks for this task',
+    //     );
+    //   }
+
+    //   return true;
+    // }
+
     if (taskId) {
       const subtasks = await this.subtaskService.findByTaskId(taskId);
-      if (!subtasks) throw new NotFoundException('Task not found');
+      if (!subtasks) throw new NotFoundException('No subtasks found for this task');
 
-      // Admin bypass
       if (user.role === 'admin') return true;
 
-      // Check if user owns the task
-      if (subtasks.length > 0 && subtasks[0].task.user !== user.id) {
-        throw new ForbiddenException(
-          'You are not authorized to access subtasks for this task',
-        );
+      if (subtasks.length > 0 && subtasks[0].task.user.id !== user.id) {
+        throw new ForbiddenException('You are not authorized to access subtasks for this task');
       }
 
       return true;
     }
+
 
     // For creation or general access
     return true;

@@ -32,6 +32,20 @@ export class NotificationService {
     return this.notificationRepository.save(notification);
   }
 
+  // notify multiple users
+  async notifyUsers(userIds: number[], title: string, message: string) {
+    const users = await this.userRepo.findBy({ id: In(userIds) });
+    if (!users.length) return;
+
+    const notifications = users.map(u => this.notificationRepository.create({
+      title,
+      message,
+      read_status: false,
+      user: { id: u.id } as User,
+    }));
+
+    await this.notificationRepository.save(notifications);
+  }
 
   // fetch all notifications 
   async findByUser(userId: number): Promise<Notification[]> {

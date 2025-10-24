@@ -18,6 +18,7 @@ import TeamDetail from '@/views/teamDetail.vue'
 import UserProfile from '@/views/userProfile.vue'
 import NotificationPage from '@/views/notificationPage.vue'
 import Taskpage from '@/views/taskpage.vue'
+import Dashboard from '@/views/dashboard.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -48,6 +49,7 @@ const routes = [
 
   { path: '/notifications', component: NotificationPage, meta: { requiresAuth: true, title:'Notifications' } },
   { path: '/task', component: Taskpage, meta: { requiresAuth: true, title:'Tasks' } },
+  { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, title:'Dashboard' } },
 
 ]
   
@@ -79,7 +81,7 @@ router.beforeEach(async (to, from, next) => {
     const role = authStore.user?.role
     if (role === 'admin') return next('/settings/profile')
     if (role === 'project_manager') return next('/projects')
-    if (role === 'member') return next('/home')
+    if (role === 'member') return next('/dashboard')
     return next('/') // fallback
   }
 

@@ -7,6 +7,10 @@ export class UpdateTeamDto  {
   @IsNotEmpty()
   name: string
 
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @IsArray()
   @IsOptional()
   addPms?: number[]
@@ -22,4 +26,7 @@ export class UpdateTeamDto  {
   @IsArray()
   @IsOptional()
   removeMembers?: number[]
+
+  addSecondaryMembers?: number[];
+  removeSecondaryMembers?: number[];
 }

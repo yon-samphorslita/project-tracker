@@ -184,6 +184,10 @@ export class TaskService {
       changes.push(`Priority from "${task.t_priority}" to "${dto.t_priority}"`);
     }
 
+    if (dto.t_status && dto.t_status !== task.t_status) {
+      changes.push(`Status from "${task.t_status}" to "${dto.t_status}"`);
+    }
+
     // Compare date fields (using dayjs for clarity)
     if (
       dto.start_date &&

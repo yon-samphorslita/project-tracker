@@ -31,6 +31,11 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @Get(':id/teams')
+  getUserTeams(@Param('id') id: number) {
+    return this.userService.getUserTeams(id);
+  }
+
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,

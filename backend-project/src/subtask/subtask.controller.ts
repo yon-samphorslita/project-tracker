@@ -7,13 +7,16 @@ import {
   Param,
   Delete,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { SubtaskService } from './subtask.service';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
 import { Subtask } from './subtask.entity';
 import { SubtaskGuard } from './subtask.guard';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('subtasks')
 export class SubtaskController {
   constructor(private readonly subtaskService: SubtaskService) {}
@@ -41,7 +44,11 @@ export class SubtaskController {
   @Get('task/:taskId')
   @UseGuards(SubtaskGuard)
   findByTaskId(@Param('taskId') taskId: string): Promise<Subtask[]> {
-    return this.subtaskService.findByTaskId(+taskId);
+    const id = Number(taskId);
+    if (isNaN(id)) {
+      throw new BadRequestException('Invalid task ID');
+    }
+    return this.subtaskService.findByTaskId(id);
   }
 
   // Update a specific subtask by ID
@@ -57,7 +64,7 @@ export class SubtaskController {
   // Delete a specific subtask by ID
   @Delete(':id')
   @UseGuards(SubtaskGuard)
-  remove(@Param('id') id: string): Promise<void> {
+  remove(@Param('id') id: string): Promise<Subtask> {
     return this.subtaskService.remove(+id);
   }
 }

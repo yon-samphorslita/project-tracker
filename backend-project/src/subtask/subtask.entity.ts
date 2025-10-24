@@ -23,6 +23,9 @@ export class Subtask {
   })
   status: Status;
 
+  @Column()
+  taskId: number;
+
   @ManyToOne(() => Task, (task) => task.subtasks, { onDelete: 'CASCADE' })
   task: Task;
 

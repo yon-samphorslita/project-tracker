@@ -1,35 +1,22 @@
 <template>
-    <!-- <div class="flex flex-col gap-4 "> -->
+    <div class="flex flex-col gap-4 ">
       <div
-
-        class="flex flex-col justify-between border w-[400px] h-60 rounded-lg shadow-sm bg-white 
-              transition transform hover:scale-[1.02] hover:shadow-md hover:bg-grey-50"
-        :style="{ borderColor: getColorFromId(team.id) }"
+        v-for="team in props.teams"
+        :key="team.id"
+        class="flex justify-between border rounded-lg p-4 shadow-sm bg-white hover:bg-[#C6E7FF]" 
         @click="goToTeamDetail(team.id)"
       >
-        <h2 
-          class="text-lg font-semibold p-4 mb-2 rounded-t-lg"
-          :style="{ background: getColorFromId(team.id) }"
-        >
-          {{ team.name }}
-        </h2>
+              
 
+        <h2 class="text-lg font-semibold mb-2">{{ team.name }}</h2>
         
-        <div class="px-4">
-          <div class=" ">Description:</div>
-          <p class="text-gray-600 mb-4 pl-4 line-clamp-3">{{ team.description || 'No description provided.' }}</p>
-        </div>
-
-        <div class="flex justify-end flex-grow  items-end gap-8 p-4">
+        <div class="flex items-center gap-8">
           <!-- Edit button -->
           <button
-            class="text-blue-500 hover:text-blue-700 transition "
+            class="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
             @click.stop="editTeam(team.id)"
           >
-            <!-- Edit -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M6.414 15.89L16.556 5.748l-1.414-1.414L5 14.476v1.414zm.829 2H3v-4.243L14.435 2.212a1 1 0 0 1 1.414 0l2.829 2.829a1 1 0 0 1 0 1.414zM3 19.89h18v2H3z"/>
-            </svg>
+            Edit
           </button>
 
           <!-- Delete icon -->
@@ -46,7 +33,7 @@
         </div>
 
       </div>
-    <!-- </div> -->
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -59,11 +46,7 @@ import axios from 'axios'
 const teamStore = useTeamStore()
 // const { teams } = storeToRefs(teamStore)
 const props = defineProps<{
-  team: { 
-    id: number;
-    name: string ;
-    description: string
-  }
+  teams: { id: number; name: string }[]
 }>()
 
 function goToTeamDetail(id: number) {
@@ -89,13 +72,6 @@ async function deleteTeam(id: number) {
     alert('Failed to delete the team.')
   }
 }
-
-function getColorFromId(id: number) {
-  const colors = ['#ffe4ef', '#f2d9ff', '#fbf8cc', '#bde0fe', '#f85c6a', '#daffcc', '#ffe5ec'];
-  return colors[id % colors.length];
-}
-
-
 onMounted(() => {
   teamStore.fetchTeams()
 })

@@ -2,24 +2,49 @@
     <TaskLayout>
         <div class="flex flex-col gap-4">
 
-          <!-- Header (New team button , search, filter + Table header) -->
+          <!-- Header  -->
           <div class="flex flex-col gap-4 pt-5 bg-white">
-            <div class="flex justify-between items-center">
-              <Button
-                label="+ New Team"
-                btn-color="#C6E7FF"
-                btntext="black"
-                @click="showTaskForm = true"
-              />
-              <taskform 
-                v-model:modelValue="showTaskForm"
-                formTitle="Create Task" 
-                :fields="taskFields" 
-                endpoint="tasks"
-              />
 
+            <!-- Filter Project  -->
+            <div class="flex justify-between items-center">
+               <div class="relative inline-block text-left">
+                <button
+                  @click="toggleProjectDropdown"
+                  class="inline-flex justify-between items-center w-64 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
+                >
+                  {{ selectedProjectLabel }}
+                  <svg
+                    class="w-4 h-4 ml-2 text-gray-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                <div
+                  v-if="isProjectDropdownOpen"
+                  class="absolute z-10 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg"
+                >
+                  <ul class="py-1">
+                    <li
+                      v-for="option in projectOptions"
+                      :key="option.value"
+                      @click="selectProject(option)"
+                      class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {{ option.label }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+
+              <!-- Search and Sort by funtion  -->
               <div class="flex gap-4 items-center">
-                <Search @update="searchQuery = $event" />
+                <Search class="w-[300px] h-4" @update="searchQuery = $event" />
                 <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
               </div>
             </div>
@@ -27,7 +52,7 @@
           </div>
 
           <div class="flex flex-col gap-3 border rounded-2xl p-4 bg-white h-full">
-          <TaskCard :tasks="taskList" @edit-task="handleEdit" @delete-task="handleDelete" />
+            <TaskCard :tasks="filteredTasks" @edit-task="handleEdit" @delete-task="handleDelete" />
           </div>
 
         </div>
@@ -37,91 +62,37 @@
 <script setup lang="ts">
 import TaskCard from '@/components/taskCard.vue'
 import TaskLayout from './pageLayout.vue'
-import Button from '@/components/button.vue'
 import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
-import taskform from '@/components/form.vue'
-import { onMounted, ref } from 'vue'
-
+import { computed, onMounted, ref, watch } from 'vue'
+import { useProjectStore } from '@/stores/project'
+import axios from 'axios'
+import { useTaskStore } from '@/stores/task'
 
 // state 
 const showTaskForm = ref(false)
 const searchQuery = ref('')
 const selectedSort = ref('')
-const sortOptions = [
-  { value: 'alphabetical-asc', label: 'Alphabetical Order (A → Z)' },
-  { value: 'alphabetical-desc', label: 'Alphabetical Order (Z → A)' },
-  { value: 'date-asc', label: 'Date Created (Oldest First)' },
-  { value: 'date-desc', label: 'Date Created (Newest First)' },
-]   
+const isProjectDropdownOpen = ref(false)
+const selectedProject = ref('all')
 
-const taskFields = [
-  { type: 'text', label: 'Task Title', placeholder: 'Enter task title', model: 'title' },
-  {
-    type: 'textarea',
-    label: 'Description',
-    placeholder: 'Enter description',
-    model: 'description',
-  },
-  // { type: 'select', label: 'Assignee', options: Members, model: 'assignee' },
-  //   { 
-  //   type: 'select', 
-  //   label: 'Assignee', 
-  //   options: teamStore.teams.map(team => ({ 
-  //       id: team.id, 
-  //       name: team.name 
-  //   })),
-  //   model: 'team_id' 
-  // },
-  {
-    type: 'select',
-    label: 'Priority',
-    options: [
-      { id: 'high', name: 'High' },
-      { id: 'medium', name: 'Medium' },
-      { id: 'low', name: 'Low' },
-    ],
-    model: 'priority',
-  },
-  { type: 'date', label: 'Start Date', model: 'startDate' },
-  { type: 'date', label: 'Due Date', model: 'dueDate' },
-]
+const projectStore = useProjectStore()
+const taskStore = useTaskStore()
 
-const taskList = ref([
-  {
-    id: 1,
-    title: 'Design Login Page',
-    projectname: 'Website Redesign',
-    due_date: '2025-10-15',
-    priority: 'High',
-    status: 'Completed'
-  },
-  {
-    id: 2,
-    title: 'Design Figma',
-    projectname: 'Website Redesign',
-    due_date: '2025-10-15',
-    priority: 'High',
-    status: 'In Progress'
-  },
-  {
-    id: 3,
-    title: 'Fix API Endpoint',
-    projectname: 'Backend Refactor',
-    due_date: '2025-10-20',
-    priority: 'Low',
-    status: 'Not Started'
-  },
-  {
-    id: 4,
-    title: 'Deploy to Production',
-    projectname: 'E-Commerce Platform',
-    due_date: '2025-10-25',
-    priority: 'Medium',
-    status: 'In Progress'
-  }
+const projectOptions = computed(() => [
+  { value: 'all', label: 'All Projects' },
+  ...projectStore.projects.map((p) => ({
+    value: p.id,
+    label: p.p_name ,
+  })),
 ])
 
+const sortOptions = [
+  { value: 'priority-asc', label: 'Priority (Low → High)' },
+  { value: 'priority-desc', label: 'Priority (High → Low)' },
+  { value: 'due-asc', label: 'Due Date (Earliest First)' },
+  { value: 'due-desc', label: 'Due Date (Latest First)' },
+]   
 
 function handleEdit(id: number) {
   console.log('Edit task ID:', id)
@@ -131,28 +102,78 @@ function handleDelete(id: number) {
   console.log('Delete task ID:', id)
 }
 
-// Computed filtered & sorted Tasks
-// const filteredSortedTasks = computed(() => {
-//   let list = [...teams.value]
-//   console.log('Teams:', list)
+function toggleProjectDropdown() {
+  isProjectDropdownOpen.value = !isProjectDropdownOpen.value
+}
 
-//   if (searchQuery.value) {
-//     const q = searchQuery.value.toLowerCase()
-//     list = list.filter(team => team.name.toLowerCase().includes(q))
-//   }
+function selectProject(option: { value: string; label: string }) {
+  selectedProject.value = option.value
+  isProjectDropdownOpen.value = false
+}
 
-//   if (selectedSort.value === 'alphabetical-asc') {
-//     list.sort((a, b) => a.name.localeCompare(b.name))
-//   } else if (selectedSort.value === 'alphabetical-desc') {
-//     list.sort((a, b) => b.name.localeCompare(a.name))
-//   }    
+const selectedProjectLabel = computed(() => {
+  return (
+    projectOptions.value.find(opt => opt.value === selectedProject.value)?.label ||
+    'Select Project'
+  )
+})
 
-//   return list
+// Filter tasks by selected project
+const filteredTasks = computed(() => {
+  let list = [...taskStore.tasks]
+
+  // Filter by selected project
+  if (selectedProject.value !== 'all') {
+    // const selected = projectOptions.value.find(p => p.value === selectedProject.value)
+    list = list.filter(t => t.project?.id === selectedProject.value)
+  }
+
+  // Filter by search query (task name or project name)
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(
+      t =>
+        t.t_name.toLowerCase().includes(q) ||
+        t.project?.p_name.toLowerCase().includes(q)
+    )
+  }
+
+  // Sort
+  if (selectedSort.value) {
+    if (selectedSort.value === 'priority-asc') {
+      const priorityOrder = { low: 1, medium: 2, high: 3 }
+      list.sort((a, b) => (priorityOrder[a.t_priority] || 0) - (priorityOrder[b.t_priority] || 0))
+    } else if (selectedSort.value === 'priority-desc') {
+      const priorityOrder = { low: 1, medium: 2, high: 3 }
+      list.sort((a, b) => (priorityOrder[b.t_priority] || 0) - (priorityOrder[a.t_priority] || 0))
+    } else if (selectedSort.value === 'due-asc') {
+      list.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+    } else if (selectedSort.value === 'due-desc') {
+      list.sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
+    }
+  }
+
+  // console.log(
+  //   'Filtering tasks:',
+  //   'Selected project:', selectedProject.value,
+  //   'Task projects:', list.map(t => t.project?.id)
+  // )
+
+  return list
+})
+
+// watch(filteredTasks, (newVal) => {
+//   console.log('Filtered tasks:', newVal.map(t => t.t_name))
 // })
 
 // Sorting
 const applySort = (option) => {
   selectedSort.value = option
 }
+
+onMounted(async () => {
+  await projectStore.fetchProjects()
+  await taskStore.fetchTasks()
+})
 
 </script>
