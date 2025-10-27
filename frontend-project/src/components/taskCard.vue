@@ -58,7 +58,7 @@
 
         <!-- Action Buttons  -->
         <div class="flex justify-around gap-2 bg-red-">
-          <div v-if="item.t_status === 'not started'">
+          <!-- <div v-if="item.t_status === 'not started'">
             <button
               class="px-3 py-1 border border-blue-500 rounded-lg bg-blue-100 text-blue-700 
                     hover:bg-blue-500 hover:text-white cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
@@ -84,7 +84,21 @@
               Completed
             </div>
 
+          </div> -->
+
+          <!-- Direct Dropdown (Start / Finish toggle) -->
+          <div class="relative inline-block text-left">
+            <select
+              v-model="item.t_status"
+              @change="handleStatusChange(item)"
+              class="px-3 py-1 border border-gray-300 rounded-lg bg-white text-gray-700 
+                    hover:border-gray-400 focus:ring focus:ring-blue-100 transition-all duration-200 shadow-sm"
+            >
+              <option value="not started">Start</option>
+              <option value="in progress">Finish</option>
+            </select>
           </div>
+
           
         </div>
 
@@ -210,6 +224,15 @@ function formatDate(dateStr: string) {
 
   return dueDate.toLocaleDateString('en-GB', options)
 }
+
+const handleStatusChange = (item) => {
+  if (item.t_status === 'not started') {
+    startTask(item.id)
+  } else if (item.t_status === 'in progress') {
+    finishTask(item.id)
+  }
+}
+
 
 async function startTask(taskId: number) {
   // emit('update-status', taskId, 'in progress')

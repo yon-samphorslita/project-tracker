@@ -6,9 +6,9 @@
               Notifications
             </div>
 
-            <div class="flex gap-4 w-fullitems-center">
+            <div class="flex gap-4 w-full items-center justify-end">
               <!-- search function  -->
-              <search @update="searchQuery = $event" />
+              <!-- <search @update="searchQuery = $event" /> -->
 
               <div class="flex justify-end items-center bg-purple-  gap-3 w-1/2">
                 <!-- mark as read button  -->

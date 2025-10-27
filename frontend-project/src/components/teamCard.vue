@@ -91,7 +91,7 @@ async function deleteTeam(id: number) {
 }
 
 function getColorFromId(id: number) {
-  const colors = ['#ffe4ef', '#f2d9ff', '#fbf8cc', '#bde0fe', '#f85c6a', '#daffcc', '#ffe5ec'];
+  const colors = ['#ffe4ef', '#f2d9ff', '#fbf8cc', '#bde0fe', '#f85c6a', '#daffcc', '#ffe5ec', '#daffcc', ];
   return colors[id % colors.length];
 }
 

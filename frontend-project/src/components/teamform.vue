@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="modelValue"
-    class="fixed top-0 left-[250px] w-[calc(100vw-250px)] h-full bg-[rgba(153,153,153,0.2)] backdrop-blur-sm flex items-center justify-center z-[1000]"
+    class="fixed top-0 left-[250px] w-[calc(100vw-250px)] h-full bg-[rgba(153,153,153,0.2)] backdrop-blur-sm flex items-center justify-center "
   >
     <div class="bg-white p-10 rounded-lg w-[600px] h-[450px] max-w-[90%] shadow-xl">
       <div class="text-2xl mb-5 text-[#2c3e50] font-semibold">Create New Team</div>
