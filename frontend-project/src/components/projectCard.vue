@@ -6,9 +6,12 @@
         <div class="flex flex-col gap-1">
           <div class="text-lg font-semibold text-gray-900">
             {{ name || 'Project Name' }}
+            <span class="ml-2">
+              <Status :status="status || 'not started'" />
+            </span>
           </div>
         </div>
-        <Status :status="status || 'not started'" />
+        <Status :priority="priority || 'not started'" />
       </div>
 
       <div class="border-t border-dashed border-gray-700/80"></div>
@@ -70,6 +73,7 @@ const props = defineProps({
   startdate: String,
   enddate: String,
   status: String,
+  priority: String,
   project: Object,
 })
 

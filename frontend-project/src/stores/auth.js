@@ -119,6 +119,12 @@ export const useAuthStore = defineStore(
       const response = await api.post('/auth/reset-password', { email, otp, newPassword })
       return response.data
     }
+
+    async function verifyOtp({ email, otp }) {
+      const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, { email, otp })
+      return response.data
+    }
+
     return {
       user,
       users,
@@ -134,6 +140,7 @@ export const useAuthStore = defineStore(
       createUser,
       requestOtp,
       resetPassword,
+      verifyOtp,
     }
   },
   { persist: true },

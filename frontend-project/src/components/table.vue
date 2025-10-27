@@ -1,5 +1,5 @@
 <template>
-  <div class="border border-gray-600/80 rounded-lg overflow-x-auto shadow-lg max-h-[600px]">
+  <div class="w-full border border-gray-600/80 rounded-lg overflow-x-auto shadow-lg max-h-[600px]">
     <table class="w-full border-collapse">
       <thead>
         <tr>
@@ -27,10 +27,16 @@
 
             <!-- Priority, Status, Active -->
             <template v-else-if="col.key === 'priority'">
-              <Status :priority="row[col.key]" />
+              <div class="flex justify-center items-center">
+                <Status :priority="row[col.key]" />
+              </div>
             </template>
             <template v-else-if="col.key === 'status'">
-              <Status :status="row[col.key]" />
+              <Status
+                :status="row[col.key]"
+                :editable="true"
+                @update:status="(val) => updateStatus({ ...row, status: val })"
+              />
             </template>
             <template v-else-if="col.key === 'active'">
               <Status :active="row[col.key]" />
@@ -38,7 +44,7 @@
 
             <!-- Icon / Avatar -->
             <template v-else-if="col.key === 'icon'">
-              <div class="flex items-center">
+              <div class="flex items-center justify-center">
                 <img
                   v-if="row[col.key]"
                   :src="row[col.key]"
@@ -85,6 +91,11 @@ const props = defineProps({
   columns: { type: Array, required: true },
   formatDate: { type: Function, default: null },
 })
+const emit = defineEmits(['statusUpdated'])
+
+function updateStatus(row) {
+  emit('statusUpdated', { id: row.id, status: row.status })
+}
 
 function getInitials(name) {
   if (!name) return ''

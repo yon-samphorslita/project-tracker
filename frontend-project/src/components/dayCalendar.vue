@@ -245,6 +245,6 @@ function getColor(item) {
         return '#FF8A5B'
     }
   }
-  return '#D9CBFB'
+  return '#D9D9D9'
 }
 </script>

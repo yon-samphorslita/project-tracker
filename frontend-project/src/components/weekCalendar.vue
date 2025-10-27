@@ -1,7 +1,39 @@
 <template>
-  <div class="min-w-[740px] max-w-[0px] overflow-x-auto border h-[800px] rounded-md">
+  <div
+    ref="outerScroll"
+    class="min-w-[740px] max-w-[0px] overflow-x-auto border h-[800px] rounded-md relative"
+  >
     <!-- Inner grid with dynamic width -->
-    <div class="min-w-max relative" :style="{ width: `${monthDays.length * 80 + 80}px` }">
+    <div
+      ref="innerGrid"
+      class="min-w-max relative"
+      :style="{ width: `${monthDays.length * 80 + 80}px` }"
+    >
+      <!-- Current time dashed line + time label (only within today's column) -->
+      <div
+        v-if="isCurrentMonth && currentDayIndex >= 0"
+        class="absolute pointer-events-none flex items-center"
+        :style="{
+          top: `${currentTopRem}rem`,
+          left: `${80 + currentDayIndex * 80}px`,
+          width: '80px',
+          zIndex: 50,
+        }"
+      >
+        <!-- Time label -->
+        <div
+          class="absolute -left-[68px] top-[2px] text-xs font-medium px-2 py-[1px] rounded bg-black text-white border shadow-sm"
+          :style="{
+            transform: 'translateY(-50%)',
+          }"
+        >
+          {{ format(currentTime, 'hh:mm a') }}
+        </div>
+
+        <!-- Dashed line -->
+        <div class="w-full border-t-2 border-dashed border-black"></div>
+      </div>
+
       <!-- Header Row (sticky) -->
       <div
         class="grid grid-cols-[80px_repeat(var(--cols),80px)] sticky top-0 z-20 bg-white border-b"
@@ -19,7 +51,7 @@
         :style="{ '--cols': monthDays.length }"
       >
         <!-- Hours column (sticky) -->
-        <div class="flex flex-col sticky left-0 z-10 border-r bg-white">
+        <div class="flex flex-col sticky left-0 z-10 border-r bg-white relative">
           <div
             v-for="hour in hours"
             :key="hour"
@@ -60,10 +92,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import { startOfMonth, endOfMonth, addDays, format, differenceInMinutes } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
+
 // Props
 const props = defineProps({ monthStartDate: { type: Date, default: () => new Date() } })
 
@@ -83,18 +116,74 @@ const hours = Array.from({ length: 24 }).map((_, i) => {
   return `${hour12} ${ampm}`
 })
 
-// Task store
+// Task & Event stores
 const taskStore = useTaskStore()
 const eventStore = useEventStore()
-// Reactive current time
+
+// Refs for scroll/positioning
+const outerScroll = ref(null)
+const innerGrid = ref(null)
+
+// Reactive current time (updates every minute)
 const currentTime = ref(new Date())
 let timer
 onMounted(async () => {
   await Promise.all([eventStore.fetchEvents(), taskStore.fetchTasks()])
+
+  // initial center scroll to current day (best-effort)
+  await nextTick()
+  centerCurrentDate()
+
   timer = setInterval(() => (currentTime.value = new Date()), 60000)
 })
 onUnmounted(() => clearInterval(timer))
 
+/* ---------- Current date / position helpers ---------- */
+const isCurrentMonth = computed(() => {
+  const today = new Date(currentTime.value)
+  // same year and month as props.monthStartDate
+  return (
+    today.getFullYear() === props.monthStartDate.getFullYear() &&
+    today.getMonth() === props.monthStartDate.getMonth()
+  )
+})
+
+// index of today's day in monthDays (0-based)
+const currentDayIndex = computed(() => {
+  if (!isCurrentMonth.value) return -1
+  const today = new Date(currentTime.value)
+  const start = startOfMonth(props.monthStartDate)
+  const diffMs = today.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays < 0) return 0
+  if (diffDays >= monthDays.length) return monthDays.length - 1
+  return diffDays
+})
+
+// top position in rem units (same scale as your task item calculation):
+// you used: (hours + minutes/60) * 4 rem per hour => 4rem per hour
+const currentTopRem = computed(() => {
+  const t = new Date(currentTime.value)
+  const hoursVal = t.getHours()
+  const minutes = t.getMinutes()
+  return (hoursVal + minutes / 60) * 4
+})
+
+function centerCurrentDate() {
+  // best-effort centering of the current date column on first view
+  if (!outerScroll.value || !innerGrid.value) return
+  if (currentDayIndex.value < 0) return
+
+  const container = outerScroll.value
+  const containerWidth = container.clientWidth
+  // each column is 80px; first column (hours) is 80px
+  const dayLeft = 80 + currentDayIndex.value * 80 // px
+  const dayCenter = dayLeft + 40 // center of the day column
+  const targetScrollLeft = Math.max(0, Math.round(dayCenter - containerWidth / 2))
+  container.scrollLeft = targetScrollLeft
+}
+
+/* ---------- Data selection & formatting (unchanged logic) ---------- */
 function getItemsForDay(dayDate) {
   const dayStart = new Date(format(dayDate, 'yyyy-MM-dd') + 'T00:00:00')
   const dayEnd = new Date(format(dayDate, 'yyyy-MM-dd') + 'T23:59:59')
@@ -112,6 +201,7 @@ function getItemsForDay(dayDate) {
       const endTime = new Date(t.due_date)
       return {
         ...t,
+        type: 'task',
         startTime: startTime < dayStart ? dayStart : startTime,
         endTime: endTime > dayEnd ? dayEnd : endTime,
       }
@@ -130,6 +220,7 @@ function getItemsForDay(dayDate) {
       const endTime = e.end_date ? new Date(e.end_date) : startTime
       return {
         ...e,
+        type: 'event',
         startTime: startTime < dayStart ? dayStart : startTime,
         endTime: endTime > dayEnd ? dayEnd : endTime,
       }
@@ -155,16 +246,18 @@ function getItemStyle(item) {
 }
 
 function getColor(item) {
-  if (item.t_priority) {
-    if (item.t_priority.toUpperCase() === 'LOW') return '#C6E7FF'
-    if (item.t_priority.toUpperCase() === 'MEDIUM') return '#FFD5DB'
-    if (item.t_priority.toUpperCase() === 'HIGH') return '#FF8A5B'
-  }
   if (item.type === 'event') {
     if (item.project?.priority?.toUpperCase() === 'LOW') return '#C6E7FF'
     if (item.project?.priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
     if (item.project?.priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
   }
-  return '#FFE578'
+
+  if (item.type === 'task') {
+    if (item.t_priority?.toUpperCase() === 'LOW') return '#C6E7FF'
+    if (item.t_priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
+    if (item.t_priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
+  }
+
+  return '#000000'
 }
 </script>

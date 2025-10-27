@@ -1,72 +1,68 @@
 <template>
-  <div class="w-full overflow-x-auto max-h-[500px] overflow-y-auto">
-    <!-- Header Row (sticky) -->
-    <div class="flex sticky top-0 z-10 border border-gray-800 rounded-t-md bg-white w-fit">
-      <div
-        class="sticky left-0 z-20 w-[240px] flex items-center h-20 bg-white border-r border-gray-800 rounded-tl-md px-2"
-      >
-        <select
-          v-model="selectedMonthYear"
-          @change="onMonthChange"
-          class="text-base bg-transparent border-none"
-        >
-          <option v-for="(option, index) in monthYearOptions" :key="index" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
-      <div class="flex-1 flex" ref="headerScroll">
+  <div ref="outerScroll" class="overflow-x-auto border border-black rounded-md relative bg-white">
+    <!-- Inner grid -->
+    <div
+      ref="innerGrid"
+      class="min-w-max relative"
+      :style="{ width: `${(monthDays.length + 1) * columnWidth}px` }"
+    >
+      <!-- Header Row -->
+      <div class="flex sticky top-0 bg-gray-100 z-20 border-b border-black">
+        <!-- Sticky Task Header -->
         <div
-          v-for="(day, i) in dateRange"
-          :key="i"
-          class="flex flex-col justify-center items-center w-[120px] h-20 border-t-0"
-          :style="isToday(day.date) ? { backgroundColor: 'rgba(198, 231, 255, 0.3)' } : {}"
+          class="w-[240px] flex-shrink-0 text-center font-semibold py-4 border-r border-black bg-[#C6E7FF] sticky left-0 z-30"
         >
-          <div class="day">{{ day.day }}</div>
-          <div class="weekday">{{ day.weekday }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Task Rows -->
-    <div>
-      <div
-        v-for="(row, rowIndex) in rows"
-        :key="rowIndex"
-        class="flex relative min-h-20 border border-gray-800 w-fit"
-      >
-        <!-- Task Label -->
-        <div
-          class="sticky left-0 w-[240px] flex items-center h-20 bg-white border-r border-gray-800 rounded-bl-md"
-        >
-          <div class="p-2.5">{{ row.label }}</div>
+          Task
         </div>
 
-        <!-- Task Timeline -->
-        <div class="flex-1 relative" :ref="setTaskRowScroll" @scroll="onScroll">
-          <div class="flex relative">
-            <!-- Task Bars -->
-            <div
-              v-for="(task, tIndex) in row.tasks || []"
-              :key="tIndex"
-              class="absolute top-3.5 h-[50px] ml-24 flex items-center rounded-full text-sm px-2 gap-1.5 overflow-hidden whitespace-nowrap text-ellipsis"
-              :style="taskBarStyle(task)"
-            >
-              <img
-                v-if="task.icon"
-                :src="task.icon"
-                class="w-[43px] h-[43px] rounded-full -ml-1.5 border-2 border-white"
-              />
-              <span class="task-name">{{ task.name }}</span>
-            </div>
+        <!-- Day Headers -->
+        <div class="flex">
+          <div
+            v-for="day in monthDays"
+            :key="day"
+            class="w-[110px] text-center py-4 border-r border-black text-sm bg-[#C6E7FF]"
+            :class="{ 'bg-[#C6E7FF] opacity-40 font-bold': day === currentDay }"
+          >
+            {{ day }}
+          </div>
+        </div>
+      </div>
 
-            <!-- Empty Cells -->
-            <div
-              v-for="(day, i) in dateRange"
-              :key="`empty-${i}`"
-              class="w-[120px] h-20 flex-shrink-0 border border-gray-800 border-t-0"
-              :class="{ 'bg-[#C6E7FF] opacity-30': isToday(day.date) }"
-            ></div>
+      <!-- Task Rows -->
+      <div v-for="(row, i) in rows" :key="i" class="flex border-b border-black relative h-[48px]">
+        <!-- Sticky Task Name -->
+        <div
+          class="w-[240px] flex-shrink-0 border-r border-black py-4 px-3 sticky left-0 bg-white z-10 font-medium"
+        >
+          {{ row.label }}
+        </div>
+
+        <!-- Day Cells -->
+        <div class="flex relative w-full">
+          <div
+            v-for="day in monthDays"
+            :key="day"
+            class="w-[110px] border-r border-black"
+            :class="{ 'bg-[#C6E7FF] opacity-40': day === currentDay }"
+          ></div>
+
+          <!-- Subtask Bars -->
+          <div
+            v-for="(task, j) in row.tasks && row.tasks.length ? row.tasks : fallbackTask(row)"
+            :key="j"
+            class="absolute top-[8px] h-[32px] flex items-center rounded-full px-2 gap-1.5 overflow-hidden whitespace-nowrap text-ellipsis"
+            :style="{
+              left: `${getTaskOffset(task.start)}px`,
+              width: `${getTaskWidth(task.start, task.end)}px`,
+              backgroundColor: task.color || '#FFD5DB',
+            }"
+          >
+            <img
+              v-if="task.icon"
+              :src="task.icon"
+              class="w-[28px] h-[28px] rounded-full -ml-1.5 border-2 border-white"
+            />
+            <span class="task-name text-sm font-medium">{{ task.name }}</span>
           </div>
         </div>
       </div>
@@ -75,126 +71,53 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const props = defineProps({
-  rows: { type: Array, required: true },
-  formatDate: {
-    type: Function,
-    default: (date) =>
-      date
-        ? new Date(date).toLocaleDateString('en-US', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })
-        : 'TBD',
+  rows: {
+    type: Array,
+    default: () => [],
   },
 })
 
-const DAY_WIDTH = 120
+const columnWidth = 110
 const today = new Date()
-const selectedMonthYear = ref(
-  `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`,
-)
+const currentDay = today.getDate()
 
-const monthYearOptions = []
-for (let i = 0; i < 12; i++) {
-  const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
-  monthYearOptions.push({
-    value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-    label: d.toLocaleString('en-US', { month: 'short', year: 'numeric' }),
-  })
-}
+// Outer scroll reference
+const outerScroll = ref(null)
 
-const dateRange = ref([])
-const taskRowScroll = ref([])
-const headerScroll = ref(null)
-
-function setTaskRowScroll(el) {
-  if (el) taskRowScroll.value.push(el)
-}
-
-function computeMonthRange() {
-  const [year, month] = selectedMonthYear.value.split('-')
-  const startDt = new Date(year, month - 1, 1)
-  const endDt = new Date(year, month, 0)
-  startDt.setHours(0, 0, 0, 0)
-  endDt.setHours(0, 0, 0, 0)
-
-  const arr = []
-  let current = new Date(startDt)
-  while (current <= endDt) {
-    arr.push({
-      date: `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`, // local date
-      day: current.getDate(),
-      weekday: current.toLocaleString('en-US', { weekday: 'short' }),
-    })
-    current.setDate(current.getDate() + 1)
-  }
-  dateRange.value = arr
-}
-
-onMounted(() => {
-  computeMonthRange()
-  nextTick(() => {
-    if (headerScroll.value) headerScroll.value.scrollLeft = 0
-    taskRowScroll.value.forEach((s) => (s.scrollLeft = 0))
-  })
+// Days in month
+const monthDays = computed(() => {
+  const year = today.getFullYear()
+  const month = today.getMonth()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  return Array.from({ length: daysInMonth }, (_, i) => i + 1)
 })
 
-function onMonthChange() {
-  computeMonthRange()
-  nextTick(() => {
-    if (headerScroll.value) headerScroll.value.scrollLeft = 0
-    taskRowScroll.value.forEach((s) => (s.scrollLeft = 0))
-  })
+// Task bar offset
+function getTaskOffset(startDate) {
+  if (!startDate) return 0
+  const start = new Date(startDate).getDate()
+  return (start - 1) * columnWidth // sticky column width
 }
 
-const TASK_LEFT_OFFSET = -80 // adjust this px value to move left (-ve = left, +ve = right)
-
-function taskBarStyle(task) {
-  if (!task.start || !task.end) return {}
-
-  const startDate =
-    task.start instanceof Date ? task.start.toISOString().split('T')[0] : task.start.split('T')[0]
-  const endDate =
-    task.end instanceof Date ? task.end.toISOString().split('T')[0] : task.end.split('T')[0]
-
-  const startIndex = dateRange.value.findIndex((d) => d.date === startDate)
-  const endIndex = dateRange.value.findIndex((d) => d.date === endDate)
-  const start = startIndex >= 0 ? startIndex : 0
-  const end = endIndex >= 0 ? endIndex : dateRange.value.length - 1
-
-  return {
-    left: `${start * DAY_WIDTH + TASK_LEFT_OFFSET}px`,
-    width: `${(end - start + 1) * DAY_WIDTH}px`,
-    background: task.color || '#FFD5DB',
-    zIndex: 2,
-  }
+// Task bar width
+function getTaskWidth(startDate, endDate) {
+  if (!startDate || !endDate) return columnWidth
+  const start = new Date(startDate).getDate()
+  const end = new Date(endDate).getDate()
+  return (end - start + 1) * columnWidth
 }
 
-// Highlight today
-function isToday(dateStr) {
-  if (!dateStr) return false
+// Auto-scroll to current day
+onMounted(() => {
+  const scrollPos = (currentDay - 1) * columnWidth + 240 - 400
+  if (outerScroll.value) outerScroll.value.scrollLeft = scrollPos > 0 ? scrollPos : 0
+})
 
-  const today = new Date()
-  const [year, month, day] = dateStr.split('-').map(Number)
-  const date = new Date(year, month - 1, day) // create local date
-
-  return (
-    today.getFullYear() === date.getFullYear() &&
-    today.getMonth() === date.getMonth() &&
-    today.getDate() === date.getDate()
-  )
-}
-
-// Sync horizontal scroll
-function onScroll(e) {
-  const scrollLeft = e.target.scrollLeft
-  if (headerScroll.value) headerScroll.value.scrollLeft = scrollLeft
-  taskRowScroll.value.forEach((s) => {
-    if (s !== e.target) s.scrollLeft = scrollLeft
-  })
+// Fallback task for rows without subtasks
+function fallbackTask(row) {
+  return []
 }
 </script>

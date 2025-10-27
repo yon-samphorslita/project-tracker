@@ -66,7 +66,11 @@
                 : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
             "
             v-model="formData[field.model]"
-            :min="field.model === 'dueDate' ? formData.startDate : undefined"
+            :min="
+              field.model === 'dueDate' || field.model === 'endDate'
+                ? formData.startDate
+                : undefined
+            "
           />
 
           <!-- Select input -->
@@ -145,10 +149,21 @@ watch(
   (data) => {
     if (!data) return
     Object.keys(data).forEach((key) => {
-      if (key === 'startDate' || key === 'dueDate') {
-        formData[key] = data[key]?.split('T')[0] || ''
+      if (['startDate', 'dueDate', 'endDate'].includes(key)) {
+        const dateValue = data[key] ? new Date(data[key]) : null
+        if (dateValue) {
+          // Detect whether this field is date or datetime-local in the field definition
+          const field = props.fields.find((f) => f.model === key)
+          if (field?.type === 'datetime-local') {
+            formData[key] = dateValue.toISOString().slice(0, 16) // "YYYY-MM-DDTHH:mm"
+          } else {
+            formData[key] = dateValue.toISOString().slice(0, 10) // "YYYY-MM-DD"
+          }
+        } else {
+          formData[key] = ''
+        }
       } else if (key === 'user') {
-        formData.user = data.user || '' // make sure it's empty string if null
+        formData.user = data.user || ''
       } else {
         formData[key] = data[key]
       }
@@ -171,6 +186,11 @@ function validate() {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(value)) {
         errors[field.model] = 'Invalid email format'
+        valid = false
+      }
+    } else if ((field.model === 'endDate' || field.model === 'dueDate') && formData.startDate) {
+      if (new Date(formData[field.model]) < new Date(formData.startDate)) {
+        errors[field.model] = `${field.label} cannot be before Start Date & Time`
         valid = false
       }
     }

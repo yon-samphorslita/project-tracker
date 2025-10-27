@@ -167,6 +167,7 @@
                 :startdate="project.start_date"
                 :enddate="project.due_date"
                 :status="project.status"
+                :priority="project.priority"
                 :members="project.assignee?.name || 'None'"
                 :completedTasks="getCompletedTasks(project.id)"
                 :totalTasks="getTotalTasks(project.id)"

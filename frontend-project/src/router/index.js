@@ -77,21 +77,26 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
-  // If token exists but user not loaded, fetch profile to validate
+  // Only try to fetch profile if there is a token and user data is not yet loaded
   if (authStore.token && !authStore.user) {
-    await authStore.fetchProfile()
+    try {
+      await authStore.fetchProfile()
+    } catch {
+      // If fetch fails, clear token and redirect to login
+      await authStore.logout()
+      return next('/login')
+    }
   }
 
   const isLoggedIn = authStore.isAuthenticated
 
-  // Prevent access to protected routes if not logged in
+  // Protected routes require login
   if (to.meta.requiresAuth && !isLoggedIn) {
     return next('/login')
   }
 
   // Prevent logged-in users from visiting login page
   if (to.path === '/login' && isLoggedIn) {
-    // Redirect based on role
     const role = authStore.user?.role
     if (role === 'admin') return next('/settings/profile')
     if (role === 'project_manager') return next('/projects')

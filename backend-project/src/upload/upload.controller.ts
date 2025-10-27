@@ -5,6 +5,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { randomBytes } from 'crypto';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 @Controller('upload')
@@ -13,12 +14,13 @@ export class UploadController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './upload',
+        destination: './upload/images',
         filename: (req, file, cb) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
-          cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+          const name = randomBytes(4).toString('hex');
+          cb(null, `${name}${ext}`);
         },
       }),
     }),

@@ -3,7 +3,15 @@
     <!-- Header Controls -->
     <div class="flex justify-between gap-2 items-center">
       <TypeList v-model:activeOption="activeOption" />
-      <Search @update="searchQuery = $event" />
+      <div class="flex gap-2 items-center">
+        <Search @update="searchQuery = $event" />
+        <Filter
+          class="min-w-fit"
+          title="Filter Tasks"
+          :fields="filterFields"
+          @update="applyFilters"
+        />
+      </div>
     </div>
 
     <!-- Task Views -->
@@ -15,17 +23,23 @@
           :kanbantasks="filteredTasksByStatus(status)"
           :kanbanTaskStatus="status"
           :kanbanTaskNum="filteredTasksByStatus(status).length"
+          :format-date="formatDate"
           @editTask="editTask"
           @deleteTask="$emit('onTaskDeleted', $event)"
         />
       </template>
 
       <template v-else-if="activeOption === 'Gantt'">
-        <GanttChart :rows="ganttRows" :format-date="formatDate" />
+        <GanttChart :rows="ganttRows.length ? ganttRows : []" :format-date="formatDate" />
       </template>
 
       <template v-else-if="activeOption === 'Table'">
-        <Table :data="filteredTasksWithSubtasks" :columns="tableColumns" :format-date="formatDate">
+        <Table
+          :data="filteredTasksWithSubtasks"
+          :columns="tableColumns"
+          :format-date="formatDate"
+          @statusUpdated="handleStatusUpdate"
+        >
           <template #actions="{ row }">
             <div class="flex gap-2">
               <img
@@ -60,14 +74,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import Table from '@/components/table.vue'
 import Kanban from '@/components/kanban.vue'
 import GanttChart from '@/components/gantt.vue'
 import Search from '@/components/search.vue'
+import Filter from '@/components/filter.vue'
 import TypeList from '@/components/typeList.vue'
 import Form from '@/components/form.vue'
-
+import { useTaskStore } from '@/stores/task'
 const props = defineProps({
   project: Object,
   tasks: Array,
@@ -75,38 +90,69 @@ const props = defineProps({
   tableColumns: Array,
   taskFields: Array,
 })
-
-const emit = defineEmits(['onTaskCreated', 'onTaskUpdated', 'onTaskDeleted'])
+const taskStore = useTaskStore()
+const emit = defineEmits(['onTaskCreated', 'onTaskUpdated', 'onTaskDeleted', 'onStatusUpdated'])
 
 const activeOption = ref('Table')
 const showEditTaskForm = ref(false)
 const editTaskData = ref({})
 const searchQuery = ref('')
-
-// ------------------ FILTERING ------------------
-const filteredTasksWithSubtasks = computed(() => {
-  const q = searchQuery.value.toLowerCase()
-  return props.tasks.filter(
-    (t) => t.title?.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q),
-  )
+// reactive filter state
+const activeFilters = reactive({
+  priority: '',
+  user: '',
 })
 
 const filteredTasksByStatus = (status) =>
   filteredTasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === status.toLowerCase())
-
-// ------------------ GANTT VIEW ------------------
-const ganttRows = computed(() =>
-  filteredTasksWithSubtasks.value.map((t) => ({
-    label: t.title,
-    tasks: [
-      {
-        name: t.title,
-        start: new Date(t.start_date || Date.now()),
-        end: new Date(t.due_date || Date.now()),
-        color: t.status?.toLowerCase() === 'completed' ? '#8BD3B7' : '#FFD966',
-        icon: t.user?.img_url || null,
-      },
+const filterFields = [
+  {
+    key: 'priority',
+    label: 'Priority',
+    type: 'select',
+    options: [
+      { value: '', label: 'All' },
+      { value: 'low', label: 'Low' },
+      { value: 'medium', label: 'Medium' },
+      { value: 'high', label: 'High' },
     ],
+  },
+  {
+    key: 'user',
+    label: 'Assigned To',
+    type: 'select',
+    options: props.TeamMembers.map((u) => ({ value: u.id, label: u.name })),
+  },
+]
+//search and filter tasks
+const filteredTasksWithSubtasks = computed(() => {
+  const q = searchQuery.value.toLowerCase()
+  return props.tasks.filter((t) => {
+    const matchesSearch =
+      t.title?.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q)
+    const matchesPriority = activeFilters.priority
+      ? t.priority?.toLowerCase() === activeFilters.priority.toLowerCase()
+      : true
+    const matchesUser = activeFilters.user ? t.user?.id === activeFilters.user : true
+    return matchesSearch && matchesPriority && matchesUser
+  })
+})
+function applyFilters(filters) {
+  Object.assign(activeFilters, filters)
+}
+
+// gantt rows
+const ganttRows = computed(() =>
+  filteredTasksWithSubtasks.value.map((task) => ({
+    label: task.title,
+    tasks:
+      task.subtasks?.map((st) => ({
+        name: st.name,
+        start: st.start ? new Date(st.start) : new Date(task.start_date),
+        end: st.end ? new Date(st.end) : new Date(task.due_date),
+        color: st.status === 'completed' ? '#8BD3B7' : '#FFD966',
+        icon: task.user?.img_url || null,
+      })) || [],
   })),
 )
 
@@ -118,8 +164,12 @@ function formatDate(dateStr) {
     year: 'numeric',
   })
 }
+async function handleStatusUpdate({ id, status }) {
+  await taskStore.updateTask(id, { t_status: status })
+  emit('statusUpdated', { id, status })
+}
 
-// ------------------ EDIT TASK ------------------
+//edit task
 function editTask(row) {
   editTaskData.value = {
     id: row.id,

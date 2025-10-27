@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:refresh": "typeorm schema:drop -d ./src/data-source.ts && typeorm migration:run -d ./src/data-source.ts"
+    "db:refresh": "npm run build && typeorm schema:drop -d ./dist/data-source.js && typeorm migration:run -d ./dist/data-source.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.888.0",

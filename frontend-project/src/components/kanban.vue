@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-[400px] md:w-96 h-auto flex-shrink-0 overflow-y-auto top-[170px] rounded-md shadow-lg bg-[#C6E7FF] p-4"
+    class="w-1/3 h-auto flex-shrink-0 overflow-y-auto top-[170px] rounded-md shadow-lg bg-[#C6E7FF] p-4"
   >
     <div class="sticky top-0 flex justify-between items-center my-5 bg-[#C6E7FF] z-10">
       <!-- kanban header  -->
@@ -38,7 +38,7 @@
           <div class="font-medium text-gray-800 truncate">
             {{ kanban.title }}
           </div>
-          <div class="flex justify-between w-12 md:w-14 gap-1 md:gap-2">
+          <div class="flex justify-between gap-1 md:gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
@@ -61,15 +61,7 @@
 
         <!-- task footer  -->
         <div class="flex justify-between items-center">
-          <div
-            class="px-2 py-1 rounded-md text-sm"
-            :style="{
-              background: getPriorityColors(kanban.priority).background,
-              color: getPriorityColors(kanban.priority).color,
-            }"
-          >
-            {{ kanban.priority }}
-          </div>
+          <Status :priority="kanban.priority" />
           <div class="w-8 h-8 rounded-full overflow-hidden">
             <img
               :src="kanban.user?.img_url"
@@ -81,17 +73,17 @@
         <hr class="my-1 border-gray-300" />
         <div class="flex items-center text-sm text-gray-700">
           <div class="font-semibold mr-2">Due:</div>
-          <div>{{ kanban.due_date }}</div>
+          <div>{{ formatDate(kanban.due_date) }}</div>
         </div>
       </div>
     </div>
   </div>
   <!-- </div> -->
-  <!-- </div> -->
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import Status from './status.vue'
 // import { defineProps } from 'vue';
 const props = defineProps({
   kanbantasks: {
@@ -105,6 +97,9 @@ const props = defineProps({
   kanbanTaskNum: {
     type: Number,
     required: true,
+  },
+  formatDate: {
+    type: Function,
   },
 })
 
@@ -120,20 +115,6 @@ const statusColor = computed(() => {
       return '#9E9E9E'
   }
 })
-
-const getPriorityColors = (priority) => {
-  const p = (priority || '').toLowerCase() // fallback to empty string
-  switch (p) {
-    case 'high':
-      return { background: 'lightgreen', color: 'green' }
-    case 'medium':
-      return { background: 'yellow', color: 'darkorange' }
-    case 'low':
-      return { background: 'pink', color: 'red' }
-    default:
-      return { background: 'lightgrey', color: 'black' }
-  }
-}
 </script>
 
 <style></style>

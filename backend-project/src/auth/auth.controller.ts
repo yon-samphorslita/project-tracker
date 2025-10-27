@@ -14,7 +14,7 @@ import {
   Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthGuard } from './auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UpdateUserDto } from 'src/user/dto/update-user.dto';
 import { UserService } from 'src/user/user.service';
@@ -31,7 +31,7 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   @Get('users')
   async getAllUsers() {
@@ -39,7 +39,7 @@ export class AuthController {
     return users.map(({ password, ...rest }) => rest);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   @Post('user')
   @HttpCode(HttpStatus.CREATED)
@@ -60,7 +60,7 @@ export class AuthController {
     return { user: userWithoutPassword, ...token };
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@Request() req) {
@@ -70,7 +70,7 @@ export class AuthController {
     return { message: 'Logged out successfully' };
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   async getProfile(@Request() req) {
     const user = await this.userService.findOne(req.user.id);
@@ -79,7 +79,7 @@ export class AuthController {
     return userWithoutPassword;
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
   async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     const userId = req.user.id;
@@ -92,15 +92,23 @@ export class AuthController {
     return userWithoutPassword;
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   @Patch('user/:id')
   async updateUser(
     @Param('id') userId: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    if ('email' in updateUserDto) delete updateUserDto.email;
     if ('password' in updateUserDto) delete updateUserDto.password;
+    if (updateUserDto.email) {
+      const existing = await this.userService.findOneByEmail(
+        updateUserDto.email,
+        true,
+      );
+      if (existing && existing.id !== Number(userId)) {
+        throw new ForbiddenException('Email is already in use');
+      }
+    }
 
     const updatedUser = await this.userService.update(
       Number(userId),
@@ -111,7 +119,7 @@ export class AuthController {
     return userWithoutPassword;
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Patch('update-password')
   async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
     const user = await this.userService.findOneByEmail(req.user.email, true);
@@ -137,7 +145,7 @@ export class AuthController {
     return { message: 'Password updated successfully' };
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(Role.ADMIN)
   @Patch('user/:id/update-password')
   async adminUpdatePassword(
@@ -181,5 +189,23 @@ export class AuthController {
     // Update password
     await this.authService.updateUserPassword(user.id, body.newPassword, true);
     return { message: 'Password updated successfully' };
+  }
+  // auth.controller.ts
+  @Post('verify-otp')
+  async verifyOtp(@Body() body: { email: string; otp: string }) {
+    const user = await this.userService.findOneByEmail(body.email, true);
+    if (!user) throw new NotFoundException('User not found');
+
+    const now = new Date();
+    if (
+      !user.otp_code ||
+      !user.otp_expiry ||
+      user.otp_code !== body.otp ||
+      new Date(user.otp_expiry) < now
+    ) {
+      throw new ForbiddenException('Invalid or expired OTP');
+    }
+
+    return { message: 'OTP verified successfully' };
   }
 }

@@ -29,17 +29,33 @@
           </button>
         </div>
 
-        <!-- Step 2: Reset Password with OTP -->
-        <div v-else-if="step === 2" class="flex flex-col gap-4">
-          <label>OTP</label>
-          <input
-            v-model="otp"
-            type="text"
-            placeholder="Enter OTP"
-            required
-            class="rounded-[20px] border border-gray-300 p-[10px]"
-          />
+        <!-- Step 2a: Enter OTP -->
+        <div v-else-if="step === 2 && !otpVerified" class="flex flex-col gap-4">
+          <label>Enter OTP</label>
+          <div class="flex justify-between gap-2">
+            <input
+              v-for="(digit, index) in otpDigits"
+              :key="index"
+              type="text"
+              maxlength="1"
+              class="w-12 h-12 text-center border rounded-lg text-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
+              v-model="otpDigits[index]"
+              @input="onOtpInput(index, $event)"
+              @paste.prevent="onPasteOtp($event)"
+              ref="setOtpRef"
+            />
+          </div>
 
+          <button
+            @click="verifyOtp"
+            class="bg-[#20A1FF] text-white py-3 rounded-[20px] font-bold hover:bg-blue-700 transition mt-4"
+          >
+            Verify OTP
+          </button>
+        </div>
+
+        <!-- Step 2b: Reset Password -->
+        <div v-else-if="step === 2 && otpVerified" class="flex flex-col gap-4">
           <label>New Password</label>
           <input
             v-model="newPassword"
@@ -70,50 +86,120 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script>
+import { ref, reactive, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
-const router = useRouter()
-const auth = useAuthStore()
+export default {
+  setup() {
+    const router = useRouter()
+    const auth = useAuthStore()
 
-const step = ref(1)
-const email = ref('')
-const otp = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
+    const step = ref(1)
+    const email = ref('')
+    const otpVerified = ref(false)
+    const otpDigits = reactive(Array(6).fill(''))
+    const otpRefs = []
+    const newPassword = ref('')
+    const confirmPassword = ref('')
 
-// Step 1: Request OTP
-async function requestOtp() {
-  try {
-    await auth.requestOtp(email.value)
-    alert('OTP sent to your email.')
-    step.value = 2
-  } catch (err) {
-    console.error(err)
-    alert(err.response?.data?.message || 'Failed to request OTP')
-  }
-}
+    const setOtpRef = (el) => {
+      if (el) otpRefs.push(el)
+    }
 
-// Step 2: Reset Password
-async function resetPassword() {
-  if (newPassword.value !== confirmPassword.value) {
-    alert('Passwords do not match.')
-    return
-  }
+    // Step 1: Request OTP
+    const requestOtp = async () => {
+      try {
+        await auth.requestOtp(email.value)
+        alert('OTP sent to your email.')
+        step.value = 2
+        nextTick(() => otpRefs[0]?.focus())
+      } catch (err) {
+        console.error(err)
+        alert(err.response?.data?.message || 'Failed to request OTP')
+      }
+    }
 
-  try {
-    await auth.resetPassword({
-      email: email.value,
-      otp: otp.value,
-      newPassword: newPassword.value,
-    })
-    alert('Password reset successful! Redirecting to login...')
-    router.push('/login')
-  } catch (err) {
-    console.error(err)
-    alert(err.response?.data?.message || 'Failed to reset password')
-  }
+    // Handle OTP input
+    const onOtpInput = (index, e) => {
+      const target = e.target
+      otpDigits[index] = target.value.replace(/\D/g, '') // only digits
+
+      if (target.value && index < 5) {
+        otpRefs[index + 1]?.focus()
+      }
+
+      if (otpDigits.every((d) => d !== '')) {
+        verifyOtp()
+      }
+    }
+
+    // Paste full OTP
+    const onPasteOtp = (e) => {
+      const paste = e.clipboardData.getData('text') || ''
+      if (paste.length === 6 && /^\d{6}$/.test(paste)) {
+        paste.split('').forEach((digit, i) => (otpDigits[i] = digit))
+        nextTick(() => verifyOtp())
+      }
+    }
+
+    // Verify OTP
+    const verifyOtp = async () => {
+      try {
+        await auth.verifyOtp({ email: email.value, otp: otpDigits.join('') })
+        otpVerified.value = true
+        nextTick(() => document.querySelector('input[type="password"]')?.focus())
+      } catch (err) {
+        console.error(err)
+        alert(err.response?.data?.message || 'Invalid OTP')
+      }
+    }
+
+    const resetPassword = async () => {
+      if (newPassword.value !== confirmPassword.value) {
+        alert('Passwords do not match.')
+        return
+      }
+
+      try {
+        await auth.resetPassword({
+          email: email.value,
+          otp: otpDigits.join(''),
+          newPassword: newPassword.value,
+        })
+        alert('Password reset successful! Redirecting to login...')
+        router.push('/login')
+      } catch (err) {
+        console.error(err)
+        alert(err.response?.data?.message || 'Failed to reset password')
+      }
+    }
+
+    return {
+      step,
+      email,
+      otpVerified,
+      otpDigits,
+      setOtpRef,
+      newPassword,
+      confirmPassword,
+      requestOtp,
+      onOtpInput,
+      onPasteOtp,
+      verifyOtp,
+      resetPassword,
+    }
+  },
 }
 </script>
+
+<style scoped>
+@media (max-width: 640px) {
+  input[type='text'] {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+}
+</style>

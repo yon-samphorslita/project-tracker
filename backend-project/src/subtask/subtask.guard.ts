@@ -19,42 +19,36 @@ export class SubtaskGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    // Check if the route has a subtask ID
+    // Route: /subtasks/:id
     const subtaskId = request.params.id ? +request.params.id : null;
-
     if (subtaskId) {
       const subtask = await this.subtaskService.findOne(subtaskId);
       if (!subtask) throw new NotFoundException('Subtask not found');
 
-      // Admins can access any subtask
-      if (user.role === 'admin') {
-        request.subtask = subtask;
-        return true;
-      }
+      request.subtask = subtask;
 
-      // Only allow if user owns the parent task/project
-      const task = await subtask.task;
-      if (task.user !== user.id && user.role !== 'admin') {
+      if (user.role === 'admin') return true;
+
+      const taskOwnerId = subtask.task?.user?.id;
+      if (taskOwnerId !== user.id) {
         throw new ForbiddenException(
           'You are not authorized to access this subtask',
         );
       }
 
-      request.subtask = subtask;
       return true;
     }
 
-    // For routes like task/:taskId, you could optionally check task ownership
+    // Route: /subtasks/task/:taskId
     const taskId = request.params.taskId ? +request.params.taskId : null;
     if (taskId) {
       const subtasks = await this.subtaskService.findByTaskId(taskId);
       if (!subtasks) throw new NotFoundException('Task not found');
 
-      // Admin bypass
       if (user.role === 'admin') return true;
 
-      // Check if user owns the task
-      if (subtasks.length > 0 && subtasks[0].task.user !== user.id) {
+      const taskOwnerId = subtasks[0]?.task?.user?.id;
+      if (subtasks.length && taskOwnerId !== user.id) {
         throw new ForbiddenException(
           'You are not authorized to access subtasks for this task',
         );
@@ -63,7 +57,7 @@ export class SubtaskGuard implements CanActivate {
       return true;
     }
 
-    // For creation or general access
+    // For creation or other routes, allow
     return true;
   }
 }

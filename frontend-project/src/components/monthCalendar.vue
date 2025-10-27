@@ -23,7 +23,7 @@
           {{ day.date.getDate() }}
         </div>
 
-        <!-- Events & Tasks (max 3 shown) -->
+        <!-- Events & Tasks (max 2 shown) -->
         <div
           v-for="(item, i) in day.items.slice(0, 2)"
           :key="i"
@@ -150,6 +150,6 @@ function getColor(item) {
     if (item.t_priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
   }
 
-  return '#D9CBFB'
+  return '#D9D9D9'
 }
 </script>

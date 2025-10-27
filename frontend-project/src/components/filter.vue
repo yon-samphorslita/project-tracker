@@ -5,7 +5,7 @@
       class="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100 transition"
     >
       <img src="../assets/icons/filter.svg" alt="Filter" class="w-4 h-4" />
-      <span class="text-sm font-medium">{{ title }}</span>
+      <span class="text-sm font-medium truncate">{{ title }}</span>
     </button>
 
     <div

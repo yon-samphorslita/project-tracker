@@ -2,15 +2,22 @@
   <div v-if="isAdmin">
     <h1 class="text-2xl font-bold mb-6">Activity Logs</h1>
 
-    <div class="flex items-center w-full mb-4">
-      <Search @update="searchQuery = $event" />
-      <Filter class="min-w-fit" title="Sort / Filter" :options="sortOptions" @select="applySort" />
+    <div class="flex items-center gap-4 mb-4 justify-between">
       <Button
         label="Export CSV"
         btn-color="green"
-        class="ml-auto text-white px-4 py-2 rounded hover:bg-green-600 transition"
+        class="text-white px-4 py-2 rounded hover:bg-green-600 transition"
         @click="exportToCSV"
       />
+      <div class="flex gap-4 items-center">
+        <Search @update="searchQuery = $event" />
+        <Filter
+          class="min-w-fit"
+          title="Sort / Filter"
+          :options="sortOptions"
+          @select="applySort"
+        />
+      </div>
     </div>
 
     <div class="overflow-x-auto bg-white shadow rounded-2xl p-8">

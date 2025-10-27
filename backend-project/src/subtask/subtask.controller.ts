@@ -13,7 +13,8 @@ import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
 import { Subtask } from './subtask.entity';
 import { SubtaskGuard } from './subtask.guard';
-
+import { AuthGuard } from '@nestjs/passport';
+@UseGuards(AuthGuard('jwt'))
 @Controller('subtasks')
 export class SubtaskController {
   constructor(private readonly subtaskService: SubtaskService) {}

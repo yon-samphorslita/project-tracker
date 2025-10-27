@@ -58,10 +58,34 @@ export class ProjectService {
       return this.projectRepository.find({ relations });
     }
 
-    return this.projectRepository.find({
-      where: [{ user: { id: userId } }, { team: { members: { id: userId } } }],
-      relations,
+    const user = await this.projectRepository.manager.findOne(User, {
+      where: { id: userId },
+      relations: ['team', 'pmTeams'],
     });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Explicitly type teamIds
+    const teamIds: number[] = [];
+
+    if (user.team) teamIds.push(user.team.id);
+    if (user.pmTeams?.length) {
+      teamIds.push(...user.pmTeams.map((team) => team.id));
+    }
+
+    return this.projectRepository
+      .createQueryBuilder('project')
+      .leftJoinAndSelect('project.team', 'team')
+      .leftJoinAndSelect('team.members', 'member')
+      .leftJoinAndSelect('team.pms', 'pms')
+      .leftJoinAndSelect('project.user', 'user')
+      .leftJoinAndSelect('project.tasks', 'tasks')
+      .leftJoinAndSelect('tasks.user', 'taskUser')
+      .where('project.userId = :userId', { userId })
+      .orWhere('team.id IN (:...teamIds)', { teamIds })
+      .getMany();
   }
 
   // Find a single project by ID
@@ -70,24 +94,39 @@ export class ProjectService {
     userId?: number,
     isAdmin = false,
   ): Promise<Project> {
-    const relations = [
-      'team',
-      'team.members',
-      'team.pms',
-      'user',
-      'tasks',
-      'tasks.subtasks',
-    ];
+    const projectQB = this.projectRepository
+      .createQueryBuilder('project')
+      .leftJoinAndSelect('project.team', 'team')
+      .leftJoinAndSelect('team.members', 'member')
+      .leftJoinAndSelect('team.pms', 'pms')
+      .leftJoinAndSelect('project.user', 'user')
+      .leftJoinAndSelect('project.tasks', 'tasks')
+      .leftJoinAndSelect('tasks.subtasks', 'subtasks')
+      .where('project.id = :id', { id });
 
-    const project = await this.projectRepository.findOne({
-      where: isAdmin
-        ? { id }
-        : [
-            { id, user: { id: userId } },
-            { id, team: { members: { id: userId } } },
-          ],
-      relations,
-    });
+    if (!isAdmin) {
+      const user = await this.projectRepository.manager.findOne(User, {
+        where: { id: userId },
+        relations: ['team', 'pmTeams'],
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      const teamIds: number[] = [];
+      if (user.team) teamIds.push(user.team.id);
+      if (user.pmTeams?.length) {
+        teamIds.push(...user.pmTeams.map((team) => team.id));
+      }
+
+      projectQB.andWhere(
+        'project.userId = :userId OR team.id IN (:...teamIds)',
+        { userId, teamIds },
+      );
+    }
+
+    const project = await projectQB.getOne();
 
     if (!project) {
       throw new NotFoundException(

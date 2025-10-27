@@ -5,7 +5,7 @@ import {
   UseGuards,
   ForbiddenException,
 } from '@nestjs/common';
-import { AuthGuard } from '../auth/auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 import { ActivityService } from './activity.service';
 import { Role } from '../enums/role.enum';
 
@@ -13,7 +13,7 @@ import { Role } from '../enums/role.enum';
 export class ActivityController {
   constructor(private readonly activityService: ActivityService) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Get('logs')
   async getLogs(@Request() req) {
     const user = req.user;

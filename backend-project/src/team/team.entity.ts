@@ -17,7 +17,7 @@ export class Team {
   @Column()
   name: string;
 
-  @ManyToMany(() => User, (user) => user.team)
+  @ManyToMany(() => User, (user) => user.pmTeams)
   @JoinTable({ name: 'team_pms' })
   pms: User[];
 

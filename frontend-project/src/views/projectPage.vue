@@ -19,7 +19,7 @@
             endpoint="projects"
             @submitted="onProjectUpdated"
           />
-          <Status :status="project.status" />
+          <Status :status="projectStatus" />
         </div>
 
         <Button
@@ -56,7 +56,7 @@
         </div>
       </template>
 
-      <!-- Shared Task View -->
+      <!-- Task Views -->
       <ProjectTaskViews
         :project="project"
         :tasks="tasksWithSubtasks"
@@ -66,6 +66,7 @@
         @onTaskCreated="onTaskCreated"
         @onTaskUpdated="onTaskUpdated"
         @onTaskDeleted="deleteTask"
+        @statusUpdated="fetchProjectTasks(project.id)"
       />
     </div>
 
@@ -101,18 +102,15 @@ const subtaskStore = useSubtaskStore()
 const authStore = useAuthStore()
 const teamStore = useTeamStore()
 
-// Reactive states
 const project = computed(() => projectStore.current)
 const tasksWithSubtasks = ref([])
 const TeamMembers = ref([])
 const editProjectData = ref(null)
 const showEditProjectForm = ref(false)
 const showTaskForm = ref(false)
-
-// User role
 const userRole = computed(() => authStore.user?.role || 'user')
 
-// ------------------ FORM FIELDS ------------------
+//form fields
 const projectFields = computed(() => [
   { type: 'text', label: 'Project Title', model: 'title', placeholder: 'Enter project title' },
   {
@@ -171,7 +169,7 @@ const taskFields = computed(() => [
   },
 ])
 
-// ------------------ TABLE CONFIG ------------------
+//table columns
 const tableColumns = ref([
   { key: 'title', label: 'Task Name' },
   { key: 'description', label: 'Description' },
@@ -183,7 +181,7 @@ const tableColumns = ref([
   { key: 'actions', label: 'Actions', slot: 'actions' },
 ])
 
-// ------------------ COMPUTED METRICS ------------------
+//stats for admin
 const totalTasks = computed(() => tasksWithSubtasks.value.length)
 const completedTasks = computed(
   () => tasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === 'completed').length,
@@ -208,11 +206,23 @@ const statusData = computed(() => {
   })
   return Object.entries(summary).map(([type, value]) => ({ type, value }))
 })
+const projectStatus = ref(project.value?.status || '')
+watch(project, (newVal) => {
+  projectStatus.value = newVal?.status || ''
+})
 
-// ------------------ FETCH FUNCTIONS ------------------
+async function onProjectUpdated() {
+  const updated = await projectStore.fetchProjectById(project.value.id)
+  projectStore.setCurrent(updated)
+  projectStatus.value = updated.status
+  showEditProjectForm.value = false
+}
+
+//fetch tasks
 async function fetchProjectTasks(projectId) {
-  tasksWithSubtasks.value = [] // clear old data first
+  tasksWithSubtasks.value = []
   await taskStore.fetchTasksByProject(projectId)
+
   const visibleTasks = taskStore.tasks.filter((t) => {
     if (userRole.value === 'admin') return true
     if (userRole.value === 'project_manager')
@@ -252,6 +262,7 @@ async function fetchProjectTasks(projectId) {
   )
 }
 
+//fetch team members
 async function fetchProjectTeamMembers(teamId) {
   const team = teamStore.teams.find((t) => t.id === Number(teamId))
   if (!team) return
@@ -274,7 +285,6 @@ async function setCurrentProject() {
 watch(() => route.params.id, setCurrentProject)
 onMounted(setCurrentProject)
 
-// ------------------ ACTIONS ------------------
 async function handleTaskCreated(taskData) {
   const payload = {
     t_name: taskData.title,
@@ -290,12 +300,6 @@ async function handleTaskCreated(taskData) {
   await taskStore.createTask(payload)
   await fetchProjectTasks(project.value.id)
   showTaskForm.value = false
-}
-
-async function onProjectUpdated() {
-  const updated = await projectStore.fetchProjectById(project.value.id)
-  projectStore.setCurrent(updated)
-  showEditProjectForm.value = false
 }
 
 async function openEditProjectForm(proj) {

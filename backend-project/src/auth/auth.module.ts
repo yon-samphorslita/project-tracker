@@ -7,8 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from 'src/user/user.entity';
 import { JwtStrategy } from './jwt.strategy';
-import { AuthGuard } from './auth.guard';
-import { PassportModule } from '@nestjs/passport';
+import { PassportModule, AuthGuard } from '@nestjs/passport';
 import { EmailService } from 'src/mail/email.service';
 @Module({
   imports: [
@@ -21,12 +20,17 @@ import { EmailService } from 'src/mail/email.service';
       inject: [ConfigService], // inject ConfigService
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'), // get secret from env
-        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') },
+        signOptions: {
+          expiresIn: parseInt(
+            configService.get('JWT_EXPIRES_IN') || '3600',
+            10,
+          ),
+        },
       }),
       global: true, // make JwtModule global if needed
     }),
   ],
-  providers: [AuthService, JwtStrategy, AuthGuard, EmailService],
+  providers: [AuthService, JwtStrategy, EmailService],
   controllers: [AuthController],
   exports: [AuthService, JwtStrategy],
 })
