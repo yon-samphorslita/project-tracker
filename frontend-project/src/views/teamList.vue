@@ -10,25 +10,21 @@
             btntext="black"
             @click="showTeamForm = true"
           />
-          <teamform v-model:modelValue="showTeamForm" @created="onTeamCreated" />
 
           <div class="flex gap-4 items-center">
             <Search @update="searchQuery = $event" />
             <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
           </div>
         </div>
-
-        <div
-          class="flex justify-between border rounded-t-2xl border-b-2 pb-2 p-4 bg-white text-lg font-semibold"
-        >
-          <div class="pl-2">Team Name</div>
-          <div class="w-1/12 flex items-center justify-center mb-2">Action</div>
-        </div>
       </div>
 
-      <div class="flex flex-col gap-3 border rounded-b-2xl p-4 bg-white h-full">
-        <teamCard :teams="filteredSortedTeams" />
+      <!-- Team Cards Grid -->
+      <div class="grid grid-cols-3 gap-3 p-6 mt-4 bg-white w-full h-full">
+        <teamCard v-for="team in filteredSortedTeams" :key="team.id" :team="team" />
       </div>
+
+      <!-- Team Creation Form -->
+      <teamform v-model:modelValue="showTeamForm" @created="onTeamCreated" />
     </div>
   </TeamLayout>
 </template>

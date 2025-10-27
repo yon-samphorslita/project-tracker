@@ -10,14 +10,14 @@
 
     <hr style="margin-left: 10%; margin-right: 10%" />
 
-    <div class="m-8">
+    <div class="m-8 ml-3">
       <div class="text-gray-500 text-sm mb-1 ml-5">Main</div>
 
       <router-link
         v-for="item in displayedMainItems"
         :key="item.name"
         :to="item.route"
-        class="flex align-center gap-3 p-2 w-full rounded-md ml-6 hover:bg-blue-300 cursor-pointer;"
+        class="flex align-center gap-3 p-2 text-lg w-full rounded-md ml-6 hover:bg-blue-300 cursor-pointer;"
       >
         <span v-html="item.icon" class="w-6 h-6"></span>
         <p>{{ item.label }}</p>
@@ -26,13 +26,13 @@
 
     <hr style="margin-left: 10%; margin-right: 10%" />
 
-    <div class="m-8">
+    <div class="m-8 ml-3">
       <div class="text-sm text-gray-500 mb-1 ml-5">Setting & Support</div>
       <router-link
         v-for="item in settings"
         :key="item.name"
         :to="item.route"
-        class="flex align-center gap-3 p-2 w-full rounded-md ml-6 hover:bg-blue-300 cursor-pointer;"
+        class="flex align-center gap-3 p-2 text-lg w-full rounded-md ml-6 hover:bg-blue-300 cursor-pointer;"
       >
         <span v-html="item.icon" class="w-6 h-6"></span>
         <p>{{ item.label }}</p>

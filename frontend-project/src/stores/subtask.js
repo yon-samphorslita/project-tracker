@@ -11,76 +11,54 @@ export const useSubtaskStore = defineStore(
     const loading = ref(false)
     const error = ref(null)
 
-    const getAuthHeaders = () => {
-      const token = localStorage.getItem('token')
-      if (!token) throw new Error('No authentication token found')
-      return { Authorization: `Bearer ${token}` }
-    }
-
     // Fetch all subtasks
-    const fetchSubtasks = async () => {
+    async function fetchSubtasks() {
       loading.value = true
       error.value = null
       try {
-        const res = await axios.get(`${API_BASE_URL}/subtasks`, {
-          headers: getAuthHeaders(),
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${API_BASE_URL}/subtasks`, {
+          headers: { Authorization: `Bearer ${token}` },
         })
-        subtasks.value = Array.isArray(res.data) ? res.data : res.data?.data || []
+        subtasks.value = response.data
       } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to fetch subtasks'
+        error.value = err.response?.data?.message || err.message
       } finally {
         loading.value = false
       }
     }
 
-    // Fetch subtasks by taskId
-    const fetchByTask = async (taskId) => {
-      if (!taskId) return []
+    // Fetch subtasks by task ID
+    async function fetchByTask(taskId) {
       loading.value = true
       error.value = null
       try {
-        const res = await axios.get(`${API_BASE_URL}/subtasks/task/${taskId}`, {
-          headers: getAuthHeaders(),
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${API_BASE_URL}/subtasks/task/${taskId}`, {
+          headers: { Authorization: `Bearer ${token}` },
         })
-        return Array.isArray(res.data) ? res.data : res.data?.data || []
+        return response.data
       } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to fetch subtasks for task'
+        error.value = err.response?.data?.message || err.message
         return []
       } finally {
         loading.value = false
       }
     }
 
-    // Fetch single subtask
-    const fetchOne = async (id) => {
-      if (!id) return null
-      loading.value = true
-      error.value = null
-      try {
-        const res = await axios.get(`${API_BASE_URL}/subtasks/${id}`, {
-          headers: getAuthHeaders(),
-        })
-        return res.data
-      } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to fetch subtask'
-        return null
-      } finally {
-        loading.value = false
-      }
-    }
-
     // Create subtask
-    const createSubtask = async (payload) => {
+    async function createSubtask(payload) {
       loading.value = true
       error.value = null
       try {
-        const res = await axios.post(`${API_BASE_URL}/subtasks`, payload, {
-          headers: getAuthHeaders(),
+        const token = localStorage.getItem('token')
+        const response = await axios.post(`${API_BASE_URL}/subtasks`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
         })
-        subtasks.value.push(res.data)
-        return res.data
+        subtasks.value.push(response.data)
+        return response.data
       } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to create subtask'
+        error.value = err.response?.data?.message || err.message
         return null
       } finally {
         loading.value = false
@@ -88,18 +66,24 @@ export const useSubtaskStore = defineStore(
     }
 
     // Update subtask
-    const updateSubtask = async (id, payload) => {
+    async function updateSubtask(id, payload) {
       loading.value = true
       error.value = null
       try {
-        const res = await axios.patch(`${API_BASE_URL}/subtasks/${id}`, payload, {
-          headers: getAuthHeaders(),
+        const token = localStorage.getItem('token')
+        const response = await axios.patch(`${API_BASE_URL}/subtasks/${id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
         })
+
         const index = subtasks.value.findIndex((s) => s.id === id)
-        if (index !== -1) subtasks.value[index] = res.data
-        return res.data
+        if (index !== -1) {
+          subtasks.value[index] = { ...subtasks.value[index], ...response.data }
+        } else if (payload.taskId) {
+          await fetchByTask(payload.taskId)
+        }
+        return response.data
       } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to update subtask'
+        error.value = err.response?.data?.message || err.message
         return null
       } finally {
         loading.value = false
@@ -107,16 +91,17 @@ export const useSubtaskStore = defineStore(
     }
 
     // Delete subtask
-    const deleteSubtask = async (id) => {
+    async function deleteSubtask(id) {
       loading.value = true
       error.value = null
       try {
+        const token = localStorage.getItem('token')
         await axios.delete(`${API_BASE_URL}/subtasks/${id}`, {
-          headers: getAuthHeaders(),
+          headers: { Authorization: `Bearer ${token}` },
         })
         subtasks.value = subtasks.value.filter((s) => s.id !== id)
       } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to delete subtask'
+        error.value = err.response?.data?.message || err.message
       } finally {
         loading.value = false
       }
@@ -128,11 +113,12 @@ export const useSubtaskStore = defineStore(
       error,
       fetchSubtasks,
       fetchByTask,
-      fetchOne,
       createSubtask,
       updateSubtask,
       deleteSubtask,
     }
   },
-  { persist: true },
+  {
+    persist: true,
+  },
 )

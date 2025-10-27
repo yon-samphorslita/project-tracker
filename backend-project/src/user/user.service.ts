@@ -112,6 +112,13 @@ export class UserService {
     });
   }
 
+  async getUserTeams(userId: number) {
+    return this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['team', 'secondaryTeams'],
+    });
+  }
+
   // Update password and optionally mark password_changed
   async updatePassword(
     userId: number,

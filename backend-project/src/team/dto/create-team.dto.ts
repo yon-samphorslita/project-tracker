@@ -11,11 +11,17 @@ export class CreateTeamDto {
   @IsNotEmpty()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @IsArray()
   @IsOptional()
   pms?: number[];
 
   @IsArray()
-  @IsOptional()
   members?: number[];
+
+  @IsArray()
+  secondaryMembers?: number[];
 }

@@ -13,6 +13,8 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { User } from '../user/user.entity';
 import { Status } from '../enums/status.enum';
 import { ActivityService } from 'src/activity/activity.service';
+import { NotificationsGateway } from 'src/notification/notification.gateway';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class ProjectService {
@@ -20,6 +22,8 @@ export class ProjectService {
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
     private readonly activityService: ActivityService,
+    private readonly notificationsGateway: NotificationsGateway,
+    private readonly notificationService: NotificationService,
   ) {}
 
   // Create a new project
@@ -39,6 +43,17 @@ export class ProjectService {
       user.id,
       `Created project: "${savedProject.p_name}" (Start: ${dayjs(savedProject.start_date).format('MMM D, YYYY')}, Due: ${dayjs(savedProject.due_date).format('MMM D, YYYY')})`,
     );
+
+    // Send notifications to all team members
+    if (savedProject.team?.members?.length) {
+      const memberIds = savedProject.team.members.map((m) => m.id);
+
+      await this.notificationService.notifyUsers(
+        memberIds,
+        'New Project Assigned',
+        `Project "${savedProject.p_name}" has been assigned to your team.`,
+      );
+    }
 
     return savedProject;
   }

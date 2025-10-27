@@ -8,6 +8,7 @@ import {
   ManyToOne,
   DeleteDateColumn,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
@@ -71,10 +72,15 @@ export class User {
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
-  @ManyToOne(() => Team, (team) => team.members, { nullable: true })
+  // Main team (priority team)
+  @ManyToOne(() => Team, (team) => team.mainMembers, { nullable: true })
   team: Team;
   @ManyToMany(() => Team, (team) => team.pms)
   pmTeams: Team[];
+
+  // Other teams
+  @ManyToMany(() => Team, (team) => team.members)
+  secondaryTeams: Team[];
 
   @OneToMany(() => Event, (event) => event.user)
   events: Event[];
