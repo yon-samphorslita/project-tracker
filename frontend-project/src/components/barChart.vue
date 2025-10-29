@@ -26,23 +26,23 @@ const teamWorkloadData = ref([])
 const teamMembers = ref([])
 
 const fetchTeamWorkload = async () => {
-  // 1️⃣ Fetch team members
+  // Fetch team members
   const team = await teamStore.fetchTeam(props.teamId)
   if (!team) return
-  teamMembers.value = [...(team.members || []), ...(team.pms || [])]
+  teamMembers.value = [...(team.members || []), ...(team.mainMembers || [])]
 
-  // 2️⃣ Fetch project tasks
+  // Fetch project tasks
   await taskStore.fetchTasksByProject(props.projectId)
   const tasks = taskStore.tasks.filter((t) => t.project?.id === props.projectId)
 
-  // 3️⃣ Initialize workload structure
+  // Initialize workload structure
   const workload = {}
   teamMembers.value.forEach((member) => {
     const name = `${member.first_name} ${member.last_name}`
     workload[name] = { total: 0, completed: 0 }
   })
 
-  // 4️⃣ Count tasks per assigned member
+  // Count tasks per assigned member
   tasks.forEach((task) => {
     // adapt to your actual task structure
     const user = task.user || task.assigned_to || null
@@ -57,7 +57,7 @@ const fetchTeamWorkload = async () => {
     }
   })
 
-  // 5️⃣ Prepare chart data
+  // Prepare chart data
   const totalData = []
   const completedData = []
   const labels = []
@@ -104,14 +104,6 @@ const renderChart = () => {
       plugins: {
         legend: { display: true, position: 'bottom' },
       },
-      // scales: {
-      //   x: { title: { display: true, text: 'Team Members' } },
-      //   y: {
-      //     beginAtZero: true,
-      //     title: { display: true, text: 'Tasks' },
-      //     ticks: { stepSize: 1 },
-      //   },
-      // },
       scales: {
         x: { stacked: true, title: { display: true, text: 'Team Members' } },
         y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Tasks' } },

@@ -23,15 +23,16 @@
         <DescriptionLabel label="Progress">
           <ProgressBar :completed="completedTasks" :total="totalTasks" />
         </DescriptionLabel>
-        <DescriptionLabel label="Members">
+<DescriptionLabel label="Members">
           <div class="flex -space-x-2">
-            <template v-if="project?.team?.members?.length">
+            <template v-if="allMembers.length">
               <img
-                v-for="member in project.team.members"
+                v-for="member in allMembers"
                 :key="member.id"
-                :src="member.img_url"
-                :alt="member.first_name"
+                :src="member.img_url || '/default-avatar.png'"
+                :alt="`${member.first_name} ${member.last_name}`"
                 class="w-8 h-8 rounded-full border-2 border-white"
+                :title="`${member.first_name} ${member.last_name}`"
               />
             </template>
             <span v-else class="text-gray-400">None</span>
@@ -91,7 +92,20 @@ watch(
   },
   { immediate: true },
 )
+const allMembers = computed(() => {
+  const team = props.project?.team
+  if (!team) return []
 
+  const combined = [
+    ...(team.mainMembers || []),
+    ...(team.members || []),
+    // ...(team.pms || []),
+  ]
+
+  // Remove duplicates by ID
+  const unique = new Map(combined.map((m) => [m.id, m]))
+  return Array.from(unique.values())
+})
 const projectTasks = computed(() => tasks.value.filter((t) => t.project?.id === props.project?.id))
 
 const totalTasks = computed(() => projectTasks.value.length)

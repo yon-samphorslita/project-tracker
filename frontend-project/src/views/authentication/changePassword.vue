@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-blue-100 p-4">
+  <div class="min-h-screen flex items-center justify-center bg-[#c6e7ff] p-4">
     <div class="bg-white rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
       <!-- Image Section -->
       <div class="flex-1 min-w-[300px] flex justify-center items-center p-6">

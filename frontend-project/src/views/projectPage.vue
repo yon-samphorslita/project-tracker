@@ -267,7 +267,7 @@ async function fetchProjectTeamMembers(teamId) {
   const team = teamStore.teams.find((t) => t.id === Number(teamId))
   if (!team) return
   TeamMembers.value = [
-    ...(team.pms || []).map((pm) => ({ id: pm.id, name: `${pm.first_name} ${pm.last_name}` })),
+    ...(team.mainMembers || []).map((mm) => ({ id: mm.id, name: `${mm.first_name} ${mm.last_name}` })),
     ...(team.members || []).map((m) => ({ id: m.id, name: `${m.first_name} ${m.last_name}` })),
   ]
 }

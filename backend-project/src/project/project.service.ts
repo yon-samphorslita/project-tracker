@@ -63,6 +63,7 @@ export class ProjectService {
     const relations = [
       'team',
       'team.members',
+      'team.mainMembers',
       'team.pms',
       'user',
       'tasks',
@@ -94,6 +95,7 @@ export class ProjectService {
       .createQueryBuilder('project')
       .leftJoinAndSelect('project.team', 'team')
       .leftJoinAndSelect('team.members', 'member')
+      .leftJoinAndSelect('team.mainMembers', 'mainMember')
       .leftJoinAndSelect('team.pms', 'pms')
       .leftJoinAndSelect('project.user', 'user')
       .leftJoinAndSelect('project.tasks', 'tasks')
@@ -113,6 +115,7 @@ export class ProjectService {
       .createQueryBuilder('project')
       .leftJoinAndSelect('project.team', 'team')
       .leftJoinAndSelect('team.members', 'member')
+      .leftJoinAndSelect('team.mainMembers', 'mainMembers')
       .leftJoinAndSelect('team.pms', 'pms')
       .leftJoinAndSelect('project.user', 'user')
       .leftJoinAndSelect('project.tasks', 'tasks')
