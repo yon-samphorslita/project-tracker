@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#c6e7ff] p-4">
-    <div class="bg-white rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
+  <div class="min-h-screen flex items-center justify-center bg-blue-bg p-4">
+    <div class="rounded-2xl bg-main-bg shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
       <!-- Image Section -->
       <div class="flex-1 min-w-[300px] flex justify-center items-center p-6">
         <img src="../../assets/images/auth.png" alt="Logo" class="max-w-full h-auto" />
@@ -40,12 +40,12 @@
             </a>
           </div>
 
-          <button
+          <Button
             type="submit"
-            class="bg-[#20A1FF] text-white py-3 rounded-[20px] font-bold hover:bg-blue-700 transition"
-          >
-            Login
-          </button>
+            btn-color="var(--blue-bg)"
+            btntext="var(--main-text)"
+            label="Login"
+          />
         </form>
       </div>
     </div>
@@ -56,7 +56,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-
+import Button from '@/components/button.vue'
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -69,22 +69,15 @@ const loginForm = ref({
 async function handleLogin() {
   try {
     const user = await auth.login(loginForm.value)
+    await auth.fetchProfile()
     if (!user.password_changed) {
       // Force first-time password change
       router.push('/change-password')
       return
+    } else {
+      router.push('/dashboard')
     }
     const role = user.role
-
-    if (role === 'admin') {
-      router.push('/settings/profile')
-    } else if (role === 'project_manager') {
-      router.push('/projects')
-    } else if (role === 'member') {
-      router.push('/task')
-    } else {
-      router.push('/home')
-    }
 
     // alert('Login successful!')
   } catch (err) {

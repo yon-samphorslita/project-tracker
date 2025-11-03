@@ -66,7 +66,7 @@ const badgeClass = computed(() => {
       case 'not started':
         return 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'
       default:
-        return 'bg-gray-200 text-gray-700'
+        return 'bg-gray-200 text-gray-text'
     }
   } else if (props.priority) {
     switch (props.priority.toLowerCase()) {
@@ -77,13 +77,13 @@ const badgeClass = computed(() => {
       case 'low':
         return 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
       default:
-        return 'bg-gray-200 text-gray-700'
+        return 'bg-gray-200 text-gray-text'
     }
   } else if (props.active !== undefined) {
     return props.active
       ? 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
       : 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'
   }
-  return 'bg-gray-200 text-gray-700'
+  return 'bg-gray-200 text-gray-text'
 })
 </script>

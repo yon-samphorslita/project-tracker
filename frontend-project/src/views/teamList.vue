@@ -2,12 +2,12 @@
   <TeamLayout>
     <div class="flex flex-col">
       <!-- Header (New team button , search, filter + Table header) -->
-      <div class="flex flex-col gap-4 sticky top-[91px] pt-5 bg-white">
+      <div class="flex flex-col gap-4 sticky top-[91px] pt-5 bg-main-bg">
         <div class="flex justify-between items-center">
           <Button
             label="+ New Team"
-            btn-color="#C6E7FF"
-            btntext="black"
+            btn-color="var(--blue-bg)"
+            btntext="var(--black-text)"
             @click="showTeamForm = true"
           />
 
@@ -19,7 +19,7 @@
       </div>
 
       <!-- Team Cards Grid -->
-      <div class="grid grid-cols-3 gap-3 p-6 mt-4 bg-white w-full h-full">
+      <div class="grid grid-cols-3 gap-3 p-6 mt-4 bg-main-bg w-full h-full">
         <teamCard v-for="team in filteredSortedTeams" :key="team.id" :team="team" />
       </div>
 

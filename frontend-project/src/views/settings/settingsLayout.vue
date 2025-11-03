@@ -1,16 +1,18 @@
 <template>
   <div v-if="auth.user" class="w-full min-h-screen flex flex-col">
     <Sidebar />
-    <Header
-      menu_item="Settings"
-      :username="`${auth.user.first_name} ${auth.user.last_name}`"
-      :role="auth.user.role"
-      :profile="auth.user.img_url || profileFallback"
-    />
-    <div class="container mt-32 ml-[320px] w-3/4 px-1">
-      <router-view />
+    <div class="flex flex-col fixed left-[250px] w-[calc(100vw-250px)] h-full overflow-y-auto">
+      <Header
+        menu_item="Settings"
+        :username="`${auth.user.first_name} ${auth.user.last_name}`"
+        :role="auth.user.role"
+        :profile="auth.user.img_url || profileFallback"
+      />
+      <div class="container mt-32 min-h-screen px-20">
+        <router-view />
+      </div>
+      <Footer />
     </div>
-    <Footer class="mt-24" />
   </div>
 
   <div v-else class="flex justify-center items-center min-h-screen">Loading...</div>

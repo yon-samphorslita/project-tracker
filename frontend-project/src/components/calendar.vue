@@ -6,19 +6,19 @@
       <!-- Header -->
       <header class="vc-header flex items-center justify-between mb-2 px-0 py-3" v-if="showHeader">
         <button
-          class="vc-btn prev text-[22px] cursor-pointer w-10 text-[#222] border-[none]"
+          class="vc-btn prev text-[22px] cursor-pointer w-10 text-black-text border-[none]"
           @click="changeMonth(-1)"
         >
           ‹
         </button>
         <div class="vc-title-bg flex-1 flex justify-center">
           <span
-            class="vc-title bg-[#c6e7ff] w-[90%] text-center font-semibold text-base px-0 py-2 rounded-lg"
+            class="vc-title bg-blue-bg w-[90%] text-center font-semibold text-base px-0 py-2 rounded-lg"
             >{{ monthName }} {{ displayYear }}</span
           >
         </div>
         <button
-          class="vc-btn nex text-[22px] cursor-pointer w-10 text-[#222] border-[none]t"
+          class="vc-btn nex text-[22px] cursor-pointer w-10 text-black-text border-[none]t"
           @click="changeMonth(1)"
         >
           ›
@@ -26,11 +26,11 @@
       </header>
 
       <!-- Weekdays -->
-      <div class="vc-weekdays-row bg-[#c6e7ff] flex mb-2.5 rounded-[5px]">
+      <div class="vc-weekdays-row bg-blue-bg flex mb-2.5 rounded-[5px]">
         <div
           v-for="d in weekdayNames"
           :key="d"
-          class="vc-weekday flex-1 text-center text-[15px] text-[#222] font-medium px-0 py-2"
+          class="vc-weekday flex-1 text-center text-[15px] text-black-text font-medium px-0 py-2"
         >
           {{ d }}
         </div>
@@ -45,8 +45,8 @@
         >
           <!-- background layer with opacity -->
           <div
-            class="vc-row-bg absolute z-0 rounded-[5px] inset-0"
-            :style="{ backgroundColor: '#C6E7FF', opacity: 0.9 - wIdx * 0.1 }"
+            class="vc-row-bg absolute z-0 rounded-[5px] inset-0 bg-blue-bg"
+            :style="{ opacity: 0.9 - wIdx * 0.1 }"
           ></div>
 
           <!-- days -->

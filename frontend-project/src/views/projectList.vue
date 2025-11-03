@@ -1,10 +1,10 @@
 <template>
   <ProjectLayout>
     <div class="container flex flex-col gap-4 pt-6">
-      <div class="flex font-semibold text-2xl">All Projects</div>
+      <div class="text-2xl font-semibold">All Projects</div>
 
       <!-- Loading -->
-      <div v-if="!isReady" class="text-center py-4 text-gray-500">Loading projects...</div>
+      <div v-if="!isReady" class="text-center py-4 text-sub-text">Loading projects...</div>
 
       <!-- Admin Dashboard -->
       <div v-if="isReady && userRole === 'admin'" class="flex flex-col gap-4">
@@ -20,18 +20,15 @@
 
         <!-- Header: Create + Search + Filter -->
         <div class="flex justify-between items-center w-full gap-4">
-          <Button
-            label="+ New Project"
-            btn-color="#C6E7FF"
-            btntext="black"
-            @click="showForm = true"
-          />
+          <Button label="+ New Project" @click="showForm = true" />
+
           <Form
             v-model:modelValue="showForm"
             formTitle="Create Project"
             :fields="projectFields"
             endpoint="projects"
             @submitted="onProjectCreated"
+            :fullScreen="true"
           />
           <div class="flex gap-4 items-center">
             <Search @update="searchQuery = $event" />
@@ -47,32 +44,56 @@
         >
           <template #actions="{ row }">
             <div class="flex gap-2">
-              <img
-                src="../assets/icons/view.svg"
-                alt="View"
-                class="cursor-pointer"
-                @click="viewProject(row)"
-              />
-              <img
-                src="../assets/icons/edit.svg"
-                alt="Edit"
-                class="cursor-pointer"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24px"
+                height="24px"
+                viewBox="0 0 16 16"
+                class="cursor-pointer w-6 h-"
+                :style="{ fill: 'var(--graysvg-text)' }"
+                @click="router.push(`/project/${row.id}`)"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="m14.5 8l.415-.208V7.79l-.003-.003l-.006-.012l-.021-.04l-.08-.144a8 8 0 0 0-.311-.494a9.4 9.4 0 0 0-1.255-1.485C12.113 4.532 10.38 3.43 8 3.43c-2.378 0-4.112 1.101-5.238 2.182a9.4 9.4 0 0 0-1.255 1.485a8 8 0 0 0-.412.678l-.006.012l-.002.003v.001s-.001.001.414.209l-.415-.209a.47.47 0 0 0 0 .417L1.5 8l-.415.208v.002l.003.003l.006.012a3 3 0 0 0 .1.184a9.4 9.4 0 0 0 1.566 1.98c1.127 1.08 2.86 2.18 5.24 2.18c2.379 0 4.113-1.1 5.24-2.181a9.5 9.5 0 0 0 1.254-1.485a8 8 0 0 0 .391-.638l.021-.04l.006-.012l.002-.003v-.001s.001-.001-.414-.209m0 0l.415.209a.47.47 0 0 0 0-.417zM7.94 6.464a1.536 1.536 0 1 0 0 3.072a1.536 1.536 0 0 0 0-3.072M5.478 8a2.464 2.464 0 1 1 4.928 0a2.464 2.464 0 0 1-4.928 0"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                :style="{ fill: 'var(--graysvg-text)' }"
+                class="cursor-pointer w-6 h-"
                 @click="editProject(row)"
-              />
-              <img
-                src="../assets/icons/delete.svg"
-                alt="Delete"
-                class="cursor-pointer"
+              >
+                <path
+                  d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C20.8027 6.94749 20.8762 6.8376 20.9264 6.71663C20.9766 6.59565 21.0024 6.46597 21.0024 6.335C21.0024 6.20403 20.9766 6.07435 20.9264 5.95338C20.8762 5.83241 20.8027 5.72252 20.71 5.63L18.37 3.29C18.2775 3.1973 18.1676 3.12375 18.0466 3.07357C17.9257 3.02339 17.796 2.99756 17.665 2.99756C17.534 2.99756 17.4043 3.02339 17.2834 3.07357C17.1624 3.12375 17.0525 3.1973 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z"
+                />
+              </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                class="cursor-pointer w-6 h-"
+                :style="{ fill: 'var(--graysvg-text)' }"
                 @click="deleteProject(row)"
-              />
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
+                />
+              </svg>
             </div>
           </template>
         </Table>
 
         <!-- Edit Project Form -->
-        <Form
-          v-model:modelValue="showEditProjectForm"
-          formTitle="Edit Project"
+        <EditForm
+          v-model="showEditProjectForm"
+          title="Edit Project"
           :fields="projectFields"
           :initialData="editProjectData"
           endpoint="projects"
@@ -82,12 +103,11 @@
 
       <!-- Non-Admin Project Cards -->
       <div v-else-if="isReady" class="flex flex-col gap-4">
-        <!-- Header -->
         <div class="flex justify-between items-center w-full gap-4">
           <Button
             label="+ New Project"
-            btn-color="#C6E7FF"
-            btntext="black"
+            btn-color="var(--blue-bg)"
+            btntext="var(--black-text)"
             @click="showForm = true"
           />
           <Form
@@ -103,8 +123,7 @@
           </div>
         </div>
 
-        <!-- Project Cards -->
-        <div class="h-[600px] overflow-y-auto gap-4 flex flex-col">
+        <div class="h-[600px] overflow-y-auto flex flex-col gap-4">
           <ProjectCard
             v-for="project in filteredSortedProjects"
             :key="project.id"
@@ -116,8 +135,8 @@
             :status="project.status"
             :priority="project.priority"
             :members="project.assignee?.name || 'None'"
-            :completedTasks="getCompletedTasks(project.id)"
-            :totalTasks="getTotalTasks(project.id)"
+            :completedTasks="getCompletedTasks(project)"
+            :totalTasks="getTotalTasks(project)"
           />
         </div>
       </div>
@@ -127,6 +146,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
 import ProjectLayout from './pageLayout.vue'
 import ProjectCard from '@/components/projectCard.vue'
 import Search from '@/components/search.vue'
@@ -136,15 +157,19 @@ import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'
 import PieChart from '@/components/pieChart.vue'
 import OverviewCard from '@/components/overviewCard.vue'
+
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
-import { useAuthStore } from '@/stores/auth'
+import { useSubtaskStore } from '@/stores/subtask'
 import { useTeamStore } from '@/stores/team'
+import { useAuthStore } from '@/stores/auth'
+import EditForm from '@/components/editForm.vue'
 
 // Stores
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
+const subtaskStore = useSubtaskStore()
 const teamStore = useTeamStore()
 
 // State
@@ -155,12 +180,7 @@ const searchQuery = ref('')
 const selectedSort = ref('')
 const isReady = ref(false)
 const userRole = computed(() => authStore.user?.role || 'user')
-import { useRouter } from 'vue-router'
 const router = useRouter()
-
-const viewProject = (row) => {
-  router.push(`/project/${row.id}`)
-}
 
 // Table & Sort Options
 const tableColumns = [
@@ -181,12 +201,7 @@ const sortOptions = [
   { value: 'due-latest', label: 'Due (Latest first)' },
 ]
 
-// Teams & Form Fields
-const Teams = [
-  // { id: 1, name: 'Team A' },
-  // { id: 2, name: 'Team B' },
-  // { id: 3, name: 'Team C' },
-]
+// Form Fields
 const projectFields = [
   { type: 'text', label: 'Project Title', placeholder: 'Enter project title', model: 'title' },
   {
@@ -198,10 +213,7 @@ const projectFields = [
   {
     type: 'select',
     label: 'Assignee',
-    options: teamStore.teams.map((team) => ({
-      id: team.id,
-      name: team.name,
-    })),
+    options: teamStore.teams.map((t) => ({ id: t.id, name: t.name })),
     model: 'team_id',
   },
   {
@@ -238,6 +250,7 @@ const filteredSortedProjects = computed(() => {
       (p) => p.p_name.toLowerCase().includes(q) || p.p_description?.toLowerCase().includes(q),
     )
   }
+
   switch (selectedSort.value) {
     case 'priority-High':
       return list.sort((a, b) => priorityValue(b.priority) - priorityValue(a.priority))
@@ -251,6 +264,7 @@ const filteredSortedProjects = computed(() => {
       return list
   }
 })
+
 const mappedFilteredSortedProjects = computed(() =>
   filteredSortedProjects.value.map((p) => ({
     id: p.id,
@@ -261,39 +275,58 @@ const mappedFilteredSortedProjects = computed(() =>
     start_date: p.start_date,
     due_date: p.due_date,
     icon: p.user?.img_url || null,
-    completed: getCompletedTasks(p.id),
-    total: getTotalTasks(p.id),
+    completed: getCompletedTasks(p),
+    total: getTotalTasks(p),
   })),
 )
 
 // Task helpers
-const getTotalTasks = (projectId) =>
-  taskStore.tasks.filter((t) => String(t.project?.id) === String(projectId)).length
-const getCompletedTasks = (projectId) =>
-  taskStore.tasks.filter(
-    (t) => String(t.project?.id) === String(projectId) && t.t_status?.toLowerCase() === 'completed',
-  ).length
+const getTotalTasks = (project) =>
+  project.tasks?.reduce((total, task) => total + 1 + (task.subtasks?.length || 0), 0) || 0
+
+const getCompletedTasks = (project) =>
+  project.tasks?.reduce((completed, task) => {
+    let count = task.t_status?.toLowerCase() === 'completed' ? 1 : 0
+    count += task.subtasks?.filter((s) => s.status?.toLowerCase() === 'completed').length || 0
+    return completed + count
+  }, 0) || 0
 
 // Fetch data on mount
 onMounted(async () => {
   if (!authStore.user) await authStore.fetchProfile()
   await teamStore.fetchTeams()
   await projectStore.fetchProjects()
+
   taskStore.tasks = []
-  for (const p of projectStore.projects) await taskStore.fetchTasksByProject(p.id)
+  subtaskStore.subtasks = []
+
+  await Promise.all(
+    projectStore.projects.map(async (p) => {
+      const tasks = (await taskStore.fetchTasksByProject(p.id)) || []
+      taskStore.tasks.push(...tasks)
+
+      await Promise.all(
+        tasks.map(async (t) => {
+          const subtasks = (await subtaskStore.fetchByTask(t.id)) || []
+          subtaskStore.subtasks.push(...subtasks)
+        }),
+      )
+    }),
+  )
+
   isReady.value = true
 })
 
 // Sorting handler
-const applySort = (option) => {
-  selectedSort.value = option
-}
+const applySort = (option) => (selectedSort.value = option)
 
 // Project actions
 const onProjectCreated = (project) => projectStore.projects.push(project)
+
 const editProject = (row) => {
   const project = projectStore.projects.find((p) => p.id === row.id)
   if (!project) return
+
   editProjectData.value = {
     id: project.id,
     title: project.p_name,
@@ -302,11 +335,12 @@ const editProject = (row) => {
     dueDate: project.due_date,
     priority: project.priority,
     status: project.status,
-    // assignee: project.assignee?.id || null,
     team_id: project.team?.id || null,
   }
+
   showEditProjectForm.value = true
 }
+
 const deleteProject = async (row) => {
   const project = projectStore.projects.find((p) => p.id === row.id)
   if (!project) return
@@ -314,6 +348,7 @@ const deleteProject = async (row) => {
     await projectStore.deleteProject(project.id)
   }
 }
+
 const onEditProjectSubmitted = (updatedProject) => {
   projectStore.projects = projectStore.projects.map((p) =>
     p.id === updatedProject.id ? updatedProject : p,
@@ -321,6 +356,9 @@ const onEditProjectSubmitted = (updatedProject) => {
   showEditProjectForm.value = false
 }
 
+const viewProject = (row) => router.push(`/project/${row.id}`)
+
+// Overview Computed
 const totalProjects = computed(() => projectStore.projects.length)
 const overdueProjects = computed(() => {
   const today = new Date()

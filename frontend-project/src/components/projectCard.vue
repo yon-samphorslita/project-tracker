@@ -1,10 +1,10 @@
 <template>
-  <div class="border border-gray-700/80 rounded-md">
+  <div class="border border-[var(--gray-bg)] rounded-md">
     <div class="p-6 flex flex-col gap-6">
       <!-- Header Row -->
       <div class="flex items-center justify-between">
         <div class="flex flex-col gap-1">
-          <div class="text-lg font-semibold text-gray-900">
+          <div class="text-lg font-semibold text-gray-text">
             {{ name || 'Project Name' }}
             <span class="ml-2">
               <Status :status="status || 'not started'" />
@@ -14,7 +14,7 @@
         <Status :priority="priority || 'not started'" />
       </div>
 
-      <div class="border-t border-dashed border-gray-700/80"></div>
+      <div class="border-t border-dashed border-[var(--gray-bg)]"></div>
 
       <!-- Info Row -->
       <div class="flex justify-between items-center px-2">
@@ -23,7 +23,7 @@
         <DescriptionLabel label="Progress">
           <ProgressBar :completed="completedTasks" :total="totalTasks" />
         </DescriptionLabel>
-<DescriptionLabel label="Members">
+        <DescriptionLabel label="Members">
           <div class="flex -space-x-2">
             <template v-if="allMembers.length">
               <img
@@ -35,15 +35,15 @@
                 :title="`${member.first_name} ${member.last_name}`"
               />
             </template>
-            <span v-else class="text-gray-400">None</span>
+            <span v-else class="text-sub-text">None</span>
           </div>
         </DescriptionLabel>
       </div>
 
-      <div class="border-t border-dashed border-gray-700/80"></div>
+      <div class="border-t border-dashed border-[var(--gray-bg)]"></div>
 
       <!-- Description -->
-      <div class="px-2 text-gray-700">
+      <div class="px-2 text-gray-text">
         {{ detail || 'No description provided.' }}
       </div>
     </div>
@@ -51,7 +51,7 @@
     <!-- View Button -->
     <button
       @click="goToProjectPage"
-      class="w-full border-t border-gray-700/80 py-2 text-gray-700 hover:bg-gray-100 transition"
+      class="w-full border-t border-[var(--gray-bg)] py-2 text-gray-text hover:bg-black/15 transition"
     >
       View details
     </button>

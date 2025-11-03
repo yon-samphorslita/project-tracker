@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-4">
     <!-- Header -->
     <div
-      class="grid grid-cols-[3fr_2fr_1fr_1fr_1fr_auto] font-semibold border-b-2 pb-3 bg-white text-lg"
+      class="grid grid-cols-[3fr_2fr_1fr_1fr_1fr_auto] font-semibold border-b-2 pb-3 bg-main-bg text-lg"
     >
       <div class="pl-4">Task</div>
       <!-- <div class="flex justify-center">Description</div> -->
@@ -17,7 +17,7 @@
     <!-- Task Rows -->
     <div class="border rounded-lg" v-for="item in props.tasks" :key="item.id">
       <div
-        class="group grid grid-cols-[3fr_2fr_1fr_1fr_1fr_auto] items-center px-4 py-3 border-grey-200 hover:bg-grey-50 transition"
+        class="group grid grid-cols-[3fr_2fr_1fr_1fr_1fr_auto] items-center px-4 py-3 border-gray-200 hover:bg-black/15 transition"
         @click="toggleExpand(item.id)"
       >
         <div class="truncate">{{ item.t_name }}</div>
@@ -60,7 +60,7 @@
           <!-- <div v-if="item.t_status === 'not started'">
             <button
               class="px-3 py-1 border border-blue-500 rounded-lg bg-blue-100 text-blue-700 
-                    hover:bg-blue-500 hover:text-white cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
+                    hover:bg-blue-500 hover:text-white-text cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
               @click.stop="startTask(item.id)"
             >
               Start
@@ -70,7 +70,7 @@
           <div v-else-if="item.t_status === 'in progress'">
             <button
               class="px-3 py-1 border border-green-500 rounded-lg bg-green-100 text-green-700 
-                    hover:bg-green-500 hover:text-white cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
+                    hover:bg-green-500 hover:text-white-text cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
               @click.stop="finishTask(item.id)"
             >
               Finish
@@ -90,7 +90,7 @@
             <select
               v-model="item.t_status"
               @change="handleStatusChange(item)"
-              class="px-3 py-1 border border-gray-300 rounded-lg bg-white text-gray-700 hover:border-gray-400 focus:ring focus:ring-blue-100 transition-all duration-200 shadow-sm"
+              class="px-3 py-1 border border-gray-300 rounded-lg bg-main-bg text-gray-text hover:border-gray-400 focus:ring focus:ring-blue-100 transition-all duration-200 shadow-sm"
             >
               <option value="not started">Start</option>
               <option value="in progress">Finish</option>
@@ -132,14 +132,14 @@
       <transition name="fade">
         <div
           v-if="expandedTask.includes(item.id)"
-          class="col-span-6 bg-gray-50 rounded-lg p-4 mt-0 m-6 border border-gray-200"
+          class="col-span-6 bg-gray50-bg rounded-lg p-4 mt-0 m-6 border border-gray-200"
         >
           <div class="flex flex-col gap-2">
             <div v-if="item.subtasks && item.subtasks.length">
               <div
                 v-for="subtask in item.subtasks"
                 :key="subtask.id"
-                class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200"
+                class="flex justify-between items-center bg-main-bg px-3 py-2 rounded-md border border-gray-200"
               >
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input
@@ -150,7 +150,7 @@
                   />
                   <span
                     :class="[
-                      'text-gray-700',
+                      'text-gray-text',
                       subtask.status === 'completed' ? 'line-through text-gray-400' : '',
                     ]"
                   >

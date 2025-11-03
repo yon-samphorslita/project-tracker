@@ -4,7 +4,7 @@
       <input
         type="text"
         placeholder="Search..."
-        class="w-full p-2 md:p-3 border border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        class="w-full p-2 md:p-3 border bg-main-bg text-sub-text border-gray-300 rounded-3xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         v-model="query"
         @input="onInput"
       />

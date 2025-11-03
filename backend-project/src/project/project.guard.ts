@@ -16,20 +16,24 @@ export class ProjectGuard implements CanActivate {
     const user = request.user;
     const projectId = +request.params.id;
 
-    if (!user?.id || isNaN(projectId))
+    if (!user?.id || isNaN(projectId)) {
       throw new NotFoundException('Invalid user or project ID');
-
-    if (user.role === 'admin') {
-      request.project = await this.projectService.findOne(projectId);
-      if (!request.project) throw new NotFoundException('Project not found');
-      return true;
     }
 
-    const project = await this.projectService.findOne(projectId, user.id);
-    if (!project)
+    // Admin can access all projects
+    const isAdmin = user.role === 'admin';
+    const project = await this.projectService.findOne(
+      projectId,
+      user.id,
+      isAdmin,
+    );
+
+    if (!project) {
+      if (isAdmin) throw new NotFoundException('Project not found');
       throw new ForbiddenException(
         'You are not authorized to access this project',
       );
+    }
 
     request.project = project;
     return true;

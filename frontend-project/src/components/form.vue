@@ -1,10 +1,14 @@
 <template>
   <div
     v-if="showForm"
-    class="fixed top-0 left-[250px] w-[calc(100vw-250px)] h-full bg-[rgba(153,153,153,0.2)] backdrop-blur-sm flex items-center justify-center z-[1000]"
+    :class="[
+      fullScreen
+        ? 'fixed top-0 left-[250px] w-[calc(100vw-250px)] h-full bg-[rgba(153,153,153,0.2)] backdrop-blur-sm flex items-center justify-center z-[1000]'
+        : 'relative w-full',
+    ]"
   >
-    <div class="bg-white p-10 rounded-lg w-[400px] max-w-[90%] shadow-xl">
-      <div class="text-2xl mb-5 text-[#2c3e50] font-semibold">
+    <div :class="[fullScreen ? 'bg-main-bg p-10 rounded-lg w-[400px] max-w-[90%] shadow-xl' : '']">
+      <div class="text-2xl mb-5 text-gray-text font-semibold">
         {{ formTitle }}
       </div>
 
@@ -22,7 +26,7 @@
               isSingleInput(index, field.type),
           }"
         >
-          <label :for="field.label" class="block mb-2 text-[#34495e] font-medium">
+          <label :for="field.label" class="block mb-2 text-gray-text font-medium">
             {{ field.label }}
           </label>
 
@@ -30,7 +34,7 @@
           <input
             v-if="['text', 'email', 'password'].includes(field.type)"
             :id="field.label"
-            class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 focus:outline-none"
+            class="w-full px-4 py-3 border bg-main-bg rounded-lg text-base transition duration-300 focus:outline-none"
             :class="
               errors[field.model]
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
@@ -44,7 +48,7 @@
           <textarea
             v-else-if="field.type === 'textarea'"
             :id="field.label"
-            class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 min-h-[120px] resize-y focus:outline-none"
+            class="w-full px-4 py-3 border bg-main-bg rounded-lg text-base transition duration-300 min-h-[120px] resize-y focus:outline-none"
             :class="
               errors[field.model]
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
@@ -59,7 +63,7 @@
             v-else-if="field.type === 'date' || field.type === 'datetime-local'"
             :type="field.type"
             :id="field.label"
-            class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 focus:outline-none"
+            class="w-full px-4 py-3 border bg-main-bg rounded-lg text-base transition duration-300 focus:outline-none"
             :class="
               errors[field.model]
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
@@ -77,7 +81,7 @@
           <select
             v-else-if="field.type === 'select'"
             :id="field.label"
-            class="w-full px-4 py-3 border rounded-lg text-base transition duration-300 focus:outline-none"
+            class="w-full px-4 py-3 border bg-main-bg rounded-lg text-base transition duration-300 focus:outline-none"
             :class="
               errors[field.model]
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
@@ -101,17 +105,16 @@
       <!-- Buttons -->
       <div class="flex justify-around w-full mt-5">
         <button
-          class="px-5 py-3 rounded text-white text-base cursor-pointer transition-colors bg-red-500 hover:bg-red-600"
+          class="px-5 py-3 rounded text-base cursor-pointer transition-colors btn-red"
           @click="cancel"
         >
           Cancel
         </button>
-        <button
-          class="px-5 py-3 rounded text-white text-base cursor-pointer transition-colors bg-blue-500 hover:bg-blue-600"
+        <Button
           @click="submitForm"
-        >
-          Submit
-        </button>
+          label="Save"
+          class="px-5 py-3 rounded text-base cursor-pointer transition-colors btn"
+        />
       </div>
     </div>
   </div>
@@ -121,8 +124,9 @@
 import { ref, reactive, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
-
+import Button from './button.vue'
 const props = defineProps({
+  fullScreen: { type: Boolean, default: true },
   formTitle: { type: String, required: true },
   fields: { type: Array, required: true },
   endpoint: { type: String, required: true },

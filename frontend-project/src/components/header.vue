@@ -1,11 +1,9 @@
 <template>
-  <div class="fixed left-[250px] w-[calc(100vw-250px)] h-[91px] z-50 bg-white">
+  <div class="fixed left-[250px] w-[calc(100vw-250px)] h-[91px] z-50 bg-main-bg">
     <div class="flex items-center h-full mx-6 md:mx-12">
-      <span class="ml-5 text-black text-xl md:text-2xl font-bold w-full">{{
-        currentPageTitle
-      }}</span>
+      <span class="ml-5 text-xl md:text-2xl font-bold w-full">{{ currentPageTitle }}</span>
 
-      <div class="flex items-center justify-end w-full">
+      <div class="flex gap-2 items-center justify-end w-full">
         <div class="relative flex flex-col items-end">
           <!-- notification icon -->
           <div @click="toggleNotification" class="notification-bell cursor-pointer flex">
@@ -30,8 +28,6 @@
               {{ unreadCount }}
             </div>
           </div>
-
-          <!-- Notification dropdown -->
           <Notification
             v-if="showNotification"
             class="absolute top-full right-0 mt-2 z-50 notification-dropdown"
@@ -50,61 +46,34 @@
           />
         </svg>
 
-        <!-- user profile  -->
-        <div
-          class="flex items-center bg-[#C6E7FF] rounded-full px-3 py-1.5 w-[130px] max-w-[150px] truncate cursor-pointer"
-          @click="gotoProfile"
-        >
-          <div class="w-8 h-8 rounded-full overflow-hidden mr-2">
-            <img :src="user?.img_url" alt="Profile Image" class="w-8 h-8 object-cover" />
-          </div>
-          <div class="flex flex-col truncate">
-            <span class="text-sm font-medium truncate">
-              {{ user ? `${user.first_name} ${user.last_name}` : '' }}
-            </span>
-            <span class="text-xs text-gray-500 truncate">{{ Role }}</span>
-          </div>
-        </div>
+        <!-- new component -->
+        <ProfileDropdown />
       </div>
     </div>
-    <hr class="mx-3 md:mx-12" />
+    <hr class="mx-3 md:mx-12" style="border-color: var(--sub-text)" />
   </div>
 </template>
 
 <script setup lang="ts">
-// import profileimg from '@/assets/profile.jpg'
 import { useRoute, useRouter } from 'vue-router'
-import Notification from '@/components/notification.vue'
 import { useNotificationStore } from '@/stores/notification'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
+import Notification from '@/components/notification.vue'
+import ProfileDropdown from '@/components/profileDropdown.vue'
+
 const router = useRouter()
-
 const route = useRoute()
-const authStore = useAuthStore()
-
-// fetch User data from Pinia store
-const user = computed(() => authStore.user)
-
-// fetch Menu Item from route name
-const currentPageTitle = computed(() => {
-  return route.meta.title
-})
-
-function gotoProfile() {
-  router.push('/settings/profile')
-  console.log('Navigating to profile page...')
-}
-// Notification logic
-const showNotification = ref(false)
 const store = useNotificationStore()
+
+const showNotification = ref(false)
 const unreadCount = computed(() => store.notifications.filter((n) => !n.read_status).length)
 
 const toggleNotification = () => {
   showNotification.value = !showNotification.value
 }
 
-// close when clicking outside
+const currentPageTitle = computed(() => route.meta.title)
+
 const handleClickOutside = (e: MouseEvent) => {
   const dropdown = document.querySelector('.notification-dropdown')
   const bell = document.querySelector('.notification-bell')
@@ -120,33 +89,11 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 }
 
-onMounted(async () => {
-  // store.connect('1')
-  if (!user.value) {
-    await authStore.user()
-  }
-
-  if (user.value?.id) {
-    store.connect(String(user.value.id))
-  }
+onMounted(() => {
   document.addEventListener('click', handleClickOutside)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
-const Role = computed(() => {
-  switch (user.value?.role) {
-    case 'admin':
-      return 'Admin'
-    case 'project_manager':
-      return 'Project Manager'
-    case 'member':
-      return ''
-    default:
-      return user.value?.role || ''
-  }
-})
 </script>
-
-<style></style>

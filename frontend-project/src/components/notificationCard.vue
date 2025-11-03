@@ -5,7 +5,7 @@
       :key="n.id"
       :class="[
         'group w-full min-h-20 flex px-4 py-2 border-gray-200 cursor-pointer transition-colors',
-        !n.read_status ? 'bg-blue-50' : 'bg-white',
+        !n.read_status ? 'bg-gray-bg' : 'bg-main-bg',
       ]"
     >
       <div
@@ -16,12 +16,12 @@
           <div v-if="!n.read_status" class="w-2 h-2 bg-blue-500 rounded-full mb-1"></div>
           <div class="font-semibold">{{ n.title }}</div>
           <div class="font-bold">-</div>
-          <div class="text-sm text-gray-500 line-clamp-2 p-1">
+          <div class="text-sm text-sub-text line-clamp-2 p-1">
             {{ n.message }}
           </div>
         </div>
 
-        <div class="flex text-sm text-gray-400">{{ timeAgo(n.created_at) }}</div>
+        <div class="flex text-sm text-sub-text">{{ timeAgo(n.created_at) }}</div>
       </div>
 
       <!-- Delete button appears only on hover -->

@@ -2,35 +2,40 @@
   <div>
     <h1 class="text-2xl font-bold mb-6">Account Settings</h1>
 
-    <div class="mx-auto bg-white shadow-md rounded-2xl p-8">
+    <div class="mx-auto bg-main-bg shadow-md rounded-2xl p-8">
       <!-- Profile Section -->
       <div class="flex items-center justify-between gap-6 mb-8">
         <div class="flex items-center gap-4">
           <div class="relative w-24 h-24">
             <img
-              :src="form.img_url || 'https://via.placeholder.com/150'"
+              :src="form.img_url"
               alt="Profile"
               class="w-24 h-24 rounded-full object-cover border"
             />
             <label
               v-if="isEditing"
-              class="absolute bottom-0 right-0 bg-[#C6E7FF] text-black rounded-full p-2 cursor-pointer hover:bg-blue-400"
+              class="absolute bottom-0 right-0 btn rounded-full p-2 cursor-pointer"
             >
               <input type="file" accept="image/*" class="hidden" @change="handleImageUpload" />
-              <img src="../../assets/icons/camera.svg" alt="Upload" class="w-4 h-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2m8 3a5 5 0 0 0-5 5a5 5 0 0 0 5 5a5 5 0 0 0 5-5a5 5 0 0 0-5-5m0 2a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3"
+                />
+              </svg>
             </label>
           </div>
           <div>
             <h2 class="text-xl font-semibold">{{ form.first_name }} {{ form.last_name }}</h2>
-            <p class="text-gray-500">{{ form.email }}</p>
+            <p class="text-sub-text">{{ form.email }}</p>
           </div>
         </div>
         <Button
           v-if="!isEditing"
           @click="startEditing"
           label="Edit"
-          btn-color="#C6E7FF"
-          btntext="black"
+          btn-color="var(--blue-bg)"
+          btntext="var(--main-text)"
         />
       </div>
 
@@ -56,42 +61,38 @@
       <form v-else class="grid gap-6" @submit.prevent="saveChanges">
         <div class="grid grid-cols-2 gap-6">
           <div>
-            <label class="block text-gray-700 mb-1">First Name</label>
+            <label class="block text-gray-text mb-1">First Name</label>
             <input
               v-model="form.first_name"
-              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
+              class="w-full px-4 py-2 border bg-main-bg rounded-xl focus:ring focus:ring-blue-200"
               type="text"
             />
           </div>
           <div>
-            <label class="block text-gray-700 mb-1">Last Name</label>
+            <label class="block text-gray-text mb-1">Last Name</label>
             <input
               v-model="form.last_name"
-              class="w-full px-4 py-2 border rounded-xl focus:ring focus:ring-blue-200"
+              class="w-full px-4 py-2 border bg-main-bg rounded-xl focus:ring focus:ring-blue-200"
               type="text"
             />
           </div>
         </div>
 
         <div>
-          <label class="block text-gray-700 mb-1">Email</label>
+          <label class="block text-gray-text mb-1">Email</label>
           <input
             v-model="form.email"
             disabled
-            class="w-full px-4 py-2 border rounded-xl bg-gray-100 cursor-not-allowed"
+            class="w-full px-4 py-2 border bg-main-bg rounded-xl bg-gray-100 cursor-not-allowed"
             type="email"
           />
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
-          <Button @click="cancelEditing" label="Cancel" btn-color="#c70707" btntext="white" />
-          <Button label="Save Changes" btn-color="#c6e7ff" btntext="black" />
+          <Button @click="cancelEditing" label="Cancel" class="btn-red" />
+          <Button label="Save Changes" btn-color="var(--blue-bg)" btntext="var(--black-text)" />
         </div>
       </form>
-    </div>
-
-    <div class="mt-4">
-      <Button @click="logout" label="Logout" btn-color="#c70707" btntext="white" />
     </div>
   </div>
 </template>

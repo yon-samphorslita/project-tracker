@@ -3,17 +3,20 @@
     <div class="flex flex-col gap-6">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Team Details</h1>
-        <button @click="goBack" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        <button
+          @click="goBack"
+          class="bg-blue-500 text-white-text px-4 py-2 rounded hover:bg-blue-600"
+        >
           Back to Teams
         </button>
       </div>
 
-      <div class="border rounded-lg p-6 bg-white shadow-sm">
+      <div class="border rounded-lg p-6 bg-main-bg shadow-sm">
         <h2 class="text-xl font-semibold mb-4">{{ team.name }}</h2>
 
         <div>
           <div class="text-lg font-semibold mt-5 mb-2">Description</div>
-          <div class="pl-4 mb-6 text-lg text-gray-700">
+          <div class="pl-4 mb-6 text-lg text-gray-text">
             {{ team.description || 'No description provided.' }}
           </div>
         </div>
@@ -59,7 +62,7 @@
               <div
                 v-for="pm in team.pms"
                 :key="pm.id"
-                class="flex items-center gap-3 border rounded-lg px-3 py-2 shadow-sm bg-gray-50 hover:bg-gray-100"
+                class="flex items-center gap-3 border rounded-lg px-3 py-2 shadow-sm bg-gray50-bg hover:bg-gray-100"
                 @click="gotoProfile(pm.id)"
               >
                 <img
@@ -115,7 +118,7 @@
               <div
                 v-for="member in allMembers"
                 :key="member.id"
-                class="flex items-center gap-3 border rounded-lg px-3 py-2 shadow-sm bg-gray-50 hover:bg-gray-100"
+                class="flex items-center gap-3 border rounded-lg px-3 py-2 shadow-sm bg-gray50-bg hover:bg-gray-100"
                 @click="gotoProfile(member.id)"
               >
                 <img

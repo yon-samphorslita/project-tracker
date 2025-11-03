@@ -190,7 +190,7 @@ export class AuthController {
     await this.authService.updateUserPassword(user.id, body.newPassword, true);
     return { message: 'Password updated successfully' };
   }
-  
+
   @Post('verify-otp')
   async verifyOtp(@Body() body: { email: string; otp: string }) {
     const user = await this.userService.findOneByEmail(body.email, true);

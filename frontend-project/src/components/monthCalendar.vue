@@ -1,7 +1,7 @@
 <template>
   <div class="w-full border rounded-md">
     <!-- Calendar Header -->
-    <div class="grid grid-cols-7 border-b text-center font-semibold sticky top-0 z-10 bg-white">
+    <div class="grid grid-cols-7 border-b text-center font-semibold sticky top-0 z-10 bg-main-bg">
       <div v-for="day in weekDays" :key="day" class="p-2">{{ day }}</div>
     </div>
 
@@ -10,14 +10,15 @@
       <div
         v-for="(day, idx) in days"
         :key="idx"
-        class="h-28 border-r border-b p-1 relative bg-[rgba(198,231,255,0.3)]"
+        class="h-28 border-r border-b p-1 relative"
+        :style="{ backgroundColor: `rgba(var(--blue-bg-rgb), 0.3)` }"
       >
         <!-- Date Number -->
         <div
           class="text-xs font-semibold mb-1 flex items-center justify-start"
           :class="{
             'text-gray-400': !day.isCurrentMonth,
-            'bg-blue-200 rounded-full w-6 h-6 flex items-center justify-center': isToday(day.date),
+            'bg-blue-bg rounded-full w-6 h-6 flex items-center justify-center': isToday(day.date),
           }"
         >
           {{ day.date.getDate() }}
@@ -27,7 +28,7 @@
         <div
           v-for="(item, i) in day.items.slice(0, 2)"
           :key="i"
-          class="truncate text-xs p-1 my-1 border rounded bg-white shadow-sm flex items-center"
+          class="truncate text-xs p-1 my-1 border rounded bg-main-bg shadow-sm flex items-center"
         >
           <!-- Color bar -->
           <span
@@ -41,7 +42,7 @@
         </div>
 
         <!-- +N More indicator -->
-        <div v-if="day.items.length > 3" class="text-xs text-gray-500 italic mt-1 ml-1">
+        <div v-if="day.items.length > 3" class="text-xs text-sub-text italic mt-1 ml-1">
           +{{ day.items.length - 3 }} more
         </div>
       </div>

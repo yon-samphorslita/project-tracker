@@ -47,26 +47,26 @@
         <!-- right side: date & time, calendar -->
         <div class="w-1/3 flex flex-col gap-4">
           <div
-            class="flex flex-col justify-end items-center gap-4 p-4 bg-[#C6E7FF] rounded-xl shadow-md"
+            class="flex flex-col justify-end items-center gap-4 p-4 bg-blue-bg rounded-xl shadow-md"
           >
             <!-- Date Information -->
             <div
-              class="flex flex-col items-center justify-center gap-2 w-64 h-24 bg-gray-100 rounded-xl shadow-md border border-gray-200"
+              class="flex flex-col items-center justify-center gap-2 w-64 h-24 bg-[var(--gray50-bg)] rounded-xl shadow-md border border-gray-200"
             >
               <div class="text-gray-800 text-3xl font-bold tracking-wide">{{ weekday }}</div>
-              <div class="text-gray-500 text-lg font-medium">{{ formattedDate }}</div>
+              <div class="text-sub-text text-lg font-medium">{{ formattedDate }}</div>
             </div>
 
             <!-- Digital Clock with Flip Animation -->
             <div
-              class="flex items-center justify-center gap-4 p-6 bg-gray-100 rounded-xl shadow-md"
+              class="flex items-center justify-center gap-4 p-6 bg-[var(--gray50-bg)] rounded-xl shadow-md"
             >
               <!-- Hours -->
               <div class="flex gap-1">
                 <FlipDigit :digit="hours[0]" />
                 <FlipDigit :digit="hours[1]" />
               </div>
-              <div class="text-3xl font-bold text-gray-700">:</div>
+              <div class="text-3xl font-bold text-gray-text">:</div>
 
               <!-- Minutes -->
               <div class="flex gap-1">
@@ -75,7 +75,7 @@
               </div>
 
               <!-- AM/PM -->
-              <div class="text-2xl font-bold text-gray-700">{{ ampm }}</div>
+              <div class="text-2xl font-bold text-gray-text">{{ ampm }}</div>
             </div>
           </div>
 
@@ -87,7 +87,7 @@
 
       <div class="py-6">
         <div class="text-xl font-semibold mb-3">Project Timeline</div>
-        <GanttChart :rows="ganttRows" :format-date="formatDate" />
+        <GanttChart :rows="ganttRows" :format-date="formatDate" ganttHeader="Projects" />
       </div>
     </div>
   </DashboardLayout>
@@ -168,15 +168,14 @@ const taskStatus = computed(() => {
 const ganttRows = computed(() =>
   projectStore.projects.map((project) => ({
     label: project.p_name,
-    tasks: [
-      {
-        name: project.p_name,
-        start: new Date(project.start_date),
-        end: new Date(project.due_date),
-        status: project.status,
-        color: getStatusColor(project.status),
-      },
-    ],
+    tasks:
+      project.tasks?.map((t) => ({
+        id: t.id,
+        name: t.t_name,
+        start: t.start_date ? new Date(t.start_date) : new Date(),
+        end: t.due_date ? new Date(t.due_date) : new Date(),
+        icon: t.user?.img_url || null,
+      })) || [],
   })),
 )
 

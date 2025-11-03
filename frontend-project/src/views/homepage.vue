@@ -9,7 +9,7 @@
 
     <!-- <Button label="Create New Project" /> -->
 
-    <!-- <button class="px-4 py-2 bg-blue-500 text-white rounded"
+    <!-- <button class="px-4 py-2 bg-blue-500 text-white-text rounded"
       @click="showForm = true">
       + Create Team
     </button> -->

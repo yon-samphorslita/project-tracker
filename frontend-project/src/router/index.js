@@ -20,6 +20,7 @@ import NotificationPage from '@/views/notificationPage.vue'
 import Taskpage from '@/views/taskpage.vue'
 import Dashboard from '@/views/dashboard.vue'
 import GetHelp from '@/views/settings/getHelp.vue'
+import ThemeSettings from '@/views/settings/ThemeSettings.vue'
 const routes = [
   { path: '/', redirect: '/login' },
   { path: '/home', name: 'Home', component: Home, meta: { requiresAuth: true } },
@@ -42,6 +43,7 @@ const routes = [
       { path: '', component: SettingsPage },
       { path: 'profile', component: SettingsProfile },
       { path: 'activity-logs', component: ActivityLogs },
+      { path: 'theme', component: ThemeSettings },
     ],
   },
   { path: '/help', component: GetHelp, meta: { requiresAuth: true, title: 'Get Help' } },
@@ -100,10 +102,7 @@ router.beforeEach(async (to, from, next) => {
   // Prevent logged-in users from visiting login page
   if (to.path === '/login' && isLoggedIn) {
     const role = authStore.user?.role
-    if (role === 'admin') return next('/settings/profile')
-    if (role === 'project_manager') return next('/projects')
-    if (role === 'member') return next('/dashboard')
-    return next('/') // fallback
+    return next('/dashboard') // fallback
   }
 
   next()

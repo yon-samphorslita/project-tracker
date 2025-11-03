@@ -3,7 +3,7 @@
     <div
       v-for="team in props.teams"
       :key="team.id"
-      class="flex justify-between border rounded-lg p-4 shadow-sm bg-white hover:bg-[#C6E7FF]"
+      class="flex justify-between border rounded-lg p-4 shadow-sm bg-main-bg hover:bg-blue-bg"
       @click="goToTeamDetail(team.id)"
     >
       <h2 class="text-lg font-semibold mb-2">{{ team.name }}</h2>
@@ -11,7 +11,7 @@
       <div class="flex items-center gap-8">
         <!-- Edit button -->
         <button
-          class="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+          class="px-3 py-1 text-sm bg-blue-500 text-white-text rounded-lg hover:bg-blue-600 transition"
           @click.stop="editTeam(team.id)"
         >
           Edit

@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#c6e7ff] p-4">
-    <div class="bg-white rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
+  <div class="min-h-screen flex items-center justify-center bg-blue-bg p-4">
+    <div class="bg-main-bg rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
       <!-- Image Section -->
       <div class="flex-1 min-w-[300px] flex justify-center items-center p-6">
         <img src="../../assets/images/auth.png" alt="Logo" class="max-w-full h-auto" />
@@ -44,12 +44,12 @@
             />
           </div>
 
-          <button
+          <Button
             type="submit"
-            class="bg-[#20A1FF] text-white py-3 rounded-[20px] font-bold hover:bg-blue-700 transition"
-          >
-            Update Password
-          </button>
+            btn-color="var(--blue-bg)"
+            btntext="var(--main-text)"
+            label="Update Password"
+          />
         </form>
       </div>
     </div>
@@ -60,7 +60,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-
+import Button from '@/components/button.vue'
 const router = useRouter()
 const auth = useAuthStore()
 

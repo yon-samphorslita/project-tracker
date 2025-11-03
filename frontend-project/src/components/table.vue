@@ -6,7 +6,7 @@
           <th
             v-for="col in columns"
             :key="col.key"
-            class="bg-[#C6E7FF] px-4 py-2 text-left border-t border-b border-gray-200"
+            class="bg-blue-bg px-4 py-2 text-left border-t border-b border-gray-200"
           >
             {{ col.label }}
           </th>
@@ -32,11 +32,7 @@
               </div>
             </template>
             <template v-else-if="col.key === 'status'">
-              <Status
-                :status="row[col.key]"
-                :editable="true"
-                @update:status="(val) => updateStatus({ ...row, status: val })"
-              />
+              <Status :status="row[col.key]" />
             </template>
             <template v-else-if="col.key === 'active'">
               <Status :active="row[col.key]" />
@@ -53,7 +49,7 @@
                 />
                 <div
                   v-else
-                  class="w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center font-semibold text-sm"
+                  class="w-8 h-8 rounded-full bg-gray-400 text-white-text flex items-center justify-center font-semibold text-sm"
                 >
                   {{ getInitials(row.name) }}
                 </div>
@@ -79,7 +75,7 @@
       </tbody>
     </table>
 
-    <div v-if="!data.length" class="text-center text-gray-500 mt-2">No data found</div>
+    <div v-if="!data.length" class="text-center text-sub-text mt-2">No data found</div>
   </div>
 </template>
 

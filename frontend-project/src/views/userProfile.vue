@@ -1,6 +1,6 @@
 <template>
   <TeamLayout>
-    <div class="mx-auto bg-white shadow-md rounded-2xl p-8">
+    <div class="mx-auto bg-main-bg shadow-md rounded-2xl p-8">
       <div class="flex items-center gap-4">
         <div class="relative w-24 h-24">
           <img
@@ -12,7 +12,7 @@
 
         <div>
           <h2 class="text-xl font-semibold">{{ user.first_name }} {{ user.last_name }}</h2>
-          <p class="text-gray-500">{{ user.email }}</p>
+          <p class="text-sub-text">{{ user.email }}</p>
         </div>
       </div>
 

@@ -15,20 +15,53 @@ export default {
   setup(props) {
     const chartContainer = ref(null)
     let chart = null
-
     const renderChart = () => {
       if (!chartContainer.value) return
       if (chart) chart.destroy()
+
+      const styles = getComputedStyle(document.documentElement)
+      const mainTextColor = styles.getPropertyValue('--main-text').trim()
+      const getPieColors = () => {
+        const styles = getComputedStyle(document.documentElement)
+        const colors = []
+
+        // Try first 10 variables
+        for (let i = 1; i <= 10; i++) {
+          const value = styles.getPropertyValue(`--random-color-${i}`).trim()
+          if (value) colors.push(value)
+        }
+
+        // Shuffle
+        for (let i = colors.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[colors[i], colors[j]] = [colors[j], colors[i]]
+        }
+
+        return colors
+      }
 
       chart = new Pie(chartContainer.value, {
         data: props.data,
         angleField: 'value',
         colorField: 'type',
         radius: 1,
-        innerRadius: 0.5,
+        innerRadius: 0.4,
         height: props.height,
-        color: ['#4F4F4F', '#A3D9C8', '#B0E0FF'],
+        color: getPieColors(),
+        label: {
+          style: {
+            fill: mainTextColor, // labels around slices
+          },
+        },
+        legend: {
+          itemName: {
+            style: {
+              fill: mainTextColor, // legend text
+            },
+          },
+        },
         interactions: [{ type: 'element-active' }],
+        statistic: false,
       })
 
       chart.render()

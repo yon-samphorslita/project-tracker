@@ -2,21 +2,33 @@
   <div ref="dropdownRef" class="filter-dropdown relative inline-block">
     <button
       @click="toggle"
-      class="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-gray-100 transition"
+      class="flex items-center gap-2 px-3 py-1 rounded-md transition hover:bg-black/15"
     >
-      <img src="../assets/icons/filter.svg" alt="Filter" class="w-4 h-4" />
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        class="w-4 h-4"
+        :style="{ fill: 'var(--graysvg-text)' }"
+      >
+        <path
+          fill="currentColor"
+          d="M14 12v7.88c.04.3-.06.62-.29.83a.996.996 0 0 1-1.41 0l-2.01-2.01a.99.99 0 0 1-.29-.83V12h-.03L4.21 4.62a1 1 0 0 1 .17-1.4c.19-.14.4-.22.62-.22h14c.22 0 .43.08.62.22a1 1 0 0 1 .17 1.4L14.03 12z"
+        />
+      </svg>
       <span class="text-sm font-medium truncate">{{ title }}</span>
     </button>
 
     <div
       v-if="open"
-      class="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3"
+      class="absolute right-0 mt-2 w-56 bg-main-bg border border-gray-200 rounded-lg shadow-lg z-50 p-3"
     >
       <div v-if="options.length">
         <div
           v-for="opt in options"
           :key="opt.value"
-          class="px-3 py-2 cursor-pointer hover:bg-gray-100 rounded-md text-sm"
+          class="px-3 py-2 cursor-pointer hover:bg-black/15 rounded-md text-sm"
           @click="selectOption(opt.value)"
         >
           {{ opt.label }}
@@ -47,10 +59,7 @@
             class="border rounded-md px-2 py-1 text-sm"
           />
         </div>
-        <button
-          @click="applyForm"
-          class="w-full py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition"
-        >
+        <button @click="applyForm" class="w-full py-2 rounded-md text-sm btn transition">
           Apply
         </button>
       </div>

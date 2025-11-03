@@ -22,7 +22,7 @@
       >
         <!-- Time label -->
         <div
-          class="absolute -left-[68px] top-[2px] text-xs font-medium px-2 py-[1px] rounded bg-black text-white border shadow-sm"
+          class="absolute -left-[68px] top-[2px] text-xs font-medium px-2 py-[1px] rounded bg-black-bg text-white-text border shadow-sm"
           :style="{
             transform: 'translateY(-50%)',
           }"
@@ -31,15 +31,15 @@
         </div>
 
         <!-- Dashed line -->
-        <div class="w-full border-t-2 border-dashed border-black"></div>
+        <div class="w-full border-t-2 border-dashed border-[var(--main-border)]"></div>
       </div>
 
       <!-- Header Row (sticky) -->
       <div
-        class="grid grid-cols-[80px_repeat(var(--cols),80px)] sticky top-0 z-20 bg-white border-b"
+        class="grid grid-cols-[80px_repeat(var(--cols),80px)] sticky top-0 z-20 bg-main-bg border-b"
         :style="{ '--cols': monthDays.length }"
       >
-        <div class="p-2 bg-white sticky left-0 z-30 border-r"></div>
+        <div class="p-2 bg-main-bg sticky left-0 z-30 border-r"></div>
         <div v-for="day in monthDays" :key="day.date" class="p-2 border-l text-center">
           {{ format(day.date, 'EEE dd') }}
         </div>
@@ -51,11 +51,11 @@
         :style="{ '--cols': monthDays.length }"
       >
         <!-- Hours column (sticky) -->
-        <div class="flex flex-col sticky left-0 z-10 border-r bg-white relative">
+        <div class="flex flex-col sticky left-0 z-10 border-r bg-main-bg">
           <div
             v-for="hour in hours"
             :key="hour"
-            class="h-16 border-b text-sm text-gray-500 flex items-center justify-end mr-1"
+            class="h-16 border-b text-sm text-sub-text flex items-center justify-end mr-1"
           >
             {{ hour }}
           </div>
@@ -65,7 +65,8 @@
         <div
           v-for="day in monthDays"
           :key="day.date"
-          class="relative border-l bg-[rgba(198,231,255,0.3)]"
+          class="relative border-l"
+          :style="{ backgroundColor: `rgba(var(--blue-bg-rgb), 0.3)` }"
         >
           <div v-for="hour in hours" :key="hour" class="h-16 border-b"></div>
 
@@ -73,7 +74,7 @@
           <div
             v-for="item in getItemsForDay(day.date)"
             :key="item.id"
-            class="absolute left-1 right-1 bg-white rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
+            class="absolute left-1 right-1 bg-main-bg rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
             :style="getItemStyle(item)"
           >
             <span
@@ -82,7 +83,7 @@
             ></span>
             <div>
               <div class="font-semibold">{{ item.e_title || item.t_name }}</div>
-              <div class="text-gray-500 text-[10px]">{{ formatTimeRange(item) }}</div>
+              <div class="text-sub-text text-[10px]">{{ formatTimeRange(item) }}</div>
             </div>
           </div>
         </div>

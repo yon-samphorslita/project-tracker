@@ -31,20 +31,18 @@ const fetchTeamWorkload = async () => {
   if (!team) return
   teamMembers.value = [...(team.members || []), ...(team.mainMembers || [])]
 
-  // Fetch project tasks
-  await taskStore.fetchTasksByProject(props.projectId)
+  // Filter project tasks
   const tasks = taskStore.tasks.filter((t) => t.project?.id === props.projectId)
 
-  // Initialize workload structure
+  // Initialize workload
   const workload = {}
   teamMembers.value.forEach((member) => {
     const name = `${member.first_name} ${member.last_name}`
     workload[name] = { total: 0, completed: 0 }
   })
 
-  // Count tasks per assigned member
+  // Count tasks per member
   tasks.forEach((task) => {
-    // adapt to your actual task structure
     const user = task.user || task.assigned_to || null
     const memberName =
       user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : null
@@ -57,10 +55,9 @@ const fetchTeamWorkload = async () => {
     }
   })
 
-  // Prepare chart data
+  const labels = []
   const totalData = []
   const completedData = []
-  const labels = []
 
   Object.entries(workload).forEach(([name, { total, completed }]) => {
     labels.push(name)
@@ -69,9 +66,12 @@ const fetchTeamWorkload = async () => {
   })
 
   teamWorkloadData.value = { labels, totalData, completedData }
-
   renderChart()
 }
+const styles = getComputedStyle(document.documentElement)
+
+const getColor = (index) => styles.getPropertyValue(`--random-color-${index}`).trim()
+const randomColors = [1, 2, 3, 4, 5, 6].sort(() => Math.random() - 0.5)
 
 const renderChart = () => {
   if (!canvasRef.value) return
@@ -87,13 +87,13 @@ const renderChart = () => {
         {
           label: 'Completed Tasks',
           data: completedData,
-          backgroundColor: '#8BD3B7',
+          backgroundColor: getColor(randomColors[0]),
           borderRadius: 4,
         },
         {
           label: 'Total Tasks',
           data: totalData,
-          backgroundColor: '#C6E7FF',
+          backgroundColor: getColor(randomColors[1]),
           borderRadius: 4,
         },
       ],
@@ -101,9 +101,7 @@ const renderChart = () => {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'bottom' },
-      },
+      plugins: { legend: { display: true, position: 'bottom' } },
       scales: {
         x: { stacked: true, title: { display: true, text: 'Team Members' } },
         y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Tasks' } },
@@ -112,8 +110,16 @@ const renderChart = () => {
   })
 }
 
-onMounted(fetchTeamWorkload)
+// Reactive: watch the task store for changes
+watch(
+  () => taskStore.tasks,
+  () => fetchTeamWorkload(),
+  { deep: true }, // ensures nested changes trigger update
+)
+
 watch(() => [props.projectId, props.teamId], fetchTeamWorkload)
+
+onMounted(fetchTeamWorkload)
 onBeforeUnmount(() => {
   if (chartInstance) chartInstance.destroy()
 })

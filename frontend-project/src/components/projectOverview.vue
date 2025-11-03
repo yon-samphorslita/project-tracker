@@ -11,7 +11,7 @@
       }"
       @click="goToProjectPage(p.id)"
     >
-      <div class="text-lg font-semibold text-gray-800 w-full">{{ p.p_name }}</div>
+      <div class="text-lg font-semibold text-gray-text w-full">{{ p.p_name }}</div>
 
       <div class="w-60 pt-2">
         <div>Progress</div>
@@ -29,7 +29,7 @@
         >
           {{ p.priority }}
         </div>
-        <div class="text-sm -end text-gray-500">
+        <div class="text-sm -end text-sub-text">
           {{ p.daysRemaining > 0 ? `${p.daysRemaining} days left` : 'Overdue' }}
         </div>
       </div>

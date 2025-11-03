@@ -5,7 +5,7 @@
 
       <div v-if="team">
         <!-- Team name  -->
-        <label for="name" class="block text-sm font-medium text-gray-700 mt-4">Team Name</label>
+        <label for="name" class="block text-sm font-medium text-gray-text mt-4">Team Name</label>
         <input
           v-model="team.name"
           :placeholder="team.name"
@@ -13,7 +13,7 @@
         />
 
         <!-- Team Description -->
-        <label for="description" class="block text-sm font-medium text-gray-700 mt-4"
+        <label for="description" class="block text-sm font-medium text-gray-text mt-4"
           >Team Description</label
         >
         <input
@@ -23,7 +23,9 @@
         />
 
         <!-- Project Manager Dropdown -->
-        <label for="pm" class="block text-sm font-medium text-gray-700 mt-4">Project Manager</label>
+        <label for="pm" class="block text-sm font-medium text-gray-text mt-4"
+          >Project Manager</label
+        >
         <Multiselect
           v-model="team.pmIds"
           :options="pmCandidates"
@@ -35,7 +37,7 @@
         />
 
         <!-- Main Members Dropdown -->
-        <label for="members" class="block text-sm font-medium text-gray-700 mt-4"
+        <label for="members" class="block text-sm font-medium text-gray-text mt-4"
           >Main Members</label
         >
         <Multiselect
@@ -52,7 +54,7 @@
         />
 
         <!-- Secondary Members -->
-        <label for="secondary" class="block text-sm font-medium text-gray-700 mt-4"
+        <label for="secondary" class="block text-sm font-medium text-gray-text mt-4"
           >Secondary Members</label
         >
         <Multiselect
@@ -69,8 +71,8 @@
       </div>
 
       <div class="flex gap-16 mt-10">
-        <button class="px-4 py-2 bg-blue-500 text-white rounded" @click="saveChanges">Save</button>
-        <button class="px-4 py-2 bg-gray-400 text-white rounded" @click="goBack">Cancel</button>
+        <button class="px-4 py-2 btn-red rounded" @click="goBack">Cancel</button>
+        <button class="px-4 py-2 btn rounded" @click="saveChanges">Save</button>
       </div>
     </div>
   </TeamLayout>

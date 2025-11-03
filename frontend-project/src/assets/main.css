@@ -1,3 +1,148 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+:root {
+  /* Light mode (default) */
+  --main-bg: #ffffff;
+  --main-text: #000000;
+  --black-bg: #000000;
+  --sub-text: #6b7280;
+  --gray-bg: #f3f4f6e0;
+  --gray-text: #374151;
+  --darkgray-bg: #111827;
+  --white-text: #ffffff;
+  --blue-bg: #c6e7ff;
+  --blue-bg-hover: #9fd0ff;
+  --blue-bg-rgb: 198, 231, 255; /* RGB for rgba */
+  --gray50-bg: #f9fafb;
+  --graysvg-text: #666666;
+  --btn-bg: var(--blue-bg);
+  --btn-text: var(--main-text);
+  --btn-hover-bg: var(--blue-bg-hover);
+  --btn-red-bg: #ff0000;
+  --btn-red-hover: #cc0000;
+  --random-color-1: #ffedd5;
+  --random-color-2: #a3d9c8;
+  --random-color-3: #b0e0ff;
+  --random-color-4: #ffd5db;
+  --random-color-5: #fffacd;
+  --random-color-6: #e9d5ff;
+  --random-color-7: #d8b4fe;
+  --random-color-8: #fbcfe8;
+}
+
+html.dark {
+  --main-bg: #1f2937;
+  --main-text: #f9fafb;
+  --black-bg: #f9fafb;
+  --sub-text: #d1d5db;
+  --gray-bg: #374151;
+  --gray-text: #d1d5db;
+  --darkgray-bg: #111827;
+  --white-text: #ffffff;
+  --blue-bg: #60a5fa;
+  --blue-bg-rgb: 96, 165, 250;
+  --blue-bg-hover: #3b82f6;
+  --gray50-bg: #111827;
+  --graysvg-text: #e5e7eb;
+  --blue-bg-hover: #4a8de6; /* ~15% darker */
+}
+
+html.blue {
+  --main-bg: #e0f2fe;
+  --main-text: #1e3a8a;
+  --black-bg: #1e3a8a;
+  --sub-text: #1d4ed8;
+  --gray-bg: #bae6fd;
+  --gray-text: #1e40af;
+  --darkgray-bg: #0c4a6e;
+  --white-text: #ffffff;
+  --blue-bg: #3b82f6;
+  --blue-bg-rgb: 59, 130, 246;
+  --blue-bg-hover: #2563eb;
+  --gray50-bg: #f0f9ff;
+  --blue-bg-hover: #3269d1; /* ~15% darker */
+
+  --graysvg-text: #1e3a8a;
+}
+
+html.spring {
+  --main-bg: #f0fff4;
+  --main-text: #22543d;
+  --black-bg: #22543d;
+  --sub-text: #38a169;
+  --blue-bg-hover: #7fd99c; /* ~15% darker */
+
+  --gray-bg: #c6f6d5;
+  --gray-text: #1e3a2b;
+  --darkgray-bg: #065f46;
+  --white-text: #ffffff;
+  --blue-bg: #9ae6b4;
+  --blue-bg-rgb: 154, 230, 180;
+  --blue-bg-hover: #68d391;
+  --gray50-bg: #f0fff4;
+  --graysvg-text: #22543d;
+}
+
+html.sunset {
+  --main-bg: #fff5f0;
+  --main-text: #7b341e;
+  --black-bg: #7b341e;
+  --sub-text: #f6ad55;
+  --blue-bg-hover: #e6bd6f; /* ~15% darker */
+
+  --gray-bg: #ffe5d4;
+  --gray-text: #9c4221;
+  --darkgray-bg: #431407;
+  --white-text: #ffffff;
+  --blue-bg: #fbd38d;
+  --blue-bg-rgb: 251, 211, 141;
+  --blue-bg-hover: #f6ad55;
+  --gray50-bg: #fffaf7;
+  --graysvg-text: #7b341e;
+}
+
+html.ocean {
+  --main-bg: #ebf8ff;
+  --main-text: #1e3a8a;
+  --black-bg: #1e3a8a;
+  --sub-text: #60a5fa;
+  --gray-bg: #bae6fd;
+  --gray-text: #1e40af;
+  --darkgray-bg: #0c4a6e;
+  --white-text: #ffffff;
+  --blue-bg: #93c5fd;
+  --blue-bg-rgb: 147, 197, 253;
+  --blue-bg-hover: #3b82f6;
+  --gray50-bg: #f0f9ff;
+  --blue-bg-hover: #78a9e6; /* ~15% darker */
+
+  --graysvg-text: #1e3a8a;
+}
+
+body {
+  background-color: var(--main-bg);
+  color: var(--main-text);
+}
+
+.icon-theme path {
+  fill: var(--graysvg-text);
+  transition: fill 0.2s ease;
+}
+.btn {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  transition: background-color 0.2s ease;
+}
+
+.btn:hover {
+  background-color: var(--btn-hover-bg);
+}
+.btn-red {
+  background-color: var(--btn-red-bg);
+  color: var(--white-text);
+  transition: background-color 0.2s ease;
+}
+.btn-red:hover {
+  background-color: var(--btn-red-hover);
+}

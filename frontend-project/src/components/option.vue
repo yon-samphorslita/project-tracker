@@ -7,7 +7,7 @@
       :class="[
         'px-6 py-2 text-sm font-medium focus:outline-none w-full',
         selected === option
-          ? 'bg-white text-gray-700 '
+          ? 'bg-main-bg text-gray-text '
           : 'bg-gray-300 text-gray-900 hover:bg-gray-400',
       ]"
     >

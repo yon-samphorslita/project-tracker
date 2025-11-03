@@ -1,7 +1,7 @@
 <template>
   <div class="w-full max-h-screen overflow-auto border rounded-md relative flex-1 min-w-[740px]">
     <!-- Header -->
-    <div class="sticky top-0 z-20 bg-white border-b">
+    <div class="sticky top-0 z-20 bg-main-bg border-b">
       <div class="ml-2 my-2 font-semibold text-lg">
         {{ format(day, 'EEE dd') }}
       </div>
@@ -13,14 +13,18 @@
         <div
           v-for="hour in hours"
           :key="hour"
-          class="h-12 border-b bg-[rgba(198,231,255,0.3)] text-sm text-gray-500 flex items-center justify-center p-2"
+          class="h-12 border-b text-sm text-gray-text flex items-center justify-center p-2"
+          :style="{ backgroundColor: `rgba(var(--blue-bg-rgb), 0.3)` }"
         >
           {{ hour }}
         </div>
       </div>
 
       <!-- Events/Tasks Column -->
-      <div class="relative flex-1 bg-[rgba(198,231,255,0.3)] min-w-[300px] overflow-hidden">
+      <div
+        class="relative flex-1 min-w-[300px] overflow-hidden"
+        :style="{ backgroundColor: `rgba(var(--blue-bg-rgb), 0.3)` }"
+      >
         <!-- Hour lines -->
         <div v-for="hour in hours" :key="hour" class="h-12 border-b"></div>
 
@@ -38,7 +42,7 @@
         <div
           v-for="(item, idx) in getItemsForDay(day)"
           :key="idx"
-          class="absolute flex justify-between gap-4 left-1 right-1 bg-white rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
+          class="absolute flex justify-between gap-4 left-1 right-1 bg-main-bg rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
           :style="getItemStyle(item)"
           @click="openEventPopup(item, $event)"
         >
@@ -54,7 +58,7 @@
               </div>
             </div>
           </div>
-          <div class="text-gray-500 text-[10px]">
+          <div class="text-sub-text text-[10px]">
             {{ item.start && item.end ? formatTimeRange(item) : '' }}
           </div>
         </div>

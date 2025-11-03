@@ -58,12 +58,14 @@
       <div>
         <!-- tab  -->
         <div
-          class="flex justify-between border rounded-t-2xl border-b-2 pb-2 p-4 bg-white text-lg font-semibold"
+          class="flex justify-between border rounded-t-2xl border-b-2 pb-2 p-4 bg-main-bg text-lg font-semibold"
         >
           <div
             class="w-1/3 cursor-pointer pb-2"
             :class="
-              currentTab === 'all' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'
+              currentTab === 'all'
+                ? 'border-b-2 border-[var(--main-border)] font-semibold'
+                : 'text-sub-text'
             "
             @click="showAllNotifications"
           >
@@ -72,7 +74,9 @@
           <div
             class="w-1/3 cursor-pointer pb-2"
             :class="
-              currentTab === 'read' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'
+              currentTab === 'read'
+                ? 'border-b-2 border-[var(--main-border)] font-semibold'
+                : 'text-sub-text'
             "
             @click="showReadNotifications"
           >
@@ -81,7 +85,9 @@
           <div
             class="w-1/3 cursor-pointer pb-2"
             :class="
-              currentTab === 'unread' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'
+              currentTab === 'unread'
+                ? 'border-b-2 border-[var(--main-border)] font-semibold'
+                : 'text-sub-text'
             "
             @click="showUnreadNotifications"
           >
@@ -90,10 +96,10 @@
         </div>
 
         <!-- notification list  -->
-        <div class="flex flex-col gap-3 border rounded-b-2xl p-4 bg-white h-full">
+        <div class="flex flex-col gap-3 border rounded-b-2xl p-4 bg-main-bg h-full">
           <NotificationCard :notifications="filteredSortedNotifications" />
 
-          <div v-if="!filteredSortedNotifications.length" class="text-center text-gray-500 py-3">
+          <div v-if="!filteredSortedNotifications.length" class="text-center text-sub-text py-3">
             No notifications found
           </div>
         </div>

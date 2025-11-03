@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
 import { useUserStore } from './user'
 const API_BASE_URL = 'http://localhost:3000'
-
+// const router = useRouter()
 export const useAuthStore = defineStore(
   'auth',
   () => {
@@ -25,6 +26,7 @@ export const useAuthStore = defineStore(
       token.value = null
       isAuthenticated.value = false
       localStorage.removeItem('token')
+      localStorage.removeItem('pinia')
     }
 
     // Axios instance with auth header
@@ -43,13 +45,14 @@ export const useAuthStore = defineStore(
     }
 
     // Logout
-    async function logout() {
+    async function logout(router) {
       try {
         if (token.value) await api.post('/auth/logout')
       } catch {
         console.warn('Backend logout failed, clearing local auth anyway')
       } finally {
         clearAuthData()
+        if (router) router.push('/login')
       }
     }
 

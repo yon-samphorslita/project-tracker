@@ -15,7 +15,7 @@
         />
         <div
           :class="
-            activeOption === option.name ? 'opacity-100 text-black' : 'opacity-80 text-gray-600'
+            activeOption === option.name ? 'opacity-100 text-main-text' : 'opacity-80 text-gray-600'
           "
         >
           {{ option.name }}
@@ -24,7 +24,7 @@
 
       <div
         v-if="activeOption === option.name"
-        class="absolute bottom-0 left-0 w-full h-[2px] bg-black rounded-lg"
+        class="absolute bottom-0 left-0 w-full h-[2px] bg-black-bg rounded-lg"
       ></div>
     </div>
   </div>

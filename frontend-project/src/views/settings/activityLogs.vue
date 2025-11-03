@@ -1,31 +1,29 @@
 <template>
-  <div v-if="isAdmin">
-    <h1 class="text-2xl font-bold mb-6">Activity Logs</h1>
+  <div v-if="isAdmin" class="relative">
+    <h1 class="text-2xl font-bold">Activity Logs</h1>
 
-    <div class="flex items-center gap-4 mb-4 justify-between">
-      <Button
-        label="Export CSV"
-        btn-color="green"
-        class="text-white px-4 py-2 rounded hover:bg-green-600 transition"
-        @click="exportToCSV"
+    <div class="flex items-center py-4 justify-start">
+      <!-- Search -->
+      <Search @update="searchQuery = $event" class="flex-1" />
+
+      <!-- Sort / Filter Dropdown -->
+      <Filter
+        class="min-w-fit"
+        title="Sort / Filter"
+        :fields="filterFields"
+        @update="handleFilterUpdate"
       />
-      <div class="flex gap-4 items-center">
-        <Search @update="searchQuery = $event" />
-        <Filter
-          class="min-w-fit"
-          title="Sort / Filter"
-          :options="sortOptions"
-          @select="applySort"
-        />
-      </div>
+
+      <!-- Export CSV Button -->
+      <Button @click="exportCSV" class="btn text-nowrap" label="Export CSV"> </Button>
     </div>
 
-    <div class="overflow-x-auto bg-white shadow rounded-2xl p-8">
-      <GenericTable :data="tableData" :columns="columns" />
+    <div class="overflow-x-auto bg-main-bg shadow rounded-2xl p-8">
+      <GenericTable :data="tableData" :columns="columns" class="h-[500px]" />
     </div>
   </div>
 
-  <div v-else class="text-center mt-20 text-gray-500">Access denied. Admins only.</div>
+  <div v-else class="text-center mt-20 text-sub-text">Access denied. Admins only.</div>
 </template>
 
 <script setup>
@@ -38,7 +36,6 @@ import GenericTable from '@/components/table.vue'
 import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
 import Button from '@/components/button.vue'
-
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -54,32 +51,82 @@ const columns = computed(() => [
   { key: 'createdAt', label: 'Time' },
 ])
 
-// Table data
-const tableData = computed(() =>
-  logs.value
-    .filter((log) => log.action.toLowerCase().includes(searchQuery.value.toLowerCase()))
-    .map((log, index) => ({
-      id: log.id,
-      index: index + 1,
-      user: log.user?.email || 'N/A',
-      action: log.action,
-      createdAt: new Date(log.createdAt).toLocaleString(),
-    })),
-)
-
-// Sorting
-const sortOptions = [
-  { label: 'Newest First', value: 'desc' },
-  { label: 'Oldest First', value: 'asc' },
+// --- Filter Fields ---
+const filterFields = [
+  {
+    key: 'sort',
+    label: 'Sort',
+    type: 'select',
+    options: [
+      { label: 'Newest First', value: 'desc' },
+      { label: 'Oldest First', value: 'asc' },
+    ],
+  },
+  {
+    key: 'range',
+    label: 'Date Range',
+    type: 'select',
+    options: [
+      { label: 'All', value: 'all' },
+      { label: 'This Month', value: 'thisMonth' },
+      { label: 'Last Month', value: 'lastMonth' },
+      { label: 'Last 3 Months', value: 'last3Months' },
+    ],
+  },
 ]
-function applySort(option) {
-  if (!option) return
-  logs.value.sort((a, b) => {
+
+const currentSort = ref('desc')
+const currentRange = ref('all')
+
+// Handle filter updates from Filter component
+function handleFilterUpdate(form) {
+  currentSort.value = form.sort || 'desc'
+  currentRange.value = form.range || 'all'
+}
+
+// Computed table data with search, filter & sort
+const tableData = computed(() => {
+  let filtered = [...logs.value]
+
+  const now = new Date()
+  // Apply range filter
+  if (currentRange.value === 'thisMonth') {
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    filtered = filtered.filter((log) => new Date(log.createdAt) >= monthStart)
+  } else if (currentRange.value === 'lastMonth') {
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+    filtered = filtered.filter((log) => {
+      const d = new Date(log.createdAt)
+      return d >= lastMonthStart && d <= lastMonthEnd
+    })
+  } else if (currentRange.value === 'last3Months') {
+    const pastDate = new Date()
+    pastDate.setMonth(now.getMonth() - 3)
+    filtered = filtered.filter((log) => new Date(log.createdAt) >= pastDate)
+  }
+
+  // Apply search
+  filtered = filtered.filter((log) =>
+    log.action.toLowerCase().includes(searchQuery.value.toLowerCase()),
+  )
+
+  // Apply sort
+  filtered.sort((a, b) => {
     const dateA = new Date(a.createdAt)
     const dateB = new Date(b.createdAt)
-    return option.value === 'desc' ? dateB - dateA : dateA - dateB
+    return currentSort.value === 'desc' ? dateB - dateA : dateA - dateB
   })
-}
+
+  // Map to table format
+  return filtered.map((log, index) => ({
+    id: log.id,
+    index: index + 1,
+    user: log.user?.email || 'N/A',
+    action: log.action,
+    createdAt: new Date(log.createdAt).toLocaleString(),
+  }))
+})
 
 // Fetch logs
 async function fetchLogs() {
@@ -94,7 +141,7 @@ async function fetchLogs() {
   }
 }
 
-// WebSocket
+// WebSocket setup
 let socket
 function setupSocket() {
   socket = io('http://localhost:3000/activity', {
@@ -105,9 +152,9 @@ function setupSocket() {
   socket.on('activityLog', (log) => logs.value.unshift(log))
 }
 
-// Export CSV
-function exportToCSV() {
-  if (!logs.value.length) return alert('No logs to export.')
+// CSV export
+function exportCSV() {
+  if (!tableData.value.length) return alert('No logs to export.')
 
   const csvRows = []
   csvRows.push(columns.value.map((col) => col.label).join(','))

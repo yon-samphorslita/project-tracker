@@ -1,8 +1,8 @@
 <template>
   <div
-    class="w-1/3 h-auto flex-shrink-0 overflow-y-auto top-[170px] rounded-md shadow-lg bg-[#C6E7FF] p-4"
+    class="w-1/3 h-auto flex-shrink-0 overflow-y-auto top-[170px] rounded-md shadow-lg bg-blue-bg p-4"
   >
-    <div class="sticky top-0 flex justify-between items-center my-5 bg-[#C6E7FF] z-10">
+    <div class="sticky top-0 flex justify-between items-center my-5 bg-blue-bg z-10">
       <!-- kanban header  -->
       <div class="flex gap-2 items-center">
         <div class="w-2 h-8 rounded-r-md" :style="{ background: statusColor }"></div>
@@ -13,14 +13,18 @@
 
       <div class="flex items-center gap-2 md:gap-3">
         <div
-          class="w-5 h-5 flex justify-center items-center rounded-full text-white text-xs"
+          class="w-5 h-5 flex justify-center items-center rounded-full text-[var(--white-text)] text-xs"
           :style="{ background: statusColor }"
         >
           {{ kanbanTaskNum }}
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-5 h-5 md:w-6 md:h-6"
+          viewBox="0 0 24 24"
+          :style="{ fill: 'var(--graysvg-text)' }"
+        >
           <path
-            fill="currentColor"
             d="M5 10c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2m14 0c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2m-7 0c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2"
           />
         </svg>
@@ -31,23 +35,34 @@
     <div class="w-full h-[70vh] overflow-y-auto space-y-5">
       <div
         v-for="kanban in kanbantasks"
-        class="bg-white border border-black rounded-md shadow-md p-3 flex flex-col space-y-2"
+        :key="kanban.id"
+        class="bg-main-bg border border-[var(--main-border)] rounded-md shadow-md p-3 flex flex-col space-y-2"
       >
         <!-- task header  -->
         <div class="flex justify-between items-center">
-          <div class="font-medium text-gray-800 truncate">
+          <div class="font-medium text-gray-text truncate">
             {{ kanban.title }}
           </div>
           <div class="flex justify-between gap-1 md:gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24">
+            <button @click="$emit('editTask', kanban)" title="Edit">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                :style="{ fill: 'var(--graysvg-text)' }"
+              >
+                <path
+                  d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83l3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"
+                />
+              </svg>
+            </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5"
+              viewBox="0 0 24 24"
+              :style="{ fill: 'var(--graysvg-text)' }"
+            >
               <path
-                fill="currentColor"
-                d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83l3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"
-              />
-            </svg>
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
                 d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2m0 14c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2m0-7c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2"
               />
             </svg>
@@ -55,7 +70,7 @@
         </div>
 
         <!-- task description  -->
-        <div class="text-gray-500 text-sm">
+        <div class="text-sub-text text-sm">
           {{ kanban.description }}
         </div>
 
@@ -71,14 +86,13 @@
           </div>
         </div>
         <hr class="my-1 border-gray-300" />
-        <div class="flex items-center text-sm text-gray-700">
+        <div class="flex items-center text-sm text-gray-text">
           <div class="font-semibold mr-2">Due:</div>
           <div>{{ formatDate(kanban.due_date) }}</div>
         </div>
       </div>
     </div>
   </div>
-  <!-- </div> -->
 </template>
 
 <script setup>
