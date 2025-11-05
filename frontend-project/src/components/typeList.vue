@@ -6,17 +6,24 @@
       class="flex-1 flex items-start justify-center flex-col cursor-pointer relative p-2"
       @click="setActive(option.name)"
     >
-      <div class="flex items-start gap-2">
-        <img
-          :src="option.icon"
-          :alt="option.name + ' Icon'"
-          :class="activeOption === option.name ? 'opacity-100' : 'opacity-60'"
-          class="w-6 h-6"
+      <div class="flex items-center gap-2">
+        <component
+          :is="option.icon"
+          :class="[
+            'w-6 h-6 transition-colors duration-200',
+            activeOption === option.name
+              ? 'text-main-text opacity-100'
+              : 'text-[var(--gray-text)] opacity-60 hover:opacity-80'
+          ]"
         />
+
         <div
-          :class="
-            activeOption === option.name ? 'opacity-100 text-main-text' : 'opacity-80 text-gray-600'
-          "
+          :class="[
+            'transition-colors duration-200',
+            activeOption === option.name
+              ? 'text-main-text opacity-100 font-bold'
+              : 'text-[var(--gray-text)] opacity-80 hover:opacity-100'
+          ]"
         >
           {{ option.name }}
         </div>
@@ -32,9 +39,9 @@
 
 <script setup>
 import { ref, watch, defineProps, defineEmits } from 'vue'
-import kanbanIcon from '@/assets/icons/kanban.svg'
-import ganttIcon from '@/assets/icons/gantt.svg'
-import tableIcon from '@/assets/icons/table.svg'
+import KanbanIcon from '@/assets/icons/kanban.svg'
+import GanttIcon from '@/assets/icons/gantt.svg'
+import TableIcon from '@/assets/icons/table.svg'
 
 const props = defineProps({
   activeOption: {
@@ -42,23 +49,22 @@ const props = defineProps({
     default: 'Kanban',
   },
 })
+
 const emit = defineEmits(['update:activeOption'])
 
 const options = [
-  { name: 'Kanban', icon: kanbanIcon },
-  { name: 'Gantt', icon: ganttIcon },
-  { name: 'Table', icon: tableIcon },
+  { name: 'Kanban', icon: KanbanIcon },
+  { name: 'Gantt', icon: GanttIcon },
+  { name: 'Table', icon: TableIcon },
 ]
 
 const activeOption = ref(props.activeOption)
 
-// Watch prop changes from parent
 watch(
   () => props.activeOption,
-  (val) => (activeOption.value = val),
+  (val) => (activeOption.value = val)
 )
 
-// Handle tab click
 function setActive(name) {
   activeOption.value = name
   emit('update:activeOption', name)

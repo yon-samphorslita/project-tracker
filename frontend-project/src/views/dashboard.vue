@@ -87,7 +87,7 @@
 
       <div class="py-6">
         <div class="text-xl font-semibold mb-3">Project Timeline</div>
-        <GanttChart :rows="ganttRows" :format-date="formatDate" ganttHeader="Projects" />
+        <GanttChart title="Projects" :rows="ganttRows" :format-date="formatDate"/>
       </div>
     </div>
   </DashboardLayout>

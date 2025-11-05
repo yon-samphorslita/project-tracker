@@ -4,19 +4,7 @@
       @click="toggle"
       class="flex items-center gap-2 px-3 py-1 rounded-md transition hover:bg-black/15"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        class="w-4 h-4"
-        :style="{ fill: 'var(--graysvg-text)' }"
-      >
-        <path
-          fill="currentColor"
-          d="M14 12v7.88c.04.3-.06.62-.29.83a.996.996 0 0 1-1.41 0l-2.01-2.01a.99.99 0 0 1-.29-.83V12h-.03L4.21 4.62a1 1 0 0 1 .17-1.4c.19-.14.4-.22.62-.22h14c.22 0 .43.08.62.22a1 1 0 0 1 .17 1.4L14.03 12z"
-        />
-      </svg>
+      <FilterIcon/>
       <span class="text-sm font-medium truncate">{{ title }}</span>
     </button>
 
@@ -69,7 +57,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
-
+import FilterIcon from '@/assets/icons/filter.svg'
 const props = defineProps({
   title: { type: String, default: 'Filter' },
   options: { type: Array, default: () => [] },

@@ -14,16 +14,7 @@
             class="flex gap-2 text-green-600 border px-2 py-1 rounded-lg cursor-pointer hover:text-green-800"
             @click="markAllAsRead"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="m7 17l-5-5m5 0l5 5L22 7m-10 5l5-5"
-              />
-            </svg>
+            <MarkIcon/>
             Mark all as Read
           </button>
 
@@ -32,12 +23,7 @@
             class="flex gap-2 text-red-600 border px-2 py-1 rounded-lg cursor-pointer hover:text-red-800"
             @click="deleteAll"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"
-              />
-            </svg>
+            <Delete/>
             Delete All
           </button>
 
@@ -116,7 +102,8 @@ import Filter from '@/components/filter.vue'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import NotificationCard from '@/components/notificationCard.vue'
-
+import MarkIcon from '@/assets/icons/mark.svg'
+import Delete from '@/assets/icons/delete.svg'
 // Stores
 const notificationStore = useNotificationStore()
 const { notifications } = storeToRefs(notificationStore)

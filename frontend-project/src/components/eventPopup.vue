@@ -16,18 +16,8 @@
         @click.stop
       >
         <!-- Close Button -->
-        <button @click="handleClose" class="absolute top-2 right-2 hover:text-gray-text">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 20 20"
-            :style="{ fill: 'var(--main-text)' }"
-          >
-            <path
-              d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15l-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152l2.758 3.15a1.2 1.2 0 0 1 0 1.698"
-            />
-          </svg>
+        <button @click="handleClose" class="absolute top-2 right-2 hover:text-[var(--gray-text)] text-[var(--graysvg-text)]">
+          <Close/>
         </button>
 
         <!-- Header -->
@@ -41,31 +31,10 @@
           <!-- Edit/Delete Icons -->
           <div v-if="!isEditing" class="flex items-center gap-3">
             <button @click="isEditing = true" title="Edit">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                :style="{ fill: 'var(--graysvg-text)' }"
-              >
-                <path
-                  d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C20.8027 6.94749 20.8762 6.8376 20.9264 6.71663C20.9766 6.59565 21.0024 6.46597 21.0024 6.335C21.0024 6.20403 20.9766 6.07435 20.9264 5.95338C20.8762 5.83241 20.8027 5.72252 20.71 5.63L18.37 3.29C18.2775 3.1973 18.1676 3.12375 18.0466 3.07357C17.9257 3.02339 17.796 2.99756 17.665 2.99756C17.534 2.99756 17.4043 3.02339 17.2834 3.07357C17.1624 3.12375 17.0525 3.1973 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z"
-                />
-              </svg>
+              <Edit class="icon-theme"/>
             </button>
             <button @click="handleDelete" title="Delete">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                :style="{ fill: 'var(--graysvg-text)' }"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
-                />
-              </svg>
+              <Delete class="icon-theme"/>
             </button>
           </div>
         </div>
@@ -172,7 +141,9 @@ import { ref, watch, onUnmounted } from 'vue'
 import { format } from 'date-fns'
 import { useProjectStore } from '@/stores/project'
 import { useEventStore } from '@/stores/event'
-
+import Close from '@/assets/icons/cross.svg'
+import Edit from '@/assets/icons/edit.svg'
+import Delete from '@/assets/icons/delete.svg'
 const props = defineProps({
   visible: Boolean,
   event: Object,

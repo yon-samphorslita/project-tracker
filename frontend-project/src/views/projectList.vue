@@ -44,48 +44,9 @@
         >
           <template #actions="{ row }">
             <div class="flex gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24px"
-                height="24px"
-                viewBox="0 0 16 16"
-                class="cursor-pointer w-6 h-"
-                :style="{ fill: 'var(--graysvg-text)' }"
-                @click="router.push(`/project/${row.id}`)"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="m14.5 8l.415-.208V7.79l-.003-.003l-.006-.012l-.021-.04l-.08-.144a8 8 0 0 0-.311-.494a9.4 9.4 0 0 0-1.255-1.485C12.113 4.532 10.38 3.43 8 3.43c-2.378 0-4.112 1.101-5.238 2.182a9.4 9.4 0 0 0-1.255 1.485a8 8 0 0 0-.412.678l-.006.012l-.002.003v.001s-.001.001.414.209l-.415-.209a.47.47 0 0 0 0 .417L1.5 8l-.415.208v.002l.003.003l.006.012a3 3 0 0 0 .1.184a9.4 9.4 0 0 0 1.566 1.98c1.127 1.08 2.86 2.18 5.24 2.18c2.379 0 4.113-1.1 5.24-2.181a9.5 9.5 0 0 0 1.254-1.485a8 8 0 0 0 .391-.638l.021-.04l.006-.012l.002-.003v-.001s.001-.001-.414-.209m0 0l.415.209a.47.47 0 0 0 0-.417zM7.94 6.464a1.536 1.536 0 1 0 0 3.072a1.536 1.536 0 0 0 0-3.072M5.478 8a2.464 2.464 0 1 1 4.928 0a2.464 2.464 0 0 1-4.928 0"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                :style="{ fill: 'var(--graysvg-text)' }"
-                class="cursor-pointer w-6 h-"
-                @click="editProject(row)"
-              >
-                <path
-                  d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C20.8027 6.94749 20.8762 6.8376 20.9264 6.71663C20.9766 6.59565 21.0024 6.46597 21.0024 6.335C21.0024 6.20403 20.9766 6.07435 20.9264 5.95338C20.8762 5.83241 20.8027 5.72252 20.71 5.63L18.37 3.29C18.2775 3.1973 18.1676 3.12375 18.0466 3.07357C17.9257 3.02339 17.796 2.99756 17.665 2.99756C17.534 2.99756 17.4043 3.02339 17.2834 3.07357C17.1624 3.12375 17.0525 3.1973 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z"
-                />
-              </svg>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                class="cursor-pointer w-6 h-"
-                :style="{ fill: 'var(--graysvg-text)' }"
-                @click="deleteProject(row)"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
-                />
-              </svg>
+              <View class="icon-theme w-6 h-6" @click="router.push(`/project/${row.id}`)"/>
+              <Edit class="icon-theme w-6 h-6" @click="editProject(row)" />
+              <Delete class="icon-theme w-6 h-6" @click="deleteProject(row)" />
             </div>
           </template>
         </Table>
@@ -157,7 +118,9 @@ import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'
 import PieChart from '@/components/pieChart.vue'
 import OverviewCard from '@/components/overviewCard.vue'
-
+import View from '@/assets/icons/view.svg'
+import Edit from '@/assets/icons/edit.svg'
+import Delete from '@/assets/icons/delete.svg'
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
 import { useSubtaskStore } from '@/stores/subtask'

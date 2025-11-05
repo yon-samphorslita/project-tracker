@@ -268,14 +268,15 @@ function getColorFromId(id: number) {
 
 onMounted(async () => {
   try {
-    const response = await axios.get(`http://localhost:3000/teams/${teamId}`)
-    team.value = response.data
+    const response = await teamStore.fetchTeam(teamId)
+    if (!response) throw new Error('Team not found')
+    team.value = response
     console.log('Fetched team details:', team.value)
 
     taskStore.tasks = []
-    for (const project of team.value.projects) {
-      await taskStore.fetchTasksByProject(project.id)
-    }
+    await Promise.all(
+      team.value.projects.map((project:any) => taskStore.fetchTasksByProject(project.id))
+    )
 
     isReady.value = true
   } catch (error) {

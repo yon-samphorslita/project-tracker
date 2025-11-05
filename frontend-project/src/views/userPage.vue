@@ -14,6 +14,7 @@
           <div class="flex w-full justify-between gap-4">
             <div class="grid grid-cols-2 gap-4 flex-1">
               <OverviewCard title="Total Users" :value="totalUsers" />
+                            <OverviewCard title="Admin Users" :value="adminUsers" />
               <OverviewCard title="Active Users" :value="activeUsers" />
               <OverviewCard title="Inactive Users" :value="inactiveUsers" />
             </div>
@@ -54,33 +55,8 @@
           <Table v-if="isReady" :data="filteredUsers" :columns="tableColumns">
             <template #actions="{ row }">
               <div class="flex gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  :style="{ fill: 'var(--graysvg-text)' }"
-                  class="cursor-pointer"
-                  @click="editUser(row)"
-                >
-                  <path
-                    d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C20.8027 6.94749 20.8762 6.8376 20.9264 6.71663C20.9766 6.59565 21.0024 6.46597 21.0024 6.335C21.0024 6.20403 20.9766 6.07435 20.9264 5.95338C20.8762 5.83241 20.8027 5.72252 20.71 5.63L18.37 3.29C18.2775 3.1973 18.1676 3.12375 18.0466 3.07357C17.9257 3.02339 17.796 2.99756 17.665 2.99756C17.534 2.99756 17.4043 3.02339 17.2834 3.07357C17.1624 3.12375 17.0525 3.1973 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z"
-                  />
-                </svg>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  class="cursor-pointer w-8 h-8"
-                  :style="{ fill: 'var(--graysvg-text)' }"
-                  @click="deleteUser(row)"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
-                  />
-                </svg>
+                <Edit class="icon-theme w-6 h-6" @click="editUser(row)" />
+                <Delete class="icon-theme w-6 h-6" @click="deleteUser(row)" />
               </div>
             </template>
           </Table>
@@ -104,6 +80,8 @@ import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
 import OverviewCard from '@/components/overviewCard.vue'
 import PieChart from '@/components/pieChart.vue'
+import Edit from '@/assets/icons/edit.svg'
+import Delete from '@/assets/icons/delete.svg'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -182,6 +160,7 @@ const mappedUsers = computed(() =>
 
 // Overview stats
 const totalUsers = computed(() => mappedUsers.value.length)
+const adminUsers = computed(() => mappedUsers.value.filter((u) => u.role === 'Admin').length)
 const activeUsers = computed(() => mappedUsers.value.filter((u) => u.active).length)
 const inactiveUsers = computed(() => totalUsers.value - activeUsers.value)
 

@@ -3,43 +3,8 @@
     class="h-screen w-[250px] top-0 left-0 bg-blue-bg bg-opacity-50 fixed overflow-hidden flex flex-col"
   >
     <div class="flex justify-center items-center">
-      <svg
-        class="icon-theme w-[80%] h-[91px]"
-        version="1.0"
-        xmlns="http://www.w3.org/2000/svg"
-        width="300.000000pt"
-        height="104.000000pt"
-        viewBox="0 0 300.000000 104.000000"
-        preserveAspectRatio="xMidYMid meet"
-      >
-        <g
-          transform="translate(0.000000,104.000000) scale(0.100000,-0.100000)"
-          fill="#000000"
-          stroke="none"
-        >
-          <path
-            d="M710 746 l0 -64 -68 -4 c-105 -6 -142 -44 -142 -149 0 -27 -5 -51 -12 -56 -7 -4 -44 -10 -82 -14 -62 -6 -73 -10 -98 -38 -26 -29 -28 -38 -28 -112 l0 -80 53 3 52 3 5 60 5 60 67 6 c37 3 78 13 93 23 33 22 64 89 65 137 0 44 10 49 91 49 l59 0 0 51 c0 42 -3 52 -20 56 -11 3 -20 12 -20 19 0 10 14 14 50 14 l50 0 0 50 0 50 -60 0 -60 0 0 -64z m90 14 c0 -16 -7 -20 -35 -20 -28 0 -35 4 -35 20 0 16 7 20 35 20 28 0 35 -4 35 -20z m-87 -122 c4 -10 8 -9 16 2 8 12 11 8 11 -17 l0 -33 -65 0 c-72 0 -85 -11 -85 -70 0 -48 -25 -97 -59 -114 -16 -9 -55 -16 -85 -16 -66 0 -86 -20 -86 -87 0 -39 -2 -43 -24 -43 -21 0 -24 6 -28 39 -8 88 24 131 98 131 53 0 102 17 114 40 6 10 10 42 10 70 0 44 5 56 29 81 26 26 36 29 89 29 39 0 62 -4 65 -12z"
-          />
-          <path
-            d="M955 620 c-9 -29 2 -40 39 -40 l33 0 -5 -89 -5 -88 29 -6 c16 -3 32 -3 36 0 5 2 8 44 8 94 l0 89 36 0 c33 0 35 2 32 28 l-3 27 -97 3 c-89 2 -97 1 -103 -18z"
-          />
-          <path
-            d="M1180 520 l0 -120 30 0 c29 0 30 1 30 50 0 28 3 50 8 49 4 0 21 -21 38 -47 l31 -47 71 -3 c70 -3 72 -2 78 23 6 24 10 26 53 23 39 -3 46 -6 49 -25 3 -19 10 -23 39 -23 24 0 34 4 30 13 -3 6 -24 61 -47 120 -42 106 -44 108 -73 105 -27 -3 -32 -10 -74 -115 -25 -62 -48 -113 -52 -112 -3 0 -19 16 -34 35 l-29 34 26 31 c29 34 30 38 16 73 -13 36 -59 56 -130 56 l-60 0 0 -120z m138 34 c3 -24 -10 -32 -48 -30 -20 1 -26 7 -28 29 -3 27 -2 28 35 25 30 -2 39 -8 41 -24z m216 -16 c9 -35 8 -38 -18 -38 -23 0 -24 2 -15 30 13 36 24 38 33 8z"
-          />
-          <path
-            d="M1713 625 c-42 -18 -66 -56 -66 -106 0 -81 44 -119 138 -119 54 0 55 1 55 29 0 28 -1 29 -54 27 -61 -1 -73 6 -81 49 -10 50 13 70 79 69 55 -2 56 -1 56 26 0 20 -6 29 -22 34 -36 9 -70 6 -105 -9z"
-          />
-          <path
-            d="M1870 520 l0 -120 31 0 32 0 -5 50 c-5 52 6 76 20 43 4 -10 18 -35 31 -55 l23 -38 140 0 139 0 -3 28 c-3 27 -4 27 -66 25 l-64 -3 52 58 c29 31 57 59 61 60 5 2 9 19 9 38 l0 34 -89 0 c-72 0 -90 -3 -95 -16 -14 -36 -7 -43 49 -46 l55 -3 -55 -62 c-33 -36 -55 -71 -55 -85 -1 -22 -2 -21 -30 12 -57 68 -57 73 -16 132 20 29 36 57 36 61 0 4 -15 7 -34 7 -31 0 -37 -5 -66 -55 -17 -30 -35 -55 -39 -55 -4 0 -6 25 -3 55 l4 55 -31 0 -31 0 0 -120z"
-          />
-          <path
-            d="M2307 633 c-4 -3 -7 -57 -7 -120 l0 -113 91 0 90 0 -3 28 c-3 26 -5 27 -60 27 -49 0 -58 2 -58 17 0 15 9 18 51 18 49 0 50 1 47 28 -3 25 -6 27 -50 25 -41 -1 -48 2 -48 18 0 17 8 19 60 19 60 0 60 0 60 30 l0 30 -83 0 c-46 0 -87 -3 -90 -7z"
-          />
-          <path
-            d="M2510 520 l0 -120 30 0 c29 0 29 0 32 67 l3 67 39 -66 c31 -53 44 -67 67 -70 16 -3 31 -2 34 0 3 3 5 59 5 124 l0 118 -29 0 c-17 0 -32 -3 -34 -7 -3 -5 -1 -33 3 -63 4 -30 5 -59 3 -63 -3 -4 -25 24 -50 63 -39 60 -49 70 -74 70 l-29 0 0 -120z m58 23 c-16 -20 -28 -15 -28 10 0 32 11 40 26 19 9 -12 9 -21 2 -29z m115 -80 c-7 -18 -20 -16 -27 4 -4 9 -1 20 6 24 15 9 28 -8 21 -28z"
-          />
-        </g>
-      </svg>
+      <Logo class="text-graysvg-text w-[80%] h-[91px]"
+/>
     </div>
 
     <hr style="margin-left: 10%; margin-right: 10%; border-color: var(--sub-text)" />
@@ -53,32 +18,23 @@
         :to="item.route"
         class="flex align-center gap-3 p-2 text-lg w-full rounded-md ml-6 btn cursor-pointer;"
       >
-        <span v-html="item.icon" class="w-6 h-6"></span>
+        <component :is="item.icon" class="w-6 h-6"></component>
         <p>{{ item.label }}</p>
       </router-link>
     </div>
-
-    <!-- <hr style="margin-left: 10%; margin-right: 10%; border-color: var(--sub-text)" /> -->
-
-    <!-- <div class="m-8 ml-3">
-      <div class="text-sm text-sub-text mb-1 ml-5">Setting & Support</div>
-      <router-link
-        v-for="item in settings"
-        :key="item.name"
-        :to="item.route"
-        class="flex align-center gap-3 p-2 text-lg w-full rounded-md ml-6 hover:brightness-90 bg-blue-bg cursor-pointer;"
-      >
-        <span v-html="item.icon" class="w-6 h-6"></span>
-        <p>{{ item.label }}</p>
-      </router-link>
-    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-
+import Logo from '@/assets/icons/logo.svg'
+import DashboardIcon from '@/assets/icons/dashboard.svg'
+import ProjectIcon from '@/assets/icons/project.svg'
+import TaskIcon from '@/assets/icons/task.svg'
+import TeamIcon from '@/assets/icons/team.svg'
+import CalendarIcon from '@/assets/icons/calendar.svg'
+import UserIcon from '@/assets/icons/user.svg'
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 
@@ -87,33 +43,31 @@ const mainItems = ref([
     name: 'dashboard',
     label: 'Dashboard',
     route: '/dashboard',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M3 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1zm0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1zm10 0a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1zm1-17a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z"/></svg>`,
+    icon: DashboardIcon,
   },
   {
     name: 'projects',
     label: 'Projects',
     route: '/projects',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 256 256">
-	<path fill="currentColor" d="M232 64V48a16 16 0 0 0-16-16H40a16 16 0 0 0-16 16v16a16 16 0 0 0 16 16v96h-8a8 8 0 0 0 0 16h88v17.38a24 24 0 1 0 16 0V192h88a8 8 0 0 0 0-16h-8V80a16 16 0 0 0 16-16m-128 80a8 8 0 0 1-16 0v-16a8 8 0 0 1 16 0Zm24 96a8 8 0 1 1 8-8a8 8 0 0 1-8 8m8-96a8 8 0 0 1-16 0v-24a8 8 0 0 1 16 0Zm32 0a8 8 0 0 1-16 0v-32a8 8 0 0 1 16 0ZM40 64V48h176v16z" />
-</svg>`,
+    icon: ProjectIcon,
   },
   {
     name: 'tasks',
     label: 'Tasks',
     route: '/task',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M7.416 3A5 5 0 0 0 7 5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2c0-.711-.148-1.388-.416-2H18a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM12 14H9a1 1 0 1 0 0 2h3a1 1 0 1 0 0-2m3-4H9a1 1 0 0 0-.117 1.993L9 12h6a1 1 0 1 0 0-2m-3-8a3 3 0 0 1 2.236 1c.428.478.704 1.093.755 1.772L15 5H9c0-.725.257-1.39.685-1.908L9.764 3c.55-.614 1.348-1 2.236-1"/></g></svg>`,
+    icon: TaskIcon,
   },
   {
     name: 'teams',
     label: 'Teams',
     route: '/teams',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 20 20"><path fill="currentColor" d="M12.5 4.5a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0m5 .5a2 2 0 1 1-4 0a2 2 0 0 1 4 0m-13 2a2 2 0 1 0 0-4a2 2 0 0 0 0 4M6 9.25C6 8.56 6.56 8 7.25 8h5.5c.69 0 1.25.56 1.25 1.25V14a4 4 0 0 1-8 0zm-1 0c0-.463.14-.892.379-1.25H3.25C2.56 8 2 8.56 2 9.25V13a3 3 0 0 0 3.404 2.973A5 5 0 0 1 5 14zM15 14c0 .7-.144 1.368-.404 1.973Q14.794 16 15 16a3 3 0 0 0 3-3V9.25C18 8.56 17.44 8 16.75 8h-2.129c.24.358.379.787.379 1.25z"/></svg>`,
+    icon: TeamIcon,
   },
   {
     name: 'calendars',
     label: 'Calendar',
     route: '/calendar',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M7.75 2.5a.75.75 0 0 0-1.5 0v1.58c-1.44.115-2.384.397-3.078 1.092c-.695.694-.977 1.639-1.093 3.078h19.842c-.116-1.44-.398-2.384-1.093-3.078c-.694-.695-1.639-.977-3.078-1.093V2.5a.75.75 0 0 0-1.5 0v1.513C15.585 4 14.839 4 14 4h-4c-.839 0-1.585 0-2.25.013z"/><path fill="currentColor" fill-rule="evenodd" d="M2 12c0-.839 0-1.585.013-2.25h19.974C22 10.415 22 11.161 22 12v2c0 3.771 0 5.657-1.172 6.828S17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172S2 17.771 2 14zm15 2a1 1 0 1 0 0-2a1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2a1 1 0 0 0 0 2m-4-5a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-6-3a1 1 0 1 0 0-2a1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2a1 1 0 0 0 0 2" clip-rule="evenodd"/></svg>`,
+    icon: CalendarIcon,
   },
 ])
 
@@ -121,9 +75,7 @@ const adminMenu = {
   name: 'users',
   label: 'User Management',
   route: '/user',
-  icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-	<path fill="currentColor" d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4" />
-</svg>`,
+  icon: UserIcon,
 }
 
 const displayedMainItems = computed(() => {
@@ -132,28 +84,4 @@ const displayedMainItems = computed(() => {
   }
   return mainItems.value
 })
-// const settings = ref([
-//   {
-//     name: 'settings',
-//     label: 'Settings',
-//     route: '/settings',
-//     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-//             <path
-//               fill="currentColor"
-//               d="M10.825 22q-.675 0-1.162-.45t-.588-1.1L8.85 18.8q-.325-.125-.612-.3t-.563-.375l-1.55.65q-.625.275-1.25.05t-.975-.8l-1.175-2.05q-.35-.575-.2-1.225t.675-1.075l1.325-1Q4.5 12.5 4.5 12.337v-.675q0-.162.025-.337l-1.325-1Q2.675 9.9 2.525 9.25t.2-1.225L3.9 5.975q.35-.575.975-.8t1.25.05l1.55.65q.275-.2.575-.375t.6-.3l.225-1.65q.1-.65.588-1.1T10.825 2h2.35q.675 0 1.163.45t.587 1.1l.225 1.65q.325.125.613.3t.562.375l1.55-.65q.625-.275 1.25-.05t.975.8l1.175 2.05q.35.575.2 1.225t-.675 1.075l-1.325 1q.025.175.025.338v.674q0 .163-.05.338l1.325 1q.525.425.675 1.075t-.2 1.225l-1.2 2.05q-.35.575-.975.8t-1.25-.05l-1.5-.65q-.275.2-.575.375t-.6.3l-.225 1.65q-.1.65-.587 1.1t-1.163.45zm1.225-6.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.488 1.025T8.55 12t1.013 2.475T12.05 15.5"
-//             />
-//           </svg>`,
-//   },
-//   {
-//     name: 'help',
-//     label: 'Get Help',
-//     route: '/help',
-//     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-//             <path
-//               fill="currentColor"
-//               d="M11.95 18q.525 0 .888-.363t.362-.887t-.362-.888t-.888-.362t-.887.363t-.363.887t.363.888t.887.362m-.9-3.85h1.85q0-.825.188-1.3t1.062-1.3q.65-.65 1.025-1.238T15.55 8.9q0-1.4-1.025-2.15T12.1 6q-1.425 0-2.312.75T8.55 8.55l1.65.65q.125-.45.563-.975T12.1 7.7q.8 0 1.2.438t.4.962q0 .5-.3.938t-.75.812q-1.1.975-1.35 1.475t-.25 1.825M12 22q-2.075 0-3.9-.787t-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"
-//             />
-//           </svg>`,
-//   },
-// ])
 </script>

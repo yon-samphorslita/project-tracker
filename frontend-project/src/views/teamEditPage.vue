@@ -9,7 +9,7 @@
         <input
           v-model="team.name"
           :placeholder="team.name"
-          class="text-lg font-semibold w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+          class="text-lg font-semibold w-full px-2 py-1 border bg-main-bg rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
         />
 
         <!-- Team Description -->
@@ -19,7 +19,7 @@
         <input
           v-model="team.description"
           :placeholder="team.description"
-          class="text-lg w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+          class="text-lg w-full px-2 py-1 bg-main-bg border rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
         />
 
         <!-- Project Manager Dropdown -->

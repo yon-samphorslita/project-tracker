@@ -51,14 +51,14 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import axios from 'axios'
-
+import { useTeamStore } from '@/stores/team';
 const isSubmitting = ref(false)
 const props = defineProps<{ modelValue: boolean }>()
 const emits = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'created', newTeam: any): void
 }>()
-
+const teamStore = useTeamStore();
 const team = reactive({
   name: '',
   description: '',
@@ -73,13 +73,13 @@ async function submitForm() {
 
   // isSubmitting.value = true
   try {
-    const payload = {
+    isSubmitting.value = true
+    const payload = await teamStore.createTeam({
       name: team.name,
       description: team.description,
-    }
+    })
 
-    const response = await axios.post('http://localhost:3000/teams', payload)
-    emits('created', response.data) // emit created event to parent
+    emits('created', payload) // emit created event to parent
     emits('update:modelValue', false)
     // console.log('Team created:', response.data)
 
@@ -87,6 +87,8 @@ async function submitForm() {
     team.description = ''
   } catch (error) {
     console.error('Error creating team:', error)
+  } finally {
+    isSubmitting.value = false
   }
 }
 

@@ -29,12 +29,7 @@
         class="opacity-0 group-hover:opacity-100 ml-3 text-red-500 hover:text-red-700 transition-opacity"
         @click.stop="softDeleteOne(n.id)"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"
-          />
-        </svg>
+        <Delete/>
       </button>
     </div>
   </div>
@@ -44,7 +39,7 @@
 import { useNotificationStore } from '@/stores/notification'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
-
+import Delete from '@/assets/icons/delete.svg'
 const store = useNotificationStore()
 const props = defineProps<{
   notifications: any

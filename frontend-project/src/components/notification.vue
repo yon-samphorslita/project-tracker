@@ -7,16 +7,7 @@
         class="flex gap-2 text-green-600 cursor-pointer hover:text-green-800"
         @click="markAllAsRead"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-          <path
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="m7 17l-5-5m5 0l5 5L22 7m-10 5l5-5"
-          />
-        </svg>
+        <MarkIcon/>
         Mark all as Read
       </div>
     </div>
@@ -79,12 +70,7 @@
             class="opacity-0 group-hover:opacity-100 ml-3 text-red-500 hover:text-red-700 transition-opacity"
             @click.stop="softDeleteOne(n.id)"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"
-              />
-            </svg>
+            <Delete/>
           </button>
         </div>
       </div>
@@ -101,7 +87,8 @@ import { useNotificationStore } from '@/stores/notification'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { routeLocationKey, useRouter } from 'vue-router'
-
+import Delete from '@/assets/icons/delete.svg'
+import MarkIcon from '@/assets/icons/mark.svg'
 const store = useNotificationStore()
 const { notifications } = storeToRefs(store)
 const router = useRouter()

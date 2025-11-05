@@ -1,5 +1,5 @@
 <template>
-  <div class="border border-[var(--gray-bg)] rounded-md">
+  <div class="border border-[var(--darkgray-bg)] rounded-md">
     <div class="p-6 flex flex-col gap-6">
       <!-- Header Row -->
       <div class="flex items-center justify-between">
@@ -14,7 +14,7 @@
         <Status :priority="priority || 'not started'" />
       </div>
 
-      <div class="border-t border-dashed border-[var(--gray-bg)]"></div>
+      <div class="border-t border-dashed border-[var(--darkgray-bg)]"></div>
 
       <!-- Info Row -->
       <div class="flex justify-between items-center px-2">
@@ -40,7 +40,7 @@
         </DescriptionLabel>
       </div>
 
-      <div class="border-t border-dashed border-[var(--gray-bg)]"></div>
+      <div class="border-t border-dashed border-[var(--darkgray-bg)]"></div>
 
       <!-- Description -->
       <div class="px-2 text-gray-text">
@@ -51,7 +51,7 @@
     <!-- View Button -->
     <button
       @click="goToProjectPage"
-      class="w-full border-t border-[var(--gray-bg)] py-2 text-gray-text hover:bg-black/15 transition"
+      class="w-full border-t border-[var(--darkgray-bg)] py-2 text-gray-text hover:bg-black/15 transition"
     >
       View details
     </button>

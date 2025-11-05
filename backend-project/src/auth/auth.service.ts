@@ -34,13 +34,13 @@ export class AuthService {
     return user;
   }
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    return this.userService.createUser({
-      ...createUserDto,
-      password: hashedPassword,
-    });
-  }
+async createUser(createUserDto: CreateUserDto, performedById: number): Promise<User> {
+  const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+  return this.userService.createUser(
+    { ...createUserDto, password: hashedPassword },
+    performedById,
+  );
+}
 
   async login(user: User): Promise<{ accessToken: string }> {
     const payload = { sub: user.id, email: user.email, role: user.role };
@@ -57,13 +57,14 @@ export class AuthService {
     return this.blacklistedTokens.has(token);
   }
 
-  async updateUserPassword(
-    userId: number,
-    newPassword: string,
-    markChanged = true,
-  ): Promise<User> {
-    return this.userService.updatePassword(userId, newPassword, markChanged);
-  }
+async updateUserPassword(
+  userId: number,
+  newPassword: string,
+  performedById: number,
+  markChanged = true,
+): Promise<User> {
+  return this.userService.updatePassword(userId, newPassword, performedById, markChanged);
+}
 
   async generateOtp(userId: number): Promise<string> {
     const user = await this.userService.findOne(userId);
@@ -75,7 +76,7 @@ export class AuthService {
     await this.userService.update(userId, {
       otp_code: otp,
       otp_expiry: expiry,
-    });
+    },0);
     await this.emailService.sendOtp(user.email, otp);
 
     return otp;
@@ -98,7 +99,7 @@ export class AuthService {
       await this.userService.update(userId, {
         otp_code: null,
         otp_expiry: null,
-      });
+      },0);
       return true;
     }
 

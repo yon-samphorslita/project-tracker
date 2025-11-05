@@ -1,7 +1,7 @@
 <template>
   <!-- <div class="flex flex-col gap-4 "> -->
   <div
-    class="flex flex-col justify-between border h-60 rounded-lg shadow-sm bg-main-bg transition transform hover:scale-[1.02] hover:shadow-md hover:bg-black/15"
+    class="flex flex-col justify-between border h-60 rounded-lg shadow-sm bg-main-bg transition transform hover:scale-[1.02] hover:shadow-md"
     :style="{ borderColor: getColorFromId(team.id) }"
     @click="goToTeamDetail(team.id)"
   >

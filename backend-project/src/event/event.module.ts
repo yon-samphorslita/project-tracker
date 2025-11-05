@@ -7,10 +7,14 @@ import { Project } from 'src/project/project.entity';
 import { Task } from 'src/task/task.entity';
 import { User } from 'src/user/user.entity';
 import { ProjectModule } from 'src/project/project.module';
+import { ActivityModule } from 'src/activity/activity.module';
+import { NotificationModule } from 'src/notification/notification.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Event, Project, Task, User]),
     ProjectModule,
+    ActivityModule,
+    NotificationModule,
   ],
   controllers: [EventController],
   providers: [EventService],

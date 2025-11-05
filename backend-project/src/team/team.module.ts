@@ -6,9 +6,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/user.entity';
 import { NotificationModule } from 'src/notification/notification.module';
+import { ActivityModule } from 'src/activity/activity.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Team, User]), NotificationModule],
+  imports: [TypeOrmModule.forFeature([Team, User]), NotificationModule, ActivityModule],
   controllers: [TeamController],
   providers: [TeamService, UserService],
 })

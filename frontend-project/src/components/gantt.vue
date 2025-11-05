@@ -1,39 +1,26 @@
 <template>
   <div class="relative w-full">
     <!-- Top header row -->
-    <div
-      class="flex rounded-t-md sticky top-0 z-30 bg-blue-bg border border-b-0 border-[var(--main-border)]"
-    >
+    <div class="flex rounded-t-md sticky top-0 z-30 bg-blue-bg border border-b-0 border-[var(--main-border)]">
       <!-- Task label column -->
-      <div
-        class="w-[280px] border-r border-[var(--main-border)] bg-blue-bg rounded-tl-md flex flex-col justify-end items-center sticky left-0 z-40 h-[60px]"
-      >
-        <span class="font-semibold text-lg">Tasks</span>
+      <div class="w-[280px] border-r border-[var(--main-border)] bg-blue-bg rounded-tl-md flex justify-center items-end sticky left-0 z-40 h-[60px]">
+        <span class="font-semibold text-lg">{{ title }}</span>
       </div>
+
       <!-- Week navigation -->
       <div class="flex-1 flex items-center justify-between px-4 h-[60px]">
         <button @click="prevWeek" class="text-xl font-bold">‹</button>
-        <span class="font-semibold text-lg"> Week: {{ weekLabel(currentWeek) }} </span>
+        <span class="font-semibold text-lg">Week: {{ weekLabel(currentWeek) }}</span>
         <button @click="nextWeek" class="text-xl font-bold">›</button>
       </div>
     </div>
 
     <!-- Scrollable grid -->
-    <div
-      ref="outerScroll"
-      class="overflow-x-auto border border-t-0 border-[var(--main-border)] rounded-b-md relative bg-main-bg"
-      @scroll="onScroll"
-    >
-      <div
-        ref="innerGrid"
-        class="min-w-max relative"
-        :style="{ width: `${allDays.length * columnWidth + stickyWidth}px` }"
-      >
+    <div ref="outerScroll" class="overflow-x-auto border border-t-0 border-[var(--main-border)] rounded-b-md relative bg-main-bg" @scroll="onScroll">
+      <div ref="innerGrid" class="min-w-max relative" :style="{ width: `${allDays.length * columnWidth + stickyWidth}px` }">
         <!-- Day headers -->
-        <div class="flex border-b border-[var(--main-border)] bg-[var(--gray-bg)]">
-          <div
-            class="w-[280px] border-r border-[var(--main-border)] bg-blue-bg sticky left-0 z-20"
-          ></div>
+        <div class="flex border-b border-[var(--main-border)]">
+          <div class="w-[280px] border-r border-[var(--main-border)] bg-blue-bg sticky left-0 z-20"></div>
           <div class="flex">
             <div
               v-for="day in allDays"
@@ -41,7 +28,7 @@
               class="w-[113px] flex items-center justify-center border-r border-t border-[var(--main-border)] text-lg"
               :class="{
                 'bg-[var(--gray-bg)]': isWeekend(day) && !isToday(day),
-                'bg-blue-bg opacity-40 font-bold': isToday(day),
+                'bg-blue-bg opacity-40 font-bold': isToday(day)
               }"
             >
               {{ day.getDate() }}
@@ -50,16 +37,9 @@
         </div>
 
         <!-- Task rows -->
-        <div
-          v-for="(row, i) in rows"
-          :key="i"
-          class="flex border-b border-[var(--main-border)] relative"
-          :style="{ height: `${rowHeight(row.tasks)}px` }"
-        >
+        <div v-for="(row, i) in rows" :key="i" class="flex border-b border-[var(--main-border)] relative" :style="{ height: `${rowHeight(row.tasks)}px` }">
           <!-- Task label column -->
-          <div
-            class="w-[280px] flex-shrink-0 border-r border-[var(--main-border)] py-4 px-3 sticky left-0 bg-main-bg z-10 font-medium"
-          >
+          <div class="w-[280px] flex-shrink-0 border-r border-[var(--main-border)] py-4 px-3 sticky left-0 bg-main-bg z-10 font-medium">
             {{ row.label }}
           </div>
 
@@ -71,7 +51,7 @@
               class="w-[113px] border-r border-[var(--main-border)]"
               :class="{
                 'bg-[var(--gray-bg)]': isWeekend(day) && !isToday(day),
-                'bg-blue-bg opacity-40 font-bold': isToday(day),
+                'bg-blue-bg opacity-40 font-bold': isToday(day)
               }"
             ></div>
 
@@ -85,14 +65,10 @@
                 left: `${getTaskOffset(task.start)}px`,
                 width: `${getTaskWidth(task.start, task.end)}px`,
                 backgroundColor: getRandomColor(),
-                opacity: isPast(task.end) ? 0.5 : 1,
+                opacity: isPast(task.end) ? 0.5 : 1
               }"
             >
-              <img
-                v-if="task.icon"
-                :src="task.icon"
-                class="w-10 h-10 rounded-full -ml-1.5 border-2 border-white"
-              />
+              <img v-if="task.icon" :src="task.icon" class="w-10 h-10 rounded-full -ml-1.5 border-2 border-white" />
               <span class="task-name text-black text-md font-medium">{{ task.name }}</span>
             </div>
           </div>
@@ -107,17 +83,19 @@ import { ref, computed, onMounted } from 'vue'
 
 const props = defineProps({
   rows: { type: Array, default: () => [] },
+  title: { type: String, default: 'Gantt Chart' }
 })
 
+/* Constants */
 const columnWidth = 113
 const minColumnWidth = 100
 const stickyWidth = 280
 const taskRowHeight = 48
+const taskGap = 4
 const today = new Date()
 const outerScroll = ref(null)
-const taskGap = 4
 
-// Generate weeks (Mon–Sun)
+/* Week generation (Mon–Sun) */
 const weeks = computed(() => {
   const result = []
   const current = new Date(today)
@@ -137,128 +115,97 @@ const weeks = computed(() => {
   return result
 })
 
-const allDays = computed(() => weeks.value.flatMap((w) => w.days))
+const allDays = computed(() => weeks.value.flatMap(w => w.days))
 
+/* Date helpers */
 const currentDay = today.getDate()
 const currentMonth = today.getMonth()
 const currentYear = today.getFullYear()
 
-function monthName(m) {
-  return new Date(currentYear, m, 1).toLocaleString('default', { month: 'short' })
-}
-function formatDate(d) {
-  return `${d.getDate()} ${monthName(d.getMonth())}, ${d.getFullYear()}`
-}
-function weekLabel(w) {
-  if (!w || !w.days?.length) return ''
-  const start = w.days[0],
-    end = w.days[w.days.length - 1]
-  return `${formatDate(start)} - ${formatDate(end)}`
-}
-function isWeekend(d) {
-  const dow = d.getDay()
-  return dow === 0 || dow === 6
-}
-function isToday(d) {
-  return (
-    d.getDate() === currentDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear
-  )
-}
-function isPast(endDate) {
-  if (!endDate) return false
-  const end = new Date(endDate)
-  end.setHours(23, 59, 59, 999)
-  return end < today
-}
-function getTaskOffset(startDate) {
+const monthName = m => new Date(currentYear, m, 1).toLocaleString('default', { month: 'short' })
+const formatDate = d => `${d.getDate()} ${monthName(d.getMonth())}, ${d.getFullYear()}`
+const weekLabel = w => !w?.days?.length ? '' : `${formatDate(w.days[0])} - ${formatDate(w.days[w.days.length-1])}`
+const isWeekend = d => [0,6].includes(d.getDay())
+const isToday = d => d.getDate() === currentDay && d.getMonth() === currentMonth && d.getFullYear() === currentYear
+const isPast = endDate => endDate ? new Date(endDate).setHours(23,59,59,999) < today : false
+
+/* Task positioning */
+const getTaskOffset = startDate => {
   if (!startDate) return stickyWidth
   const start = new Date(startDate)
-  const diffDays = Math.floor((start - allDays.value[0]) / (24 * 60 * 60 * 1000))
+  const firstDay = new Date(allDays.value[0])
+  firstDay.setHours(0,0,0,0)
+  const diffDays = (start - firstDay) / (1000*60*60*24) - 2.5
   return stickyWidth + diffDays * columnWidth
 }
-function getTaskWidth(startDate, endDate) {
+
+const getTaskWidth = (startDate, endDate) => {
   if (!startDate || !endDate) return minColumnWidth
-  const diffMs = new Date(endDate) - new Date(startDate)
-  const diffDays = diffMs / (24 * 60 * 60 * 1000)
+  const diffDays = (new Date(endDate) - new Date(startDate)) / (1000*60*60*24)
   return Math.max(diffDays * columnWidth, minColumnWidth)
 }
-function getRandomColor() {
+
+const getRandomColor = () => {
   const styles = getComputedStyle(document.documentElement)
   const colors = []
-  for (let i = 1; i <= 10; i++) {
+  for (let i=1; i<=10; i++) {
     const v = styles.getPropertyValue(`--random-color-${i}`).trim()
     if (v) colors.push(v)
   }
-  return colors[Math.floor(Math.random() * colors.length)]
+  return colors[Math.floor(Math.random()*colors.length)]
 }
 
-// Row height based on future/current tasks only
-function rowHeight(tasks) {
-  if (!tasks || tasks.length === 0) return taskRowHeight
-  const futureCount = tasks.filter((t) => !isPast(t.end)).length
-  return Math.max(futureCount, 1) * (taskRowHeight + taskGap) + taskGap
+/* Row heights */
+const rowHeight = tasks => {
+  if (!tasks?.length) return taskRowHeight
+  const futureCount = tasks.filter(t => !isPast(t.end)).length
+  return Math.max(futureCount,1)*(taskRowHeight+taskGap)+taskGap
 }
 
-// Count of tasks before this one (stacking future tasks)
-function tasksBefore(task, tasks) {
-  return tasks.filter((t) => !isPast(t.end)).findIndex((t) => t === task)
+/* Task stacking */
+const tasksBefore = (task, tasks) => {
+  if (isPast(task.end)) return 0
+  const futureTasks = tasks.filter(t => !isPast(t.end))
+  return futureTasks.findIndex(t => t===task)
 }
 
-// Week navigation
-const selectedWeekIndex = ref(weeks.value.findIndex((w) => w.days.some(isToday)) || 0)
+/* Week navigation */
+const selectedWeekIndex = ref(weeks.value.findIndex(w => w.days.some(isToday)) || 0)
 const currentWeek = computed(() => weeks.value[selectedWeekIndex.value])
 const isProgrammaticScroll = ref(false)
 
-function scrollToWeek(index) {
+const scrollToWeek = index => {
   const week = weeks.value[index]
   if (!week) return
   const firstDay = week.days[0]
-  const dayIndex = allDays.value.findIndex(
-    (d) =>
-      d.getDate() === firstDay.getDate() &&
-      d.getMonth() === firstDay.getMonth() &&
-      d.getFullYear() === firstDay.getFullYear(),
+  const dayIndex = allDays.value.findIndex(d =>
+    d.getDate() === firstDay.getDate() &&
+    d.getMonth() === firstDay.getMonth() &&
+    d.getFullYear() === firstDay.getFullYear()
   )
-  const left = dayIndex * columnWidth
   if (outerScroll.value) {
     isProgrammaticScroll.value = true
-    outerScroll.value.scrollTo({ left, behavior: 'smooth' })
-    setTimeout(() => (isProgrammaticScroll.value = false), 600)
-  }
-}
-function prevWeek() {
-  if (selectedWeekIndex.value > 0) {
-    selectedWeekIndex.value--
-    scrollToWeek(selectedWeekIndex.value)
-  }
-}
-function nextWeek() {
-  if (selectedWeekIndex.value < weeks.value.length - 1) {
-    selectedWeekIndex.value++
-    scrollToWeek(selectedWeekIndex.value)
+    outerScroll.value.scrollTo({ left: dayIndex * columnWidth, behavior: 'smooth' })
+    setTimeout(() => isProgrammaticScroll.value = false, 600)
   }
 }
 
-// Scroll sync
-function onScroll() {
+const prevWeek = () => { if (selectedWeekIndex.value>0) { selectedWeekIndex.value--; scrollToWeek(selectedWeekIndex.value) } }
+const nextWeek = () => { if (selectedWeekIndex.value<weeks.value.length-1) { selectedWeekIndex.value++; scrollToWeek(selectedWeekIndex.value) } }
+
+const onScroll = () => {
   if (!outerScroll.value || isProgrammaticScroll.value) return
-  const scrollLeft = outerScroll.value.scrollLeft
-  const dayIndex = Math.floor(scrollLeft / columnWidth)
-  if (dayIndex >= 0 && dayIndex < allDays.value.length) {
+  const dayIndex = Math.floor(outerScroll.value.scrollLeft / columnWidth)
+  if (dayIndex>=0 && dayIndex<allDays.value.length) {
     const currentDayTime = allDays.value[dayIndex].getTime()
-    const weekIndex = weeks.value.findIndex((w) =>
-      w.days.some((d) => d.getTime() === currentDayTime),
-    )
-    if (weekIndex >= 0 && weekIndex !== selectedWeekIndex.value) selectedWeekIndex.value = weekIndex
+    const weekIndex = weeks.value.findIndex(w => w.days.some(d=>d.getTime()===currentDayTime))
+    if (weekIndex>=0 && weekIndex!==selectedWeekIndex.value) selectedWeekIndex.value = weekIndex
   }
 }
 
-// Auto-scroll to current week
+/* Auto-scroll to current week */
 onMounted(() => {
-  const index = weeks.value.findIndex((w) => w.days.some(isToday))
-  if (index >= 0) {
-    selectedWeekIndex.value = index
-    scrollToWeek(index)
-  }
+  const index = weeks.value.findIndex(w => w.days.some(isToday))
+  if (index>=0) { selectedWeekIndex.value = index; scrollToWeek(index) }
 })
 </script>

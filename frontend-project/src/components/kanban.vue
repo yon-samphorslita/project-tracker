@@ -6,7 +6,7 @@
       <!-- kanban header  -->
       <div class="flex gap-2 items-center">
         <div class="w-2 h-8 rounded-r-md" :style="{ background: statusColor }"></div>
-        <div class="text-gray-800 text-base md:text-lg font-medium">
+        <div class="text-[var(--darkgray-bg)] text-base md:text-lg font-medium">
           {{ kanbanTaskStatus }}
         </div>
       </div>
@@ -18,16 +18,8 @@
         >
           {{ kanbanTaskNum }}
         </div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="w-5 h-5 md:w-6 md:h-6"
-          viewBox="0 0 24 24"
-          :style="{ fill: 'var(--graysvg-text)' }"
-        >
-          <path
-            d="M5 10c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2m14 0c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2m-7 0c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2"
-          />
-        </svg>
+        <More          class="w-5 h-5 md:w-6 md:h-6 icon-theme"
+/>
       </div>
     </div>
 
@@ -45,27 +37,11 @@
           </div>
           <div class="flex justify-between gap-1 md:gap-2">
             <button @click="$emit('editTask', kanban)" title="Edit">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                viewBox="0 0 24 24"
-                :style="{ fill: 'var(--graysvg-text)' }"
-              >
-                <path
-                  d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83l3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"
-                />
-              </svg>
+              <Edit                 class="w-5 h-5 icon-theme"
+/>
             </button>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5"
-              viewBox="0 0 24 24"
-              :style="{ fill: 'var(--graysvg-text)' }"
-            >
-              <path
-                d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2m0 14c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2m0-7c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2"
-              />
-            </svg>
+<More                class="w-5 h-5 icon-theme"
+/>
           </div>
         </div>
 
@@ -98,7 +74,8 @@
 <script setup>
 import { computed } from 'vue'
 import Status from './status.vue'
-// import { defineProps } from 'vue';
+import More from '@/assets/icons/more.svg'
+import Edit from '@/assets/icons/edit.svg'
 const props = defineProps({
   kanbantasks: {
     type: Array,

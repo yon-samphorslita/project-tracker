@@ -39,17 +39,7 @@
           <h2 class="font-semibold text-lg">Personal Information</h2>
           <p class="text-sm text-sub-text">View and edit your name, email, and profile details.</p>
         </div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          class="text-gray-400"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
+        <NextIcon/>
       </div>
 
       <!-- Activity Logs -->
@@ -62,22 +52,11 @@
           <h2 class="font-semibold text-lg">Activity Logs</h2>
           <p class="text-sm text-sub-text">Review your recent account activities and actions.</p>
         </div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          class="text-gray-400"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
+        <NextIcon/>
       </div>
 
       <!-- Theme -->
       <div
-        v-if="Admin"
         class="bg-main-bg shadow-md rounded-2xl p-6 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition"
         @click="$router.push('/settings/theme')"
       >
@@ -85,45 +64,29 @@
           <h2 class="font-semibold text-lg">Themes</h2>
           <p class="text-sm text-sub-text">Review your recent account activities and actions.</p>
         </div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          class="text-gray-400"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
+        <NextIcon/>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
 import { computed } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
 import { useUserStore } from '@/stores/user'
-export default {
-  setup() {
-    const store = useNotificationStore()
-    const userStore = useUserStore()
+import NextIcon from '@/assets/icons/next.svg'
 
-    const notificationsEnabled = computed({
-      get: () => store.notificationsEnabled,
-      set: (val) => store.toggleNotifications(val),
-    })
+const store = useNotificationStore()
+const userStore = useUserStore()
 
-    const toggleNotifications = () => {
-      store.toggleNotifications(!notificationsEnabled.value)
-    }
-    const Admin = computed(() => userStore.currentUser?.role === 'admin')
-    return {
-      notificationsEnabled,
-      toggleNotifications,
-      Admin,
-    }
-  },
+const notificationsEnabled = computed({
+  get: () => store.notificationsEnabled,
+  set: (val) => store.toggleNotifications(val),
+})
+
+const toggleNotifications = () => {
+  store.toggleNotifications(!notificationsEnabled.value)
 }
+
+const Admin = computed(() => userStore.currentUser?.role === 'admin')
 </script>
