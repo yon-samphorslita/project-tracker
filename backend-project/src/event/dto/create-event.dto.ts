@@ -21,10 +21,6 @@ export class CreateEventDto {
   e_status?: Status;
 
   @IsOptional()
-  @IsEnum(Priority)
-  e_priority?: Priority;
-
-  @IsOptional()
   @IsDateString()
   start_date?: string;
 

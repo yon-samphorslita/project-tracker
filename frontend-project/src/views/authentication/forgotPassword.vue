@@ -20,7 +20,6 @@
             required
             class="rounded-[20px] border border-gray-300 p-[10px]"
           />
-
           <Button
             @click="requestOtp"
             btn-color="var(--blue-bg)"
@@ -45,7 +44,6 @@
               ref="setOtpRef"
             />
           </div>
-
           <Button
             @click="verifyOtp"
             btn-color="var(--blue-bg)"
@@ -91,6 +89,7 @@ import { ref, reactive, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import Button from '@/components/button.vue'
+
 export default {
   setup() {
     const router = useRouter()
@@ -108,7 +107,6 @@ export default {
       if (el) otpRefs.push(el)
     }
 
-    // Step 1: Request OTP
     const requestOtp = async () => {
       try {
         await auth.requestOtp(email.value)
@@ -121,30 +119,20 @@ export default {
       }
     }
 
-    // Handle OTP input
     const onOtpInput = (index, e) => {
-      const target = e.target
-      otpDigits[index] = target.value.replace(/\D/g, '') // only digits
-
-      if (target.value && index < 5) {
-        otpRefs[index + 1]?.focus()
-      }
-
-      if (otpDigits.every((d) => d !== '')) {
-        verifyOtp()
-      }
+      otpDigits[index] = e.target.value.replace(/\D/g, '')
+      if (otpDigits[index] && index < 5) otpRefs[index + 1]?.focus()
+      if (otpDigits.every((d) => d !== '')) verifyOtp()
     }
 
-    // Paste full OTP
     const onPasteOtp = (e) => {
       const paste = e.clipboardData.getData('text') || ''
-      if (paste.length === 6 && /^\d{6}$/.test(paste)) {
-        paste.split('').forEach((digit, i) => (otpDigits[i] = digit))
+      if (/^\d{6}$/.test(paste)) {
+        paste.split('').forEach((d, i) => (otpDigits[i] = d))
         nextTick(() => verifyOtp())
       }
     }
 
-    // Verify OTP
     const verifyOtp = async () => {
       try {
         await auth.verifyOtp({ email: email.value, otp: otpDigits.join('') })
@@ -161,7 +149,6 @@ export default {
         alert('Passwords do not match.')
         return
       }
-
       try {
         await auth.resetPassword({
           email: email.value,
@@ -193,13 +180,3 @@ export default {
   },
 }
 </script>
-
-<style scoped>
-@media (max-width: 640px) {
-  input[type='text'] {
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1.25rem;
-  }
-}
-</style>

@@ -7,5 +7,5 @@ export class UpdatePasswordDto {
   newPassword: string;
 
   @IsNotEmpty()
-  oldPassword: string; // optional, if you want user to confirm current password
+  oldPassword: string;
 }

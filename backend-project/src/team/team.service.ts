@@ -8,7 +8,6 @@ import { UpdateTeamDto } from './dto/update-team.dto';
 import { NotificationsGateway } from 'src/notification/notification.gateway';
 import { NotificationService } from 'src/notification/notification.service';
 import { ActivityService } from 'src/activity/activity.service';
-
 @Injectable()
 export class TeamService {
   constructor(
@@ -31,7 +30,7 @@ export class TeamService {
     });
     await this.teamRepository.save(team);
 
-    // Add PMs
+    // --- Add PMs ---
     if (createTeamDto.pms?.length) {
       await this.teamRepository
         .createQueryBuilder()
@@ -40,57 +39,34 @@ export class TeamService {
         .add(createTeamDto.pms);
     }
 
-    // Add secondary members
-    let secondaryNames = 'none';
+    // --- Add secondary members ---
     if (createTeamDto.secondaryMembers?.length) {
       await this.userRepository
         .createQueryBuilder()
         .relation(User, 'secondaryTeams')
         .of(createTeamDto.secondaryMembers)
         .add(team.id);
-
-      const secondaryUsers = await this.userRepository.findBy({ id: In(createTeamDto.secondaryMembers) });
-      secondaryNames = secondaryUsers.map(u => `${u.first_name} ${u.last_name}`).join(', ');
-
-      for (const uid of createTeamDto.secondaryMembers) {
-        const notification = {
-          title: 'Assigned to a new team',
-          message: `You have been added to team "${team.name}".`,
-          read_status: false,
-        };
-        this.notificationsGateway.sendNotification(uid.toString(), notification as any);
-      }
     }
 
-    // Add main members
-    let mainNames = 'none';
+    // --- Add main members ---
     if (createTeamDto.members?.length) {
-      await this.userRepository.update(createTeamDto.members, { team: team });
-
-      const mainUsers = await this.userRepository.findBy({ id: In(createTeamDto.members) });
-      mainNames = mainUsers.map(u => `${u.first_name} ${u.last_name}`).join(', ');
-
-      for (const uid of createTeamDto.members) {
-        const notification = {
-          title: 'Assigned to a new main team',
-          message: `You have been assigned to team "${team.name}" as your main team.`,
-          read_status: false,
-        };
-        this.notificationsGateway.sendNotification(uid.toString(), notification as any);
-      }
+      await this.userRepository.update(createTeamDto.members, { team });
     }
 
-    // PMs names
-    let pmNames = 'none';
-    if (createTeamDto.pms?.length) {
-      const pmUsers = await this.userRepository.findBy({ id: In(createTeamDto.pms) });
-      pmNames = pmUsers.map(u => `${u.first_name} ${u.last_name}`).join(', ');
-    }
+    // --- Log Activity using full names ---
+    const getFullNames = async (ids?: number[]) => {
+      if (!ids?.length) return 'none';
+      const users = await this.userRepository.findBy({ id: In(ids) });
+      return users.map((u) => `${u.first_name} ${u.last_name}`).join(', ');
+    };
 
-    // Log activity
+    const pmsList = await getFullNames(createTeamDto.pms);
+    const mainList = await getFullNames(createTeamDto.members);
+    const secondaryList = await getFullNames(createTeamDto.secondaryMembers);
+
     await this.activityService.logAction(
       userId,
-      `Created team "${team.name}" with PMs: ${pmNames}, main members: ${mainNames}, secondary members: ${secondaryNames}.`
+      `Created team "${team.name}" with PMs: ${pmsList}, main members: ${mainList}, secondary members: ${secondaryList}.`,
     );
 
     return this.teamRepository.findOneOrFail({
@@ -118,117 +94,142 @@ export class TeamService {
 
   /** UPDATE TEAM */
   async update(id: number, dto: UpdateTeamDto, userId: number): Promise<Team> {
-    const team = await this.teamRepository.findOne({
-      where: { id },
-      relations: ['pms', 'members', 'mainMembers'],
-    });
-    if (!team) throw new NotFoundException(`Team with ID ${id} not found`);
+    const team = await this.findOne(id);
+    const actions: string[] = [];
 
-    const changes: string[] = [];
+    const getFullNames = async (ids?: number[]) => {
+      if (!ids?.length) return '';
+      const users = await this.userRepository.findBy({ id: In(ids) });
+      return users.map((u) => `${u.first_name} ${u.last_name}`).join(', ');
+    };
 
+    // --- Name / Description ---
     if (dto.name && dto.name !== team.name) {
-      changes.push(`Name: "${team.name}" → "${dto.name}"`);
+      actions.push(`Changed name from "${team.name}" → "${dto.name}"`);
+      await this.teamRepository.update(id, { name: dto.name });
       team.name = dto.name;
     }
+
     if (dto.description && dto.description !== team.description) {
-      changes.push(`Description updated`);
+      actions.push(
+        `Changed description from "${team.description}" → "${dto.description}"`,
+      );
+      await this.teamRepository.update(id, { description: dto.description });
       team.description = dto.description;
     }
 
-    // PMs
+    // --- PMs ---
     if (dto.addPms?.length) {
-      await this.teamRepository
-        .createQueryBuilder()
-        .relation(Team, 'pms')
-        .of(team.id)
-        .add(dto.addPms);
-
-      const addedPms = await this.userRepository.findBy({ id: In(dto.addPms) });
-      changes.push(`Added PMs: ${addedPms.map(u => `${u.first_name} ${u.last_name}`).join(', ')}`);
+      const currentPmsIds = team.pms.map((u) => u.id);
+      const actuallyAdded = dto.addPms.filter(
+        (id) => !currentPmsIds.includes(id),
+      );
+      if (actuallyAdded.length) {
+        await this.teamRepository
+          .createQueryBuilder()
+          .relation(Team, 'pms')
+          .of(team.id)
+          .add(actuallyAdded);
+        const addedNames = await getFullNames(actuallyAdded);
+        actions.push(`Added PMs: ${addedNames}`);
+      }
     }
+
     if (dto.removePms?.length) {
-      await this.teamRepository
-        .createQueryBuilder()
-        .relation(Team, 'pms')
-        .of(team.id)
-        .remove(dto.removePms);
-
-      const removedPms = await this.userRepository.findBy({ id: In(dto.removePms) });
-      changes.push(`Removed PMs: ${removedPms.map(u => `${u.first_name} ${u.last_name}`).join(', ')}`);
+      const currentPmsIds = team.pms.map((u) => u.id);
+      const actuallyRemoved = dto.removePms.filter((id) =>
+        currentPmsIds.includes(id),
+      );
+      if (actuallyRemoved.length) {
+        await this.teamRepository
+          .createQueryBuilder()
+          .relation(Team, 'pms')
+          .of(team.id)
+          .remove(actuallyRemoved);
+        const removedNames = await getFullNames(actuallyRemoved);
+        actions.push(`Removed PMs: ${removedNames}`);
+      }
     }
 
-    // Main members
+    // --- Main Members ---
     if (dto.addMembers?.length) {
-      await this.userRepository.update(dto.addMembers, { team: team });
-      const addedMembers = await this.userRepository.findBy({ id: In(dto.addMembers) });
-      changes.push(`Added main members: ${addedMembers.map(u => `${u.first_name} ${u.last_name}`).join(', ')}`);
-
-      for (const uid of dto.addMembers) {
-        const notification = {
-          title: 'Assigned to a new main team',
-          message: `You have been assigned to team "${team.name}" as your main team.`,
-          read_status: false,
-        };
-        this.notificationsGateway.sendNotification(uid.toString(), notification as any);
+      const currentMemberIds = team.members.map((u) => u.id);
+      const actuallyAdded = dto.addMembers.filter(
+        (id) => !currentMemberIds.includes(id),
+      );
+      if (actuallyAdded.length) {
+        const addedNames = await getFullNames(actuallyAdded);
+        actions.push(`Added main members: ${addedNames}`);
+        await this.userRepository.update(actuallyAdded, { team });
       }
     }
+
     if (dto.removeMembers?.length) {
-      await this.userRepository.update(dto.removeMembers, { team: null as any });
-      const removedMembers = await this.userRepository.findBy({ id: In(dto.removeMembers) });
-      changes.push(`Removed main members: ${removedMembers.map(u => `${u.first_name} ${u.last_name}`).join(', ')}`);
-
-      for (const uid of dto.removeMembers) {
-        const notification = {
-          title: 'Removed from main team',
-          message: `You have been removed from team "${team.name}".`,
-          read_status: false,
-        };
-        this.notificationsGateway.sendNotification(uid.toString(), notification as any);
+      const currentMemberIds = team.members.map((u) => u.id);
+      const actuallyRemoved = dto.removeMembers.filter((id) =>
+        currentMemberIds.includes(id),
+      );
+      if (actuallyRemoved.length) {
+        const removedNames = await getFullNames(actuallyRemoved);
+        actions.push(`Removed main members: ${removedNames}`);
+        await this.userRepository.update(actuallyRemoved, {
+          team: null as any,
+        });
       }
     }
 
-    // Secondary members
+    // --- Secondary Members ---
     if (dto.addSecondaryMembers?.length) {
-      for (const uid of dto.addSecondaryMembers) {
-        await this.userRepository
-          .createQueryBuilder()
-          .relation(User, 'secondaryTeams')
-          .of(uid)
-          .add(team.id);
+      const currentSecondaryIds = team.members.map((u) => u.id);
+      const actuallyAdded = dto.addSecondaryMembers.filter(
+        (id) => !currentSecondaryIds.includes(id),
+      );
+      if (actuallyAdded.length) {
+        const addedNames = await getFullNames(actuallyAdded);
+        actions.push(`Added secondary members: ${addedNames}`);
+        for (const uid of actuallyAdded) {
+          await this.userRepository
+            .createQueryBuilder()
+            .relation(User, 'secondaryTeams')
+            .of(uid)
+            .add(team.id);
+        }
       }
-      const addedSecondary = await this.userRepository.findBy({ id: In(dto.addSecondaryMembers) });
-      changes.push(`Added secondary members: ${addedSecondary.map(u => `${u.first_name} ${u.last_name}`).join(', ')}`);
     }
+
     if (dto.removeSecondaryMembers?.length) {
-      for (const uid of dto.removeSecondaryMembers) {
-        await this.userRepository
-          .createQueryBuilder()
-          .relation(User, 'secondaryTeams')
-          .of(uid)
-          .remove(team.id);
+      const currentSecondaryIds = team.members.map((u) => u.id);
+      const actuallyRemoved = dto.removeSecondaryMembers.filter((id) =>
+        currentSecondaryIds.includes(id),
+      );
+      if (actuallyRemoved.length) {
+        const removedNames = await getFullNames(actuallyRemoved);
+        actions.push(`Removed secondary members: ${removedNames}`);
+        for (const uid of actuallyRemoved) {
+          await this.userRepository
+            .createQueryBuilder()
+            .relation(User, 'secondaryTeams')
+            .of(uid)
+            .remove(team.id);
+        }
       }
-      const removedSecondary = await this.userRepository.findBy({ id: In(dto.removeSecondaryMembers) });
-      changes.push(`Removed secondary members: ${removedSecondary.map(u => `${u.first_name} ${u.last_name}`).join(', ')}`);
     }
 
-    await this.teamRepository.save(team);
-
-    if (changes.length > 0) {
-      await this.activityService.logAction(userId, `Updated team "${team.name}": ${changes.join('; ')}`);
+    // --- Log only real changes ---
+    if (actions.length) {
+      await this.activityService.logAction(
+        userId,
+        `Updated team "${team.name}": ${actions.join('; ')}`,
+      );
     }
 
-    return this.teamRepository.findOneOrFail({
-      where: { id: team.id },
-      relations: ['pms', 'members', 'mainMembers', 'projects'],
-    });
+    return this.findOne(id);
   }
 
   /** DELETE TEAM */
   async remove(id: number, userId: number): Promise<void> {
     const team = await this.findOne(id);
     await this.teamRepository.remove(team);
-
-    // Log activity
     await this.activityService.logAction(userId, `Deleted team "${team.name}"`);
   }
 }

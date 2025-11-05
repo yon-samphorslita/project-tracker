@@ -1,7 +1,5 @@
 <template>
   <div class="flex flex-col gap-6">
-    <!-- <h1 class="text-2xl font-bold mb-4">Account Settings</h1> -->
-
     <!-- Settings Options -->
     <div class="grid grid-cols-1 gap-6">
       <!-- Notifications -->
@@ -39,32 +37,32 @@
           <h2 class="font-semibold text-lg">Personal Information</h2>
           <p class="text-sm text-sub-text">View and edit your name, email, and profile details.</p>
         </div>
-        <NextIcon/>
+        <NextIcon />
       </div>
 
-      <!-- Activity Logs -->
+      <!-- Activity Logs (Admin Only) -->
       <div
-        v-if="Admin"
+        v-if="isAdmin"
         class="bg-main-bg shadow-md rounded-2xl p-6 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition"
         @click="$router.push('/settings/activity-logs')"
       >
         <div>
           <h2 class="font-semibold text-lg">Activity Logs</h2>
-          <p class="text-sm text-sub-text">Review your recent account activities and actions.</p>
+          <p class="text-sm text-sub-text">Review recent account activities and actions.</p>
         </div>
-        <NextIcon/>
+        <NextIcon />
       </div>
 
-      <!-- Theme -->
+      <!-- Theme Settings -->
       <div
         class="bg-main-bg shadow-md rounded-2xl p-6 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition"
         @click="$router.push('/settings/theme')"
       >
         <div>
           <h2 class="font-semibold text-lg">Themes</h2>
-          <p class="text-sm text-sub-text">Review your recent account activities and actions.</p>
+          <p class="text-sm text-sub-text">Customize your application appearance.</p>
         </div>
-        <NextIcon/>
+        <NextIcon />
       </div>
     </div>
   </div>
@@ -76,17 +74,17 @@ import { useNotificationStore } from '@/stores/notification'
 import { useUserStore } from '@/stores/user'
 import NextIcon from '@/assets/icons/next.svg'
 
-const store = useNotificationStore()
+const notificationStore = useNotificationStore()
 const userStore = useUserStore()
 
 const notificationsEnabled = computed({
-  get: () => store.notificationsEnabled,
-  set: (val) => store.toggleNotifications(val),
+  get: () => notificationStore.notificationsEnabled,
+  set: (val) => notificationStore.toggleNotifications(val),
 })
 
 const toggleNotifications = () => {
-  store.toggleNotifications(!notificationsEnabled.value)
+  notificationStore.toggleNotifications(!notificationsEnabled.value)
 }
 
-const Admin = computed(() => userStore.currentUser?.role === 'admin')
+const isAdmin = computed(() => userStore.currentUser?.role === 'admin')
 </script>

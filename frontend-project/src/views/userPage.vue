@@ -1,69 +1,66 @@
 <template>
   <UserLayout>
-    <div class="container p-4">
+    <div class="container">
       <!-- Permission check -->
       <div v-if="userRole !== 'admin'" class="text-sub-text text-center py-4">
         You do not have permission to view this page.
       </div>
 
-      <div v-else>
-        <div class="flex flex-col gap-4">
-          <h1 class="text-2xl font-bold">User Management</h1>
+      <div v-else class="flex flex-col gap-4">
+        <h1 class="text-2xl font-bold">User Management</h1>
 
-          <!-- Overview + Pie -->
-          <div class="flex w-full justify-between gap-4">
-            <div class="grid grid-cols-2 gap-4 flex-1">
-              <OverviewCard title="Total Users" :value="totalUsers" />
-                            <OverviewCard title="Admin Users" :value="adminUsers" />
-              <OverviewCard title="Active Users" :value="activeUsers" />
-              <OverviewCard title="Inactive Users" :value="inactiveUsers" />
-            </div>
-            <!-- 👇 chart now shows users by role -->
-            <PieChart :data="roleData" :height="280" class="w-[600px]" />
+        <!-- Overview & PieChart -->
+        <div class="flex w-full justify-between gap-4">
+          <div class="grid grid-cols-2 gap-4 flex-1">
+            <OverviewCard title="Total Users" :value="totalUsers" />
+            <OverviewCard title="Admin Users" :value="adminUsers" />
+            <OverviewCard title="Active Users" :value="activeUsers" />
+            <OverviewCard title="Inactive Users" :value="inactiveUsers" />
           </div>
+          <PieChart :data="roleData" :height="280" class="w-[600px]" />
+        </div>
 
-          <!-- Actions -->
-          <div class="flex justify-between items-center w-full">
-            <Button
-              label="+ New User"
-              btn-color="var(--blue-bg)"
-              btntext="var(--black-text)"
-              @click="openForm"
+        <!-- Actions -->
+        <div class="flex justify-between items-center w-full">
+          <Button
+            label="+ New User"
+            btn-color="var(--blue-bg)"
+            btntext="var(--black-text)"
+            @click="openForm"
+          />
+
+          <Form
+            v-model:modelValue="showForm"
+            formTitle="User"
+            :fields="userFields"
+            :initialData="editUserData"
+            endpoint="auth/user"
+            @submitted="handleSubmit"
+          />
+
+          <div class="flex gap-4 items-center">
+            <Search v-model:query="searchQuery" />
+            <Filter
+              class="min-w-fit"
+              title="Sort / Filter"
+              :options="sortOptions"
+              @select="applySort"
             />
+          </div>
+        </div>
 
-            <Form
-              v-model:modelValue="showForm"
-              formTitle="User"
-              :fields="userFields"
-              :initialData="editUserData"
-              endpoint="auth/user"
-              @submitted="handleSubmit"
-            />
-
-            <div class="flex gap-4 items-center">
-              <Search @update="searchQuery = $event" />
-              <Filter
-                class="min-w-fit"
-                title="Sort / Filter"
-                :options="sortOptions"
-                @select="applySort"
-              />
+        <!-- Users Table -->
+        <Table v-if="isReady" :data="filteredUsers" :columns="tableColumns">
+          <template #actions="{ row }">
+            <div class="flex gap-2">
+              <Edit class="icon-theme w-6 h-6" @click="editUser(row)" />
+              <Delete class="icon-theme w-6 h-6" @click="deleteUser(row)" />
             </div>
-          </div>
+          </template>
+        </Table>
 
-          <!-- Users Table -->
-          <Table v-if="isReady" :data="filteredUsers" :columns="tableColumns">
-            <template #actions="{ row }">
-              <div class="flex gap-2">
-                <Edit class="icon-theme w-6 h-6" @click="editUser(row)" />
-                <Delete class="icon-theme w-6 h-6" @click="deleteUser(row)" />
-              </div>
-            </template>
-          </Table>
-
-          <div v-if="isReady && filteredUsers.length === 0" class="text-center py-4 text-sub-text">
-            No users found.
-          </div>
+        <div v-if="isReady && filteredUsers.length === 0" class="text-center py-4 text-sub-text">
+          No users found.
         </div>
       </div>
     </div>
@@ -71,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import UserLayout from './pageLayout.vue'
 import Table from '@/components/table.vue'
 import Button from '@/components/button.vue'
@@ -88,14 +85,50 @@ import { useUserStore } from '@/stores/user'
 const authStore = useAuthStore()
 const userStore = useUserStore()
 
+// State
 const isReady = ref(false)
 const showForm = ref(false)
 const editUserData = ref(null)
 const searchQuery = ref('')
 const sortOption = ref('role-all')
 
+// Computed
 const userRole = computed(() => authStore.user?.role || 'user')
 
+const users = computed(() => authStore.users || [])
+const roleLabels = {
+  admin: 'Admin',
+  member: 'Team Member',
+  project_manager: 'Project Manager',
+}
+
+// Map users for table display
+const mappedUsers = computed(() =>
+  users.value.map((u) => ({
+    id: u.id,
+    name: `${u.first_name} ${u.last_name}`,
+    email: u.email,
+    role: roleLabels[u.role] || u.role,
+    active: Boolean(u.active),
+    first_name: u.first_name,
+    last_name: u.last_name,
+  })),
+)
+
+// Overview stats
+const totalUsers = computed(() => mappedUsers.value.length)
+const adminUsers = computed(() => mappedUsers.value.filter((u) => u.role === 'Admin').length)
+const activeUsers = computed(() => mappedUsers.value.filter((u) => u.active).length)
+const inactiveUsers = computed(() => totalUsers.value - activeUsers.value)
+
+// Pie chart data
+const roleData = computed(() => {
+  const counts = {}
+  mappedUsers.value.forEach((u) => (counts[u.role] = (counts[u.role] || 0) + 1))
+  return Object.entries(counts).map(([type, value]) => ({ type, value }))
+})
+
+// Table columns
 const tableColumns = [
   { key: 'name', label: 'Name' },
   { key: 'email', label: 'Email' },
@@ -104,6 +137,7 @@ const tableColumns = [
   { key: 'actions', label: 'Actions', slot: 'actions' },
 ]
 
+// User form fields
 const userFields = [
   { type: 'text', label: 'First Name', placeholder: 'Enter first name', model: 'first_name' },
   { type: 'text', label: 'Last Name', placeholder: 'Enter last name', model: 'last_name' },
@@ -130,6 +164,7 @@ const userFields = [
   },
 ]
 
+// Sort / Filter options
 const sortOptions = [
   { value: 'name-asc', label: 'Name (A → Z)' },
   { value: 'name-desc', label: 'Name (Z → A)' },
@@ -138,44 +173,7 @@ const sortOptions = [
   { value: 'role-all', label: 'All Roles' },
 ]
 
-const roleLabels = {
-  admin: 'Admin',
-  member: 'Team Member',
-  project_manager: 'Project Manager',
-}
-
-const users = computed(() => authStore.users || [])
-
-const mappedUsers = computed(() =>
-  users.value.map((u) => ({
-    id: u.id,
-    name: `${u.first_name} ${u.last_name}`,
-    email: u.email,
-    role: roleLabels[u.role] || u.role,
-    active: Boolean(u.active),
-    first_name: u.first_name,
-    last_name: u.last_name,
-  })),
-)
-
-// Overview stats
-const totalUsers = computed(() => mappedUsers.value.length)
-const adminUsers = computed(() => mappedUsers.value.filter((u) => u.role === 'Admin').length)
-const activeUsers = computed(() => mappedUsers.value.filter((u) => u.active).length)
-const inactiveUsers = computed(() => totalUsers.value - activeUsers.value)
-
-// Users by role (for chart)
-const roleData = computed(() => {
-  const counts = {}
-  mappedUsers.value.forEach((u) => {
-    counts[u.role] = (counts[u.role] || 0) + 1
-  })
-  return Object.entries(counts).map(([role, value]) => ({
-    type: role,
-    value,
-  }))
-})
-
+// Computed filtered users
 const filteredUsers = computed(() => {
   let result = mappedUsers.value
 
@@ -207,6 +205,7 @@ const filteredUsers = computed(() => {
   return result
 })
 
+// Methods
 function applySort(option) {
   sortOption.value = typeof option === 'string' ? option : option.value
 }
@@ -248,6 +247,7 @@ async function handleSubmit(formUser) {
   }
 }
 
+// Fetch data on mount
 onMounted(async () => {
   if (!authStore.user) await authStore.fetchProfile()
   if (userRole.value === 'admin') await authStore.fetchAllUsers()

@@ -8,8 +8,6 @@ import {
   Param,
   UseGuards,
   Request,
-  NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { Event } from './event.entity';
@@ -32,8 +30,7 @@ export class EventController {
   @Get(':id')
   @UseGuards(EventGuard)
   findOne(@Param('id') id: string, @Request() req): Promise<Event> {
-    const eventId = +id;
-    return this.eventService.findOne(eventId, req.user.id);
+    return this.eventService.findOne(+id, req.user.id);
   }
 
   @Post()
@@ -51,14 +48,12 @@ export class EventController {
     @Body() updateEventDto: UpdateEventDto,
     @Request() req,
   ): Promise<Event> {
-    const eventId = +id;
-    return this.eventService.update(eventId, updateEventDto, req.user);
+    return this.eventService.update(+id, updateEventDto, req.user);
   }
 
   @Delete(':id')
   @UseGuards(EventGuard)
   delete(@Param('id') id: string, @Request() req): Promise<void> {
-    const eventId = +id;
-    return this.eventService.delete(eventId, req.user.id);
+    return this.eventService.delete(+id, req.user.id);
   }
 }

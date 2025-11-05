@@ -29,7 +29,7 @@
         class="opacity-0 group-hover:opacity-100 ml-3 text-red-500 hover:text-red-700 transition-opacity"
         @click.stop="softDeleteOne(n.id)"
       >
-        <Delete/>
+        <Delete />
       </button>
     </div>
   </div>

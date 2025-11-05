@@ -10,61 +10,53 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { TeamService } from './team.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { Team } from './team.entity';
-import { Request } from 'express';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/enums/role.enum';
-import { RolesGuard } from 'src/auth/roles.guard';
-
-// Define a typed request with user
-interface AuthenticatedRequest extends Request {
-  user: {
-    id: number;
-    email?: string;
-    role?: string;
-  };
-}
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('teams')
 export class TeamController {
   constructor(private readonly teamService: TeamService) {}
-  
-  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
-  @Post()
-  create(@Body() createTeamDto: CreateTeamDto, @Req() req: AuthenticatedRequest): Promise<Team> {
-    return this.teamService.create(createTeamDto, req.user.id);
-  }
 
+  // Anyone can view teams
   @Get()
   findAll(): Promise<Team[]> {
     return this.teamService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Team> {
-    return this.teamService.findOne(id);
+  findOne(@Param('id') id: string): Promise<Team> {
+    return this.teamService.findOne(+id);
   }
 
+  // Only ADMIN or PROJECT_MANAGER can create teams
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
+  @Post()
+  create(@Body() createTeamDto: CreateTeamDto, @Req() req): Promise<Team> {
+    return this.teamService.create(createTeamDto, req.user.id);
+  }
+
+  // Only ADMIN or PROJECT_MANAGER can update teams
   @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTeamDto: UpdateTeamDto,
-    @Req() req: AuthenticatedRequest,
+    @Req() req,
   ): Promise<Team> {
-    const userId = req.user.id;
-    return this.teamService.update(id, updateTeamDto, userId);
+    return this.teamService.update(id, updateTeamDto, req.user.id);
   }
 
-  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
+  // Only ADMIN can delete teams
+  @Roles(Role.ADMIN)
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @Req() req: AuthenticatedRequest): Promise<void> {
-    const userId = req.user.id;
-    return this.teamService.remove(id, userId);
+  remove(@Param('id') id: string, @Req() req): Promise<void> {
+    return this.teamService.remove(+id, req.user.id);
   }
 }

@@ -82,16 +82,12 @@
 <script setup>
 import Status from '@/components/status.vue'
 import ProgressBar from '@/components/progressBar.vue'
+
 const props = defineProps({
   data: { type: Array, required: true },
   columns: { type: Array, required: true },
   formatDate: { type: Function, default: null },
 })
-const emit = defineEmits(['statusUpdated'])
-
-function updateStatus(row) {
-  emit('statusUpdated', { id: row.id, status: row.status })
-}
 
 function getInitials(name) {
   if (!name) return ''

@@ -24,7 +24,10 @@ export class SubtaskController {
 
   // Create a new subtask
   @Post()
-  create(@Body() createSubtaskDto: CreateSubtaskDto, @Req() req): Promise<Subtask> {
+  create(
+    @Body() createSubtaskDto: CreateSubtaskDto,
+    @Req() req,
+  ): Promise<Subtask> {
     const userId = req.user.id;
     return this.subtaskService.create(createSubtaskDto, userId);
   }

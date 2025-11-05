@@ -1,23 +1,21 @@
 <template>
   <CalendarLayout>
-    <div class="flex justify-between w-full gap-4 pt-6">
+    <div class="flex gap-8 w-full">
       <!-- Left Sidebar -->
-      <div class="container border border-1 w-fit p-4 flex flex-col gap-4 rounded-md">
+      <div class="container w-fit p-4 flex flex-col gap-4 border rounded-md">
         <!-- View Option -->
         <Option v-model="viewType" />
 
-        <!-- Calendar Mini -->
+        <!-- Mini Calendar -->
         <Calendar />
 
         <!-- Add Schedule -->
         <div class="flex items-center">
           <div>Add Schedule</div>
-          <button
-            class="ml-auto btn text-main-text px-2 py-1 rounded transition"
-            @click="openForm"
-          >
-            <Plus/>
+          <button class="ml-auto btn text-main-text px-2 py-1 rounded transition" @click="openForm">
+            <Plus />
           </button>
+
           <Form
             v-model:modelValue="showForm"
             formTitle="Schedule Event"
@@ -40,7 +38,7 @@
               <!-- Colored Circle -->
               <div
                 class="w-2 h-2 rounded-full"
-                :style="{ backgroundColor: getRandomColor(project.id) }"
+                :style="{ backgroundColor: getProjectColor(project.id) }"
               ></div>
 
               <!-- Project Name -->
@@ -54,7 +52,7 @@
 
       <!-- Main Calendar View -->
       <div class="flex-1">
-        <div class="flex mb-4 items-center">
+        <div class="flex items-center mb-4">
           <h2 class="text-2xl font-semibold mr-4">{{ currentMonthYear }}</h2>
         </div>
 
@@ -72,6 +70,7 @@ import { ref, computed, onMounted } from 'vue'
 import { format } from 'date-fns'
 import { useEventStore } from '@/stores/event'
 import { useProjectStore } from '@/stores/project'
+
 import Form from '@/components/form.vue'
 import CalendarLayout from './pageLayout.vue'
 import MonthCalendar from '@/components/monthCalendar.vue'
@@ -80,65 +79,64 @@ import DayCalendar from '@/components/dayCalendar.vue'
 import Option from '@/components/option.vue'
 import Calendar from '@/components/calendar.vue'
 import Plus from '@/assets/icons/add.svg'
+
+// Refs
 const showForm = ref(false)
 const editEventData = ref(null)
 const viewType = ref('Day')
 const currentDate = ref(new Date())
+
+// Computed
 const currentMonthYear = computed(() => format(currentDate.value, 'MMMM yyyy'))
+
+// Stores
 const projectStore = useProjectStore()
 const eventStore = useEventStore()
-// Fetch projects on mount
-onMounted(() => {
-  projectStore.fetchProjects()
-})
 
-// Select a project (set current in store)
+// Fetch projects on mount
+onMounted(() => projectStore.fetchProjects())
+
+// Project selection
 function selectProject(project) {
   projectStore.setCurrent(project)
 }
 
+// Form fields
 const eventFields = computed(() => [
   { model: 'title', label: 'Title', type: 'text', required: true },
   { model: 'startDate', label: 'Start Date & Time', type: 'datetime-local', required: true },
   { model: 'endDate', label: 'End Date & Time', type: 'datetime-local', required: true },
-  { model: 'location', label: 'Location', type: 'text', colSpan: 1 },
+  { model: 'location', label: 'Location', type: 'text' },
   {
     model: 'project',
     label: 'Project',
     type: 'select',
-    options: projectStore.projects, // now reactive
+    options: projectStore.projects,
     required: true,
   },
   { model: 'description', label: 'Description', type: 'textarea' },
 ])
 
-const props = defineProps({
-  viewType: {
-    type: String,
-    default: 'Day',
-  },
-})
-// Define your three colors
+// Colors
 const colors = ['#FFE578', '#FFD5DB', '#D9CBFB']
-
-// Return a "random" color based on project id (so it stays consistent)
-function getRandomColor(projectId) {
-  // Simple hash to map id to a color index
-  const index = projectId % colors.length
-  return colors[index]
+function getProjectColor(projectId) {
+  return colors[projectId % colors.length]
 }
+
+// Form functions
 function openForm() {
   editEventData.value = null
   showForm.value = true
 }
-async function handleSubmit(formUser) {
+
+async function handleSubmit(formData) {
   try {
     if (editEventData.value?.id) {
-      await eventStore.updateEvent({ id: editEventData.value.id, ...formUser })
+      await eventStore.updateEvent({ id: editEventData.value.id, ...formData })
     }
     await eventStore.fetchEvents()
   } catch (err) {
-    console.error('Error saving user:', err)
+    console.error('Error saving event:', err)
   } finally {
     showForm.value = false
     editEventData.value = null

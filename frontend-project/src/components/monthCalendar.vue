@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import {
   startOfMonth,
   endOfMonth,
@@ -92,22 +92,19 @@ const days = computed(() => {
   return eachDayOfInterval({ start, end }).map((date) => {
     const formatted = format(date, 'yyyy-MM-dd')
 
-    // --- TASKS ---
-    const dayTasks = taskStore.tasks.filter((t) => {
-      if (!t.due_date) return false
-      const dueDate = parseISO(t.due_date)
-      return format(dueDate, 'yyyy-MM-dd') === formatted
-    })
+    // Tasks for the day
+    const dayTasks = taskStore.tasks.filter((t) =>
+      t.due_date ? format(parseISO(t.due_date), 'yyyy-MM-dd') === formatted : false,
+    )
 
-    // --- EVENTS ---
+    // Events for the day
     const dayEvents = eventStore.events.filter((e) => {
       if (!e.start_date) return false
       const startDate = parseISO(e.start_date)
       const endDate = e.end_date ? parseISO(e.end_date) : startDate
-      const startStr = format(startDate, 'yyyy-MM-dd')
-      const endStr = format(endDate, 'yyyy-MM-dd')
-      // Event spans multiple days
-      return formatted >= startStr && formatted <= endStr
+      return (
+        formatted >= format(startDate, 'yyyy-MM-dd') && formatted <= format(endDate, 'yyyy-MM-dd')
+      )
     })
 
     // Combine both
@@ -115,18 +112,8 @@ const days = computed(() => {
       date,
       isCurrentMonth: isSameMonth(date, new Date(props.year, props.month)),
       items: [
-        ...dayEvents.map((e) => ({
-          ...e,
-          type: 'event',
-          title: e.e_title,
-          time: e.start_time,
-        })),
-        ...dayTasks.map((t) => ({
-          ...t,
-          type: 'task',
-          title: t.t_title,
-          time: t.start_time,
-        })),
+        ...dayEvents.map((e) => ({ ...e, type: 'event', title: e.e_title, time: e.start_time })),
+        ...dayTasks.map((t) => ({ ...t, type: 'task', title: t.t_title, time: t.start_time })),
       ],
     }
   })
@@ -139,18 +126,10 @@ function isToday(date) {
 
 // Colors for events/tasks
 function getColor(item) {
-  if (item.type === 'event') {
-    if (item.project?.priority?.toUpperCase() === 'LOW') return '#C6E7FF'
-    if (item.project?.priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
-    if (item.project?.priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
-  }
-
-  if (item.type === 'task') {
-    if (item.t_priority?.toUpperCase() === 'LOW') return '#C6E7FF'
-    if (item.t_priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
-    if (item.t_priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
-  }
-
+  const priority = (item.type === 'event' ? item.project?.priority : item.t_priority)?.toUpperCase()
+  if (priority === 'LOW') return '#C6E7FF'
+  if (priority === 'MEDIUM') return '#FFD5DB'
+  if (priority === 'HIGH') return '#FF8A5B'
   return '#D9D9D9'
 }
 </script>

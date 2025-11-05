@@ -37,7 +37,7 @@ export const useTeamStore = defineStore('team', () => {
     teams.value.unshift(newTeam)
   }
 
-    async function createTeam(payload) {
+  async function createTeam(payload) {
     try {
       const token = localStorage.getItem('token')
       const res = await axios.post(`${API_BASE_URL}/teams`, payload, {
@@ -73,7 +73,7 @@ export const useTeamStore = defineStore('team', () => {
       })
       teams.value = teams.value.filter((t) => t.id !== id)
     } catch (err) {
-      console.error('Error deleting team:', err)
+      console.error('Error deleting team:', err.response?.data || err.message)
     }
   }
 

@@ -4,13 +4,13 @@
       @click="toggle"
       class="flex items-center gap-2 px-3 py-1 rounded-md transition hover:bg-black/15"
     >
-      <FilterIcon/>
+      <FilterIcon />
       <span class="text-sm font-medium truncate">{{ title }}</span>
     </button>
 
     <div
       v-if="open"
-      class="absolute right-0 mt-2 w-56 bg-main-bg border border-gray-200 rounded-lg shadow-lg z-50 p-3"
+      class="absolute right-0 mt-2 w-56 bg-main-bg border border-gray-200 rounded-lg shadow-lg p-3"
     >
       <div v-if="options.length">
         <div
@@ -58,6 +58,7 @@
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import FilterIcon from '@/assets/icons/filter.svg'
+
 const props = defineProps({
   title: { type: String, default: 'Filter' },
   options: { type: Array, default: () => [] },

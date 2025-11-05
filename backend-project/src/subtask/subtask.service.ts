@@ -16,7 +16,10 @@ export class SubtaskService {
     private readonly activityService: ActivityService, // Inject ActivityService
   ) {}
 
-  async create(createSubtaskDto: CreateSubtaskDto, userId: number): Promise<Subtask> {
+  async create(
+    createSubtaskDto: CreateSubtaskDto,
+    userId: number,
+  ): Promise<Subtask> {
     const { taskId, name } = createSubtaskDto;
 
     const task = await this.subtaskRepository.manager.findOne(Task, {
@@ -37,7 +40,7 @@ export class SubtaskService {
     // Log activity
     await this.activityService.logAction(
       userId,
-      `Created subtask "${savedSubtask.name}" for task "${task.t_name}".`
+      `Created subtask "${savedSubtask.name}" for task "${task.t_name}".`,
     );
 
     return savedSubtask;
@@ -56,8 +59,15 @@ export class SubtaskService {
     });
   }
 
-  async update(id: number, dto: UpdateSubtaskDto, userId?: number): Promise<Subtask> {
-    const subtask = await this.subtaskRepository.findOne({ where: { id }, relations: ['task'] });
+  async update(
+    id: number,
+    dto: UpdateSubtaskDto,
+    userId?: number,
+  ): Promise<Subtask> {
+    const subtask = await this.subtaskRepository.findOne({
+      where: { id },
+      relations: ['task'],
+    });
     if (!subtask)
       throw new NotFoundException(`Subtask with id ${id} not found`);
 
@@ -69,7 +79,7 @@ export class SubtaskService {
     if (userId) {
       await this.activityService.logAction(
         userId,
-        `Updated subtask "${oldName}" to "${updatedSubtask.name}" for task "${subtask.task.t_name}".`
+        `Updated subtask "${oldName}" to "${updatedSubtask.name}" for task "${subtask.task.t_name}".`,
       );
     }
 
@@ -77,7 +87,10 @@ export class SubtaskService {
   }
 
   async remove(id: number, userId?: number): Promise<Subtask> {
-    const subtask = await this.subtaskRepository.findOne({ where: { id }, relations: ['task'] });
+    const subtask = await this.subtaskRepository.findOne({
+      where: { id },
+      relations: ['task'],
+    });
     if (!subtask)
       throw new NotFoundException(`Subtask with id ${id} not found`);
 
@@ -87,7 +100,7 @@ export class SubtaskService {
     if (userId) {
       await this.activityService.logAction(
         userId,
-        `Deleted subtask "${subtask.name}" from task "${subtask.task.t_name}".`
+        `Deleted subtask "${subtask.name}" from task "${subtask.task.t_name}".`,
       );
     }
 

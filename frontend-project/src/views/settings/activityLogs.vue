@@ -2,11 +2,9 @@
   <div v-if="isAdmin" class="relative">
     <h1 class="text-2xl font-bold">Activity Logs</h1>
 
-    <div class="flex items-center py-4 justify-start">
-      <!-- Search -->
-      <Search @update="searchQuery = $event" class="flex-1" />
+    <div class="flex items-center py-4 justify-start gap-4">
+      <Search v-model:query="searchQuery" />
 
-      <!-- Sort / Filter Dropdown -->
       <Filter
         class="min-w-fit"
         title="Sort / Filter"
@@ -14,8 +12,7 @@
         @update="handleFilterUpdate"
       />
 
-      <!-- Export CSV Button -->
-      <Button @click="exportCSV" class="btn text-nowrap" label="Export CSV"> </Button>
+      <Button @click="exportCSV" class="btn text-nowrap" label="Export CSV" />
     </div>
 
     <div class="overflow-x-auto bg-main-bg shadow rounded-2xl p-8">
@@ -36,6 +33,7 @@ import GenericTable from '@/components/table.vue'
 import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
 import Button from '@/components/button.vue'
+
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -51,7 +49,7 @@ const columns = computed(() => [
   { key: 'createdAt', label: 'Time' },
 ])
 
-// --- Filter Fields ---
+// Filter fields
 const filterFields = [
   {
     key: 'sort',
@@ -78,18 +76,16 @@ const filterFields = [
 const currentSort = ref('desc')
 const currentRange = ref('all')
 
-// Handle filter updates from Filter component
 function handleFilterUpdate(form) {
   currentSort.value = form.sort || 'desc'
   currentRange.value = form.range || 'all'
 }
 
-// Computed table data with search, filter & sort
+// Computed table data with search, filter, and sort
 const tableData = computed(() => {
   let filtered = [...logs.value]
-
   const now = new Date()
-  // Apply range filter
+
   if (currentRange.value === 'thisMonth') {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     filtered = filtered.filter((log) => new Date(log.createdAt) >= monthStart)
@@ -106,19 +102,16 @@ const tableData = computed(() => {
     filtered = filtered.filter((log) => new Date(log.createdAt) >= pastDate)
   }
 
-  // Apply search
   filtered = filtered.filter((log) =>
     log.action.toLowerCase().includes(searchQuery.value.toLowerCase()),
   )
 
-  // Apply sort
   filtered.sort((a, b) => {
     const dateA = new Date(a.createdAt)
     const dateB = new Date(b.createdAt)
     return currentSort.value === 'desc' ? dateB - dateA : dateA - dateB
   })
 
-  // Map to table format
   return filtered.map((log, index) => ({
     id: log.id,
     index: index + 1,
@@ -156,9 +149,7 @@ function setupSocket() {
 function exportCSV() {
   if (!tableData.value.length) return alert('No logs to export.')
 
-  const csvRows = []
-  csvRows.push(columns.value.map((col) => col.label).join(','))
-
+  const csvRows = [columns.value.map((col) => col.label).join(',')]
   tableData.value.forEach((row) => {
     const values = columns.value.map((col) => {
       const val = row[col.key]
@@ -177,7 +168,6 @@ function exportCSV() {
   document.body.removeChild(link)
 }
 
-// Lifecycle
 onMounted(() => {
   if (!isAdmin.value) {
     alert('You do not have permission to access this page.')

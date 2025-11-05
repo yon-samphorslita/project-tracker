@@ -6,9 +6,10 @@
       <!-- Profile Section -->
       <div class="flex items-center justify-between gap-6 mb-8">
         <div class="flex items-center gap-4">
+          <!-- Profile Image -->
           <div class="relative w-24 h-24">
             <img
-              :src="form.img_url"
+              :src="form.img_url || fallbackImg"
               alt="Profile"
               class="w-24 h-24 rounded-full object-cover border"
             />
@@ -17,14 +18,18 @@
               class="absolute bottom-0 right-0 btn rounded-full p-2 cursor-pointer"
             >
               <input type="file" accept="image/*" class="hidden" @change="handleImageUpload" />
-            <Camera/>
+              <Camera />
             </label>
           </div>
+
+          <!-- Name & Email -->
           <div>
             <h2 class="text-xl font-semibold">{{ form.first_name }} {{ form.last_name }}</h2>
             <p class="text-sub-text">{{ form.email }}</p>
           </div>
         </div>
+
+        <!-- Edit Button -->
         <Button
           v-if="!isEditing"
           @click="startEditing"
@@ -34,7 +39,7 @@
         />
       </div>
 
-      <!-- Read-only info -->
+      <!-- Read-only Information -->
       <div v-if="!isEditing" class="grid gap-6">
         <div class="grid grid-cols-2 gap-6">
           <div>
@@ -59,17 +64,21 @@
             <label class="block text-gray-text mb-1">First Name</label>
             <input
               v-model="form.first_name"
-              class="w-full px-4 py-2 border bg-main-bg rounded-xl focus:ring focus:ring-blue-200"
               type="text"
+              class="w-full px-4 py-2 border bg-main-bg rounded-xl focus:ring focus:ring-blue-200"
             />
+            <p v-if="errors.first_name" class="text-red-500 text-sm mt-1">
+              {{ errors.first_name }}
+            </p>
           </div>
           <div>
             <label class="block text-gray-text mb-1">Last Name</label>
             <input
               v-model="form.last_name"
-              class="w-full px-4 py-2 border bg-main-bg rounded-xl focus:ring focus:ring-blue-200"
               type="text"
+              class="w-full px-4 py-2 border bg-main-bg rounded-xl focus:ring focus:ring-blue-200"
             />
+            <p v-if="errors.last_name" class="text-red-500 text-sm mt-1">{{ errors.last_name }}</p>
           </div>
         </div>
 
@@ -77,11 +86,13 @@
           <label class="block text-gray-text mb-1">Email</label>
           <input
             v-model="form.email"
-            disabled
-            class="w-full px-4 py-2 border bg-main-bg rounded-xl bg-gray-100 cursor-not-allowed"
             type="email"
+            disabled
+            class="w-full px-4 py-2 border bg-gray-100 rounded-xl cursor-not-allowed"
           />
         </div>
+
+        <div v-if="errors.general" class="text-red-500 text-sm mt-2">{{ errors.general }}</div>
 
         <div class="flex justify-end gap-3 mt-6">
           <Button @click="cancelEditing" label="Cancel" class="btn-red" />
@@ -95,11 +106,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
 import Button from '@/components/button.vue'
 import Camera from '@/assets/icons/camera.svg'
+
 const authStore = useAuthStore()
-const router = useRouter()
+const fallbackImg = '/assets/profile.jpg'
 
 const form = ref({
   first_name: '',
@@ -110,35 +121,67 @@ const form = ref({
 
 const isEditing = ref(false)
 
+// Validation errors
+const errors = ref({
+  first_name: '',
+  last_name: '',
+  general: '',
+})
+
 onMounted(async () => {
-  const profile = await authStore.fetchProfile()
-  if (profile) {
-    form.value = {
-      first_name: profile.first_name,
-      last_name: profile.last_name,
-      email: profile.email,
-      img_url: profile.img_url || '',
+  try {
+    const profile = await authStore.fetchProfile()
+    if (profile) {
+      form.value = {
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        email: profile.email,
+        img_url: profile.img_url || fallbackImg,
+      }
     }
+  } catch (err) {
+    console.error('Failed to fetch profile', err)
+    errors.value.general = 'Failed to load profile'
   }
 })
 
 function startEditing() {
   isEditing.value = true
+  clearErrors()
 }
 
 function cancelEditing() {
   isEditing.value = false
+  clearErrors()
+}
+
+function clearErrors() {
+  errors.value = { first_name: '', last_name: '', general: '' }
+}
+
+function validateForm() {
+  let valid = true
+  clearErrors()
+  if (!form.value.first_name.trim()) {
+    errors.value.first_name = 'First name is required'
+    valid = false
+  }
+  if (!form.value.last_name.trim()) {
+    errors.value.last_name = 'Last name is required'
+    valid = false
+  }
+  return valid
 }
 
 async function saveChanges() {
+  if (!validateForm()) return
   try {
     const { first_name, last_name, img_url } = form.value
     await authStore.updateProfile({ first_name, last_name, img_url })
-    alert('Profile updated successfully!')
     isEditing.value = false
   } catch (err) {
     console.error('Failed to update profile', err)
-    alert(err.response?.data?.message || 'Update failed')
+    errors.value.general = err.response?.data?.message || 'Update failed'
   }
 }
 
@@ -160,20 +203,9 @@ async function handleImageUpload(e) {
     const uploadedUrl = `http://localhost:3000/upload/images/${data.filename}`
     form.value.img_url = uploadedUrl
     await authStore.updateProfile({ img_url: uploadedUrl })
-    alert('Profile picture updated!')
   } catch (err) {
     console.error('Failed to upload image', err)
-    alert('Image upload failed')
-  }
-}
-
-async function logout() {
-  try {
-    await authStore.logout()
-  } catch (err) {
-    console.error('Logout failed', err)
-  } finally {
-    router.push('/login')
+    errors.value.general = 'Image upload failed'
   }
 }
 </script>

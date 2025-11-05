@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed left-[250px] w-[calc(100vw-250px)] h-[91px] z-50 bg-main-bg">
+  <div class="fixed left-[250px] w-[calc(100vw-250px)] h-[91px] z-30 bg-main-bg">
     <div class="flex items-center h-full mx-6 md:mx-12">
       <span class="ml-5 text-xl md:text-2xl font-bold w-full">{{ currentPageTitle }}</span>
 
@@ -7,8 +7,7 @@
         <div class="relative flex flex-col items-end">
           <!-- notification icon -->
           <div @click="toggleNotification" class="notification-bell cursor-pointer flex">
-            <NotificationIcon               class="w-6 h-6 mr-1 md:mr-5 cursor-pointer icon-theme"
-/>
+            <NotificationIcon class="w-6 h-6 mr-1 md:mr-5 cursor-pointer icon-theme" />
             <div
               v-if="unreadCount > 0"
               class="absolute -top-2 right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full"
@@ -18,12 +17,13 @@
           </div>
           <Notification
             v-if="showNotification"
-            class="absolute top-full right-0 mt-2 z-50 notification-dropdown"
+            class="absolute top-full right-0 mt-2 z-30 notification-dropdown"
           />
         </div>
-        <HelpIcon           class="w-6 h-6 mr-1 md:mr-5 cursor-pointer icon-theme"
+        <HelpIcon
+          class="w-6 h-6 mr-1 md:mr-5 cursor-pointer icon-theme"
           @click="router.push('/help')"
-/>
+        />
         <ProfileDropdown />
       </div>
     </div>

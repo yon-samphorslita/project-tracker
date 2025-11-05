@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6 p-6">
+  <div class="flex flex-col gap-6">
     <h1 class="text-2xl font-bold">Theme Settings</h1>
     <p class="text-sub-text">Choose your preferred theme for the app.</p>
 
@@ -8,15 +8,17 @@
         v-for="option in themes"
         :key="option.value"
         @click="setTheme(option.value)"
-        class="cursor-pointer rounded-2xl shadow-md p-6 flex flex-col items-center justify-center transition transform hover:scale-105"
+        role="button"
+        :aria-pressed="option.value === theme"
+        class="cursor-pointer rounded-2xl shadow-md p-6 flex flex-col items-center justify-center transition transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-offset-2"
         :class="[
-          option.value === theme ? 'ring-4 ring-offset-2 ring-[#C6E7FF]' : '',
           option.bgClass,
           option.textClass,
+          option.value === theme ? 'ring-4 ring-offset-2 ring-[#C6E7FF]' : '',
         ]"
       >
         <div class="text-lg font-semibold mb-2">{{ option.name }}</div>
-        <div class="text-sm">{{ option.description }}</div>
+        <div class="text-sm text-center">{{ option.description }}</div>
       </div>
     </div>
   </div>

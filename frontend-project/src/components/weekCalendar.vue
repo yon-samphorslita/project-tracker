@@ -1,15 +1,8 @@
 <template>
-  <div
-    ref="outerScroll"
-    class="min-w-[740px] max-w-[0px] overflow-x-auto border h-[800px] rounded-md relative"
-  >
-    <!-- Inner grid with dynamic width -->
-    <div
-      ref="innerGrid"
-      class="min-w-max relative"
-      :style="{ width: `${monthDays.length * 80 + 80}px` }"
-    >
-      <!-- Current time dashed line + time label (only within today's column) -->
+  <div ref="outerScroll" class="w-[687px] overflow-x-auto border h-[800px] rounded-md relative">
+    <!-- Inner grid -->
+    <div class="min-w-max relative" :style="{ width: `${monthDays.length * 80 + 80}px` }">
+      <!-- Current time line -->
       <div
         v-if="isCurrentMonth && currentDayIndex >= 0"
         class="absolute pointer-events-none flex items-center"
@@ -17,30 +10,35 @@
           top: `${currentTopRem}rem`,
           left: `${80 + currentDayIndex * 80}px`,
           width: '80px',
-          zIndex: 50,
+          zIndex: 8,
         }"
       >
-        <!-- Time label -->
         <div
-          class="absolute -left-[68px] top-[2px] text-xs font-medium px-2 py-[1px] rounded bg-black-bg text-white-text border shadow-sm"
-          :style="{
-            transform: 'translateY(-50%)',
-          }"
+          class="absolute -left-[68px] top-[2px] text-xs font-medium px-2 py-[1px] rounded bg-[var(--black-bg)] text-[var(--white-text)] border shadow-sm"
+          style="transform: translateY(-50%)"
         >
           {{ format(currentTime, 'hh:mm a') }}
         </div>
-
-        <!-- Dashed line -->
         <div class="w-full border-t-2 border-dashed border-[var(--main-border)]"></div>
       </div>
 
-      <!-- Header Row (sticky) -->
+      <!-- Header Row -->
       <div
-        class="grid grid-cols-[80px_repeat(var(--cols),80px)] sticky top-0 z-20 bg-main-bg border-b"
+        class="grid grid-cols-[80px_repeat(var(--cols),80px)] sticky top-0 z-10 bg-main-bg border-b"
         :style="{ '--cols': monthDays.length }"
       >
-        <div class="p-2 bg-main-bg sticky left-0 z-30 border-r"></div>
-        <div v-for="day in monthDays" :key="day.date" class="p-2 border-l text-center">
+        <div class="p-2 bg-main-bg sticky left-0 z-0 border-r"></div>
+        <div
+          v-for="(day, index) in monthDays"
+          :key="day.date"
+          class="p-2 border-l text-center"
+          :style="{
+            backgroundColor:
+              isCurrentMonth && index === currentDayIndex
+                ? `rgba(var(--blue-bg-rgb), 0.7)`
+                : `var(--main-bg)`,
+          }"
+        >
           {{ format(day.date, 'EEE dd') }}
         </div>
       </div>
@@ -50,12 +48,12 @@
         class="grid grid-cols-[80px_repeat(var(--cols),80px)]"
         :style="{ '--cols': monthDays.length }"
       >
-        <!-- Hours column (sticky) -->
-        <div class="flex flex-col sticky left-0 z-10 border-r bg-main-bg">
+        <!-- Hours column -->
+        <div class="flex flex-col sticky left-0 z-[9] border-r bg-main-bg">
           <div
             v-for="hour in hours"
             :key="hour"
-            class="h-16 border-b text-sm text-sub-text flex items-center justify-end mr-1"
+            class="h-16 border-b text-sm text-sub-text flex items-center justify-end pr-2"
           >
             {{ hour }}
           </div>
@@ -63,14 +61,19 @@
 
         <!-- Days columns -->
         <div
-          v-for="day in monthDays"
+          v-for="(day, index) in monthDays"
           :key="day.date"
           class="relative border-l"
-          :style="{ backgroundColor: `rgba(var(--blue-bg-rgb), 0.3)` }"
+          :style="{
+            backgroundColor:
+              isCurrentMonth && index === currentDayIndex
+                ? `rgba(var(--blue-bg-rgb), 0.7)`
+                : `rgba(var(--blue-bg-rgb), 0.3)`,
+          }"
         >
           <div v-for="hour in hours" :key="hour" class="h-16 border-b"></div>
 
-          <!-- Tasks -->
+          <!-- Tasks & Events -->
           <div
             v-for="item in getItemsForDay(day.date)"
             :key="item.id"
@@ -98,8 +101,9 @@ import { startOfMonth, endOfMonth, addDays, format, differenceInMinutes } from '
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
 
-// Props
-const props = defineProps({ monthStartDate: { type: Date, default: () => new Date() } })
+const props = defineProps({
+  monthStartDate: { type: Date, default: () => new Date() },
+})
 
 // Generate all days of the month
 const monthDays = []
@@ -110,133 +114,100 @@ while (day <= monthEnd) {
   day = addDays(day, 1)
 }
 
-// Generate 24 hours
-const hours = Array.from({ length: 24 }).map((_, i) => {
+// 24-hour labels
+const hours = Array.from({ length: 24 }, (_, i) => {
   const hour12 = i % 12 === 0 ? 12 : i % 12
   const ampm = i < 12 ? 'AM' : 'PM'
   return `${hour12} ${ampm}`
 })
 
-// Task & Event stores
 const taskStore = useTaskStore()
 const eventStore = useEventStore()
 
-// Refs for scroll/positioning
 const outerScroll = ref(null)
-const innerGrid = ref(null)
-
-// Reactive current time (updates every minute)
 const currentTime = ref(new Date())
 let timer
+
 onMounted(async () => {
   await Promise.all([eventStore.fetchEvents(), taskStore.fetchTasks()])
-
-  // initial center scroll to current day (best-effort)
   await nextTick()
   centerCurrentDate()
-
   timer = setInterval(() => (currentTime.value = new Date()), 60000)
 })
+
 onUnmounted(() => clearInterval(timer))
 
-/* ---------- Current date / position helpers ---------- */
+/* ---------- Computed Helpers ---------- */
 const isCurrentMonth = computed(() => {
   const today = new Date(currentTime.value)
-  // same year and month as props.monthStartDate
   return (
     today.getFullYear() === props.monthStartDate.getFullYear() &&
     today.getMonth() === props.monthStartDate.getMonth()
   )
 })
 
-// index of today's day in monthDays (0-based)
 const currentDayIndex = computed(() => {
   if (!isCurrentMonth.value) return -1
   const today = new Date(currentTime.value)
   const start = startOfMonth(props.monthStartDate)
-  const diffMs = today.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  if (diffDays < 0) return 0
-  if (diffDays >= monthDays.length) return monthDays.length - 1
-  return diffDays
+  const diffDays = Math.floor(
+    (today.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24),
+  )
+  return Math.min(Math.max(diffDays, 0), monthDays.length - 1)
 })
 
-// top position in rem units (same scale as your task item calculation):
-// you used: (hours + minutes/60) * 4 rem per hour => 4rem per hour
 const currentTopRem = computed(() => {
   const t = new Date(currentTime.value)
-  const hoursVal = t.getHours()
-  const minutes = t.getMinutes()
-  return (hoursVal + minutes / 60) * 4
+  return (t.getHours() + t.getMinutes() / 60) * 4 + 2.8
 })
 
 function centerCurrentDate() {
-  // best-effort centering of the current date column on first view
-  if (!outerScroll.value || !innerGrid.value) return
-  if (currentDayIndex.value < 0) return
-
+  if (!outerScroll.value || currentDayIndex.value < 0) return
   const container = outerScroll.value
   const containerWidth = container.clientWidth
-  // each column is 80px; first column (hours) is 80px
-  const dayLeft = 80 + currentDayIndex.value * 80 // px
-  const dayCenter = dayLeft + 40 // center of the day column
-  const targetScrollLeft = Math.max(0, Math.round(dayCenter - containerWidth / 2))
-  container.scrollLeft = targetScrollLeft
+  const dayLeft = 80 + currentDayIndex.value * 80
+  container.scrollLeft = Math.max(0, Math.round(dayLeft + 40 - containerWidth / 2))
 }
 
-/* ---------- Data selection & formatting (unchanged logic) ---------- */
+/* ---------- Data & Styling Helpers ---------- */
 function getItemsForDay(dayDate) {
   const dayStart = new Date(format(dayDate, 'yyyy-MM-dd') + 'T00:00:00')
   const dayEnd = new Date(format(dayDate, 'yyyy-MM-dd') + 'T23:59:59')
 
-  // Tasks for the day
-  const taskItems = taskStore.tasks
+  const tasks = taskStore.tasks
     .filter((t) => t.start_date && t.due_date)
     .filter((t) => {
       const start = new Date(t.start_date)
       const end = new Date(t.due_date)
       return end > dayStart && start < dayEnd
     })
-    .map((t) => {
-      const startTime = new Date(t.start_date)
-      const endTime = new Date(t.due_date)
-      return {
-        ...t,
-        type: 'task',
-        startTime: startTime < dayStart ? dayStart : startTime,
-        endTime: endTime > dayEnd ? dayEnd : endTime,
-      }
-    })
+    .map((t) => ({
+      ...t,
+      type: 'task',
+      startTime: new Date(Math.max(new Date(t.start_date), dayStart)),
+      endTime: new Date(Math.min(new Date(t.due_date), dayEnd)),
+    }))
 
-  // Events for the day
-  const eventItems = eventStore.events
+  const events = eventStore.events
     .filter((e) => e.start_date)
     .filter((e) => {
       const start = new Date(e.start_date)
       const end = e.end_date ? new Date(e.end_date) : start
       return end > dayStart && start < dayEnd
     })
-    .map((e) => {
-      const startTime = new Date(e.start_date)
-      const endTime = e.end_date ? new Date(e.end_date) : startTime
-      return {
-        ...e,
-        type: 'event',
-        startTime: startTime < dayStart ? dayStart : startTime,
-        endTime: endTime > dayEnd ? dayEnd : endTime,
-      }
-    })
+    .map((e) => ({
+      ...e,
+      type: 'event',
+      startTime: new Date(Math.max(new Date(e.start_date), dayStart)),
+      endTime: new Date(Math.min(new Date(e.end_date || e.start_date), dayEnd)),
+    }))
 
-  return [...taskItems, ...eventItems] // Merge tasks + events
+  return [...tasks, ...events]
 }
 
 function formatTimeRange(item) {
-  if (item.startTime && item.endTime) {
-    const startStr = format(item.startTime, 'hh:mm a')
-    const endStr = format(item.endTime, 'hh:mm a')
-    return `${startStr} - ${endStr}`
-  }
-  return ''
+  if (!item.startTime || !item.endTime) return ''
+  return `${format(item.startTime, 'hh:mm a')} - ${format(item.endTime, 'hh:mm a')}`
 }
 
 function getItemStyle(item) {
@@ -247,18 +218,18 @@ function getItemStyle(item) {
 }
 
 function getColor(item) {
-  if (item.type === 'event') {
-    if (item.project?.priority?.toUpperCase() === 'LOW') return '#C6E7FF'
-    if (item.project?.priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
-    if (item.project?.priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
-  }
+  const priority =
+    item.type === 'event' ? item.project?.priority?.toUpperCase() : item.t_priority?.toUpperCase()
 
-  if (item.type === 'task') {
-    if (item.t_priority?.toUpperCase() === 'LOW') return '#C6E7FF'
-    if (item.t_priority?.toUpperCase() === 'MEDIUM') return '#FFD5DB'
-    if (item.t_priority?.toUpperCase() === 'HIGH') return '#FF8A5B'
+  switch (priority) {
+    case 'LOW':
+      return '#C6E7FF'
+    case 'MEDIUM':
+      return '#FFD5DB'
+    case 'HIGH':
+      return '#FF8A5B'
+    default:
+      return '#000000'
   }
-
-  return '#000000'
 }
 </script>

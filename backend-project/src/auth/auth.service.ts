@@ -34,13 +34,16 @@ export class AuthService {
     return user;
   }
 
-async createUser(createUserDto: CreateUserDto, performedById: number): Promise<User> {
-  const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-  return this.userService.createUser(
-    { ...createUserDto, password: hashedPassword },
-    performedById,
-  );
-}
+  async createUser(
+    createUserDto: CreateUserDto,
+    performedById: number,
+  ): Promise<User> {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    return this.userService.createUser(
+      { ...createUserDto, password: hashedPassword },
+      performedById,
+    );
+  }
 
   async login(user: User): Promise<{ accessToken: string }> {
     const payload = { sub: user.id, email: user.email, role: user.role };
@@ -57,14 +60,19 @@ async createUser(createUserDto: CreateUserDto, performedById: number): Promise<U
     return this.blacklistedTokens.has(token);
   }
 
-async updateUserPassword(
-  userId: number,
-  newPassword: string,
-  performedById: number,
-  markChanged = true,
-): Promise<User> {
-  return this.userService.updatePassword(userId, newPassword, performedById, markChanged);
-}
+  async updateUserPassword(
+    userId: number,
+    newPassword: string,
+    performedById: number,
+    markChanged = true,
+  ): Promise<User> {
+    return this.userService.updatePassword(
+      userId,
+      newPassword,
+      performedById,
+      markChanged,
+    );
+  }
 
   async generateOtp(userId: number): Promise<string> {
     const user = await this.userService.findOne(userId);
@@ -73,10 +81,14 @@ async updateUserPassword(
     const otp = randomInt(100000, 999999).toString();
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
 
-    await this.userService.update(userId, {
-      otp_code: otp,
-      otp_expiry: expiry,
-    },0);
+    await this.userService.update(
+      userId,
+      {
+        otp_code: otp,
+        otp_expiry: expiry,
+      },
+      0,
+    );
     await this.emailService.sendOtp(user.email, otp);
 
     return otp;
@@ -96,10 +108,14 @@ async updateUserPassword(
       String(user.otp_code).trim() === String(otp).trim() &&
       otpExpiry.getTime() > now.getTime()
     ) {
-      await this.userService.update(userId, {
-        otp_code: null,
-        otp_expiry: null,
-      },0);
+      await this.userService.update(
+        userId,
+        {
+          otp_code: undefined,
+          otp_expiry: undefined,
+        },
+        0,
+      );
       return true;
     }
 

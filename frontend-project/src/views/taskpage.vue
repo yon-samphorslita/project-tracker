@@ -46,7 +46,7 @@
 
           <!-- Search and Sort by funtion  -->
           <div class="flex gap-4 items-center">
-            <Search class="w-[300px] h-4" @update="searchQuery = $event" />
+            <Search v-model:query="searchQuery" />
             <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
           </div>
         </div>

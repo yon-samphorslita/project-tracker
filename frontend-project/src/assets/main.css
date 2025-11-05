@@ -203,7 +203,9 @@ body {
 
 .icon-theme path {
   fill: var(--graysvg-text);
-  transition: fill 0.2s ease, opacity 0.2s ease;
+  transition:
+    fill 0.2s ease,
+    opacity 0.2s ease;
   opacity: 80%;
   cursor: pointer;
 }

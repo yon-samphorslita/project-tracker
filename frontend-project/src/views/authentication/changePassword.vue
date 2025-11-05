@@ -17,9 +17,11 @@
               v-model="form.oldPassword"
               type="password"
               placeholder="Old Password"
-              required
               class="rounded-[20px] border border-gray-300 p-[10px]"
             />
+            <span v-if="errors.oldPassword" class="text-red-500 text-sm mt-1">{{
+              errors.oldPassword
+            }}</span>
           </div>
 
           <div class="flex flex-col">
@@ -28,9 +30,11 @@
               v-model="form.newPassword"
               type="password"
               placeholder="New Password"
-              required
               class="rounded-[20px] border border-gray-300 p-[10px]"
             />
+            <span v-if="errors.newPassword" class="text-red-500 text-sm mt-1">{{
+              errors.newPassword
+            }}</span>
           </div>
 
           <div class="flex flex-col">
@@ -39,13 +43,20 @@
               v-model="form.confirmPassword"
               type="password"
               placeholder="Confirm New Password"
-              required
               class="rounded-[20px] border border-gray-300 p-[10px]"
             />
+            <span v-if="errors.confirmPassword" class="text-red-500 text-sm mt-1">{{
+              errors.confirmPassword
+            }}</span>
+          </div>
+
+          <div v-if="errors.general" class="text-red-500 text-sm text-center">
+            {{ errors.general }}
           </div>
 
           <Button
             type="submit"
+            :disabled="loading"
             btn-color="var(--blue-bg)"
             btntext="var(--main-text)"
             label="Update Password"
@@ -61,6 +72,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import Button from '@/components/button.vue'
+
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -70,20 +82,57 @@ const form = ref({
   confirmPassword: '',
 })
 
-async function handleChangePassword() {
-  if (form.value.newPassword !== form.value.confirmPassword) {
-    alert('Passwords do not match')
-    return
-  }
+const errors = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+  general: '',
+})
 
+const loading = ref(false)
+
+function validateForm() {
+  let valid = true
+  errors.value.oldPassword = ''
+  errors.value.newPassword = ''
+  errors.value.confirmPassword = ''
+  errors.value.general = ''
+
+  if (!form.value.oldPassword) {
+    errors.value.oldPassword = 'Old password is required'
+    valid = false
+  }
+  if (!form.value.newPassword) {
+    errors.value.newPassword = 'New password is required'
+    valid = false
+  }
+  if (!form.value.confirmPassword) {
+    errors.value.confirmPassword = 'Please confirm your new password'
+    valid = false
+  }
+  if (
+    form.value.newPassword &&
+    form.value.confirmPassword &&
+    form.value.newPassword !== form.value.confirmPassword
+  ) {
+    errors.value.confirmPassword = 'Passwords do not match'
+    valid = false
+  }
+  return valid
+}
+
+async function handleChangePassword() {
+  if (!validateForm()) return
+
+  loading.value = true
   try {
     await auth.updatePassword(form.value.oldPassword, form.value.newPassword)
-
-    alert('Password updated successfully')
     router.push('/') // redirect to dashboard
   } catch (err) {
     console.error(err)
-    alert(err.response?.data?.message || 'Failed to update password')
+    errors.value.general = err.response?.data?.message || 'Failed to update password'
+  } finally {
+    loading.value = false
   }
 }
 </script>

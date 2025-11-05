@@ -51,14 +51,14 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import axios from 'axios'
-import { useTeamStore } from '@/stores/team';
+import { useTeamStore } from '@/stores/team'
 const isSubmitting = ref(false)
 const props = defineProps<{ modelValue: boolean }>()
 const emits = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'created', newTeam: any): void
 }>()
-const teamStore = useTeamStore();
+const teamStore = useTeamStore()
 const team = reactive({
   name: '',
   description: '',

@@ -1,6 +1,6 @@
 <template>
   <TeamLayout>
-    <div class="flex flex-col gap-4 mt-6">
+    <div class="flex flex-col gap-4">
       <h1 class="text-2xl font-bold">Editing Team Information</h1>
 
       <div v-if="team">
@@ -136,29 +136,33 @@ async function fetchCandidates() {
 }
 
 async function saveChanges() {
-  team.value.memberIds = team.value.memberIds.filter((m) => !m.hasMainTeam || m.isOnThisTeam)
+  try {
+    const currentPms = team.value.pmIds.map((pm) => pm.id)
+    const currentMembers = team.value.memberIds.map((m) => m.id)
+    const currentSecondary = team.value.secondaryMemberIds.map((m) => m.id)
 
-  const currentPms = team.value.pmIds.map((pm) => pm.id)
-  const currentMembers = team.value.memberIds.map((m) => m.id)
-  const currentSecondary = team.value.secondaryMemberIds.map((m) => m.id)
+    const payload = {
+      name: team.value.name,
+      description: team.value.description,
+      addPms: currentPms.filter((id) => !existingPms.value.includes(id)),
+      removePms: existingPms.value.filter((id) => !currentPms.includes(id)),
+      addMembers: currentMembers.filter((id) => !existingMembers.value.includes(id)),
+      removeMembers: existingMembers.value.filter((id) => !currentMembers.includes(id)),
+      addSecondaryMembers: currentSecondary.filter(
+        (id) => !existingSecondaryMembers.value.includes(id),
+      ),
+      removeSecondaryMembers: existingSecondaryMembers.value.filter(
+        (id) => !currentSecondary.includes(id),
+      ),
+    }
 
-  const payload = {
-    name: team.value.name,
-    description: team.value.description,
-    addPms: currentPms.filter((id) => !existingPms.value.includes(id)),
-    removePms: existingPms.value.filter((id) => !currentPms.includes(id)),
-    addMembers: currentMembers.filter((id) => !existingMembers.value.includes(id)),
-    removeMembers: existingMembers.value.filter((id) => !currentMembers.includes(id)),
-    addSecondaryMembers: currentSecondary.filter(
-      (id) => !existingSecondaryMembers.value.includes(id),
-    ),
-    removeSecondaryMembers: existingSecondaryMembers.value.filter(
-      (id) => !currentSecondary.includes(id),
-    ),
+    console.log('Update payload:', payload)
+
+    await teamStore.updateTeam(team.value.id, payload)
+    router.push('/teams')
+  } catch (err) {
+    console.error('Update failed:', err.response?.data || err.message)
   }
-
-  await teamStore.updateTeam(team.value.id, payload)
-  router.push('/teams') // go back to team list
 }
 
 function goBack() {

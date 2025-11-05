@@ -23,16 +23,15 @@ export class ActivityService {
     });
 
     if (logWithUser) {
-
-    // Emit to admin clients
-    this.gateway.sendLog({
-      id: logWithUser.id,
-      userId: logWithUser.userId,
-      user: { email: logWithUser.user?.email },
-      action: logWithUser.action,
-      createdAt: logWithUser.createdAt,
-    });
-  }
+      // Emit to admin clients
+      this.gateway.sendLog({
+        id: logWithUser.id,
+        userId: logWithUser.userId,
+        user: { email: logWithUser.user?.email },
+        action: logWithUser.action,
+        createdAt: logWithUser.createdAt,
+      });
+    }
     return logWithUser;
   }
 

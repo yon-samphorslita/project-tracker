@@ -7,7 +7,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Status } from '../enums/status.enum';
-import { Priority } from '../enums/priority.enum';
 import { Project } from 'src/project/project.entity';
 import { Task } from 'src/task/task.entity';
 import { User } from 'src/user/user.entity';
@@ -25,9 +24,6 @@ export class Event {
 
   @Column({ type: 'enum', enum: Status, default: Status.NOT_STARTED })
   e_status: Status;
-
-  // @Column({ type: 'enum', enum: Priority, default: Priority.MEDIUM })
-  // e_priority: Priority;
 
   @Column({ type: 'timestamp', nullable: true })
   start_date: Date;

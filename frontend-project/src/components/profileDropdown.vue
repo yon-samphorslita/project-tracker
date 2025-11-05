@@ -1,5 +1,5 @@
 <template>
-  <div ref="profileRef" class="relative">
+  <div ref="profileRef" class="relative z-50">
     <!-- Profile Button -->
     <div class="rounded-full cursor-pointer" @click="toggleDropdown">
       <div class="w-9 h-9 rounded-full overflow-hidden">
@@ -12,7 +12,7 @@
       v-if="showDropdown"
       class="absolute right-0 mt-2 w-72 bg-main-bg shadow-lg rounded-md border border-black overflow-hidden z-50"
     >
-      <div class="flex flex-col gap-4 p-4">
+      <div class="flex flex-col gap-4 p-4 z-50">
         <!-- Account Section -->
         <div>
           <p class="text-xs text-[var(--gray-text)] font-bold mb-2">ACCOUNT</p>
@@ -35,17 +35,17 @@
         <div>
           <p class="text-xs text-[var(--gray-text)] font-bold mb-2">TRACKZEN</p>
           <ul class="flex flex-col">
-            <li class="hover:bg-black/15 rounded-md p-2 cursor-pointer" @click.stop="gotoProfile">
+            <li class="hover:bg-black/15 rounded-md p-2 cursor-pointer" @click="gotoProfile">
               Profile
             </li>
             <li
               v-if="Role === 'Admin'"
               class="hover:bg-black/15 rounded-md p-2 cursor-pointer"
-              @click.stop="gotoActivityLogs"
+              @click="gotoActivityLogs"
             >
               Activity Logs
             </li>
-            <li class="hover:bg-black/15 rounded-md p-2 cursor-pointer" @click.stop="gotoSettings">
+            <li class="hover:bg-black/15 rounded-md p-2 cursor-pointer" @click="gotoSettings">
               Settings
             </li>
 
@@ -60,7 +60,7 @@
               </label>
             </li>
 
-            <li class="hover:bg-black/15 rounded-md p-2 cursor-pointer" @click.stop="gotoTheme">
+            <li class="hover:bg-black/15 rounded-md p-2 cursor-pointer" @click="gotoTheme">
               Theme
             </li>
           </ul>
@@ -71,9 +71,7 @@
         <!-- Help Section -->
         <div>
           <ul class="flex flex-col">
-            <li class="hover:bg-black/15 rounded-md p-2 cursor-pointer" @click.stop="gotoHelp">
-              Help
-            </li>
+            <li class="hover:bg-black/15 rounded-md p-2 cursor-pointer" @click="gotoHelp">Help</li>
           </ul>
         </div>
 
@@ -84,7 +82,7 @@
           <ul>
             <li
               class="hover:bg-black/15 rounded-md p-2 cursor-pointer text-red-500 font-bold"
-              @click.stop="logout"
+              @click="logout"
             >
               Logout
             </li>
@@ -96,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, watchEffect, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
@@ -109,12 +107,10 @@ const user = computed(() => authStore.user)
 const showDropdown = ref(false)
 const profileRef = ref(null)
 
-// Toggle dropdown
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
 }
 
-// Notification toggle
 const notificationsEnabled = computed({
   get: () => notificationStore.notificationsEnabled,
   set: (val) => notificationStore.toggleNotifications(val),
@@ -122,46 +118,34 @@ const notificationsEnabled = computed({
 
 // Connect to socket when user is available
 watchEffect(() => {
-  if (user.value && user.value.id) {
-    notificationStore.connect(user.value.id)
-  }
+  if (user.value?.id) notificationStore.connect(user.value.id)
 })
 
 // Navigation helpers
-const gotoProfile = async () => {
+const gotoProfile = () => {
   showDropdown.value = false
-  await nextTick()
   router.push('/settings/profile')
 }
-
-const gotoSettings = async () => {
+const gotoSettings = () => {
   showDropdown.value = false
-  await nextTick()
   router.push('/settings')
 }
-
-const gotoActivityLogs = async () => {
+const gotoActivityLogs = () => {
   showDropdown.value = false
-  await nextTick()
   router.push('/settings/activity-logs')
 }
-
-const gotoTheme = async () => {
+const gotoTheme = () => {
   showDropdown.value = false
-  await nextTick()
   router.push('/settings/theme')
 }
-
-const gotoHelp = async () => {
+const gotoHelp = () => {
   showDropdown.value = false
-  await nextTick()
   router.push('/help')
 }
 
-// Logout
 const logout = async () => {
   showDropdown.value = false
-  if (notificationStore.socket) notificationStore.socket.disconnect()
+  notificationStore.socket?.disconnect()
   try {
     await authStore.logout(router)
   } catch (err) {
@@ -171,9 +155,7 @@ const logout = async () => {
 
 // Close dropdown when clicking outside
 const handleClickOutside = (e) => {
-  if (profileRef.value && !profileRef.value.contains(e.target)) {
-    showDropdown.value = false
-  }
+  if (profileRef.value && !profileRef.value.contains(e.target)) showDropdown.value = false
 }
 
 onMounted(() => document.addEventListener('click', handleClickOutside))
@@ -181,16 +163,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
 // Compute user role for conditional items
 const Role = computed(() => {
-  if (!user.value) return ''
-  switch (user.value.role) {
-    case 'admin':
-      return 'Admin'
-    case 'project_manager':
-      return 'Project Manager'
-    case 'member':
-      return 'Member'
-    default:
-      return user.value.role || ''
-  }
+  const r = user.value?.role?.toLowerCase() || ''
+  if (r === 'admin') return 'Admin'
+  if (r === 'project_manager') return 'Project Manager'
+  if (r === 'member') return 'Member'
+  return r
 })
 </script>

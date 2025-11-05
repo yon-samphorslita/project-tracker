@@ -56,7 +56,6 @@ function closeForm() {
   showForm.value = false
 }
 
-// Emit submitted and close panel
 function onSubmitted(data) {
   emit('submitted', data)
   showForm.value = false

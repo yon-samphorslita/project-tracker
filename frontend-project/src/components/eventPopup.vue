@@ -16,8 +16,11 @@
         @click.stop
       >
         <!-- Close Button -->
-        <button @click="handleClose" class="absolute top-2 right-2 hover:text-[var(--gray-text)] text-[var(--graysvg-text)]">
-          <Close/>
+        <button
+          @click="handleClose"
+          class="absolute top-2 right-2 hover:text-[var(--gray-text)] text-[var(--graysvg-text)]"
+        >
+          <Close />
         </button>
 
         <!-- Header -->
@@ -28,13 +31,12 @@
             }}
           </h3>
 
-          <!-- Edit/Delete Icons -->
-          <div v-if="!isEditing" class="flex items-center gap-3">
+          <div v-if="!isEditing" class="flex items-center">
             <button @click="isEditing = true" title="Edit">
-              <Edit class="icon-theme"/>
+              <Edit class="icon-theme w-6 h-6" />
             </button>
             <button @click="handleDelete" title="Delete">
-              <Delete class="icon-theme"/>
+              <Delete class="icon-theme" />
             </button>
           </div>
         </div>
@@ -49,17 +51,13 @@
             <span class="font-medium text-gray-text">End:</span>
             {{ formatDate(eventData.end || eventData.endDate) }}
           </div>
-
           <div v-if="eventData.location">
-            <span class="font-medium text-gray-text">Location:</span>
-            {{ eventData.location }}
+            <span class="font-medium text-gray-text">Location:</span> {{ eventData.location }}
           </div>
-
           <div v-if="eventData.project">
             <span class="font-medium text-gray-text">Project:</span>
             {{ getProjectName(eventData.project) }}
           </div>
-
           <div v-if="eventData.description || eventData.e_description">
             <span class="font-medium text-gray-text">Description:</span>
             {{ eventData.description || eventData.e_description }}
@@ -86,7 +84,6 @@
                 class="w-full border bg-main-bg rounded-md px-2 py-1 focus:ring focus:ring-blue-200"
               />
             </div>
-
             <div>
               <label class="font-medium text-gray-text block mb-1">End</label>
               <input
@@ -115,7 +112,6 @@
             ></textarea>
           </div>
 
-          <!-- Save / Cancel Buttons -->
           <div class="flex justify-end mt-4 gap-3 border-t pt-3">
             <button
               @click="cancelEdit"
@@ -144,6 +140,7 @@ import { useEventStore } from '@/stores/event'
 import Close from '@/assets/icons/cross.svg'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
+
 const props = defineProps({
   visible: Boolean,
   event: Object,
@@ -159,7 +156,6 @@ const isEditing = ref(false)
 const eventData = ref(null)
 const editableData = ref({})
 
-// Watch for selected event
 watch(
   () => props.event,
   (val) => {
@@ -179,26 +175,19 @@ watch(
 function toInputDatetime(date) {
   if (!date) return ''
   const d = new Date(date)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hours = String(d.getHours()).padStart(2, '0')
-  const minutes = String(d.getMinutes()).padStart(2, '0')
-  return `${year}-${month}-${day}T${hours}:${minutes}`
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-// Format dates
 function formatDate(date) {
   if (!date) return 'N/A'
   try {
-    const d = new Date(date)
-    return format(d, 'EEE dd MMM yyyy, HH:mm')
+    return format(new Date(date), 'EEE dd MMM yyyy, HH:mm')
   } catch {
     return date
   }
 }
 
-// Project name
 function getProjectName(project) {
   if (typeof project === 'string') return project
   if (project?.p_name) return project.p_name
@@ -206,12 +195,10 @@ function getProjectName(project) {
   return found?.p_name || 'Unknown Project'
 }
 
-// Close popup
 function handleClose() {
   emit('close')
 }
 
-// Delete event
 async function handleDelete() {
   if (!eventData.value?.id) return
   if (confirm('Are you sure you want to delete this event?')) {
@@ -220,7 +207,6 @@ async function handleDelete() {
   }
 }
 
-// Save edits
 async function handleSave() {
   const updated = await eventStore.updateEvent(eventData.value.id, editableData.value)
   if (updated) {
@@ -229,20 +215,21 @@ async function handleSave() {
   }
 }
 
-// Cancel edit
 function cancelEdit() {
   editableData.value = { ...eventData.value }
   isEditing.value = false
 }
 
-// 🔒 Scroll lock
+// Scroll lock
 watch(
   () => props.visible,
   (val) => {
     document.body.style.overflow = val ? 'hidden' : ''
   },
 )
-onUnmounted(() => (document.body.style.overflow = ''))
+onUnmounted(() => {
+  document.body.style.overflow = ''
+})
 </script>
 
 <style scoped>

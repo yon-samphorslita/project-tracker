@@ -53,7 +53,7 @@ export class EventService {
 
     await this.activityService.logAction(
       user.id,
-      `Created event "${savedEvent.e_title}" in project "${project.p_name}" starting at ${this.formatDate(savedEvent.start_date)} and ending at ${this.formatDate(savedEvent.end_date)}.`
+      `Created event "${savedEvent.e_title}" in project "${project.p_name}" starting at ${this.formatDate(savedEvent.start_date)} and ending at ${this.formatDate(savedEvent.end_date)}.`,
     );
 
     return savedEvent;
@@ -73,18 +73,25 @@ export class EventService {
     if (user) {
       const changes: string[] = [];
       if (oldEventData.e_title !== updatedEvent.e_title)
-        changes.push(`Title: "${oldEventData.e_title}" → "${updatedEvent.e_title}"`);
+        changes.push(
+          `Title: "${oldEventData.e_title}" → "${updatedEvent.e_title}"`,
+        );
       if (oldEventData.e_description !== updatedEvent.e_description)
         changes.push('Description changed');
       if (oldEventData.start_date !== updatedEvent.start_date)
-        changes.push(`Start: ${this.formatDate(oldEventData.start_date)} → ${this.formatDate(updatedEvent.start_date)}`);
+        changes.push(
+          `Start: ${this.formatDate(oldEventData.start_date)} → ${this.formatDate(updatedEvent.start_date)}`,
+        );
       if (oldEventData.end_date !== updatedEvent.end_date)
-        changes.push(`End: ${this.formatDate(oldEventData.end_date)} → ${this.formatDate(updatedEvent.end_date)}`);
+        changes.push(
+          `End: ${this.formatDate(oldEventData.end_date)} → ${this.formatDate(updatedEvent.end_date)}`,
+        );
 
-      const changesStr = changes.length > 0 ? changes.join('; ') : 'No significant changes';
+      const changesStr =
+        changes.length > 0 ? changes.join('; ') : 'No significant changes';
       await this.activityService.logAction(
         user.id,
-        `Updated event "${updatedEvent.e_title}". Changes: ${changesStr}.`
+        `Updated event "${updatedEvent.e_title}". Changes: ${changesStr}.`,
       );
     }
 
@@ -98,25 +105,17 @@ export class EventService {
     if (userId) {
       await this.activityService.logAction(
         userId,
-        `Deleted event "${event.e_title}" from project "${event.project?.p_name}".`
+        `Deleted event "${event.e_title}" from project "${event.project?.p_name}".`,
       );
     }
   }
 
   async findAll(userId?: number, projectId?: number): Promise<Event[]> {
-    if (userId) {
-      return this.eventRepository.find({
-        where: { user: { id: userId } },
-        relations: ['user', 'project'],
-      });
-    }
-    if (projectId) {
-      return this.eventRepository.find({
-        where: { project: { id: projectId } },
-        relations: ['user', 'project'],
-      });
-    }
-    return this.eventRepository.find({ relations: ['user', 'project'] });
+    const where: any = {};
+    if (userId) where.user = { id: userId };
+    if (projectId) where.project = { id: projectId };
+
+    return this.eventRepository.find({ where, relations: ['user', 'project'] });
   }
 
   async findOne(
@@ -130,8 +129,10 @@ export class EventService {
     });
 
     if (!event) throw new NotFoundException('Event not found');
-    if (userId && event.user?.id !== userId) throw new ForbiddenException('You do not have access to this event');
-    if (projectId && event.project?.id !== projectId) throw new ForbiddenException('Event does not belong to this project');
+    if (userId && event.user?.id !== userId)
+      throw new ForbiddenException('You do not have access to this event');
+    if (projectId && event.project?.id !== projectId)
+      throw new ForbiddenException('Event does not belong to this project');
 
     return event;
   }

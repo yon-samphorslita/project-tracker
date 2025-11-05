@@ -2,11 +2,11 @@
   <div
     class="calendar-frame max-w-[420px] shadow-[0_2px_12px_rgba(0,0,0,0.1)] border overflow-x-auto p-4 rounded-xl border-solid border-[#e6e6e6]"
   >
-    <div class="vue-calendar max-w-[400px] mx-auto my-0 pb-4 rounded-[10px]">
+    <div class="vue-calendar max-w-[400px] mx-auto pb-4 rounded-[10px]">
       <!-- Header -->
       <header class="vc-header flex items-center justify-between mb-2 px-0 py-3" v-if="showHeader">
         <button
-          class="vc-btn prev text-[22px] cursor-pointer w-10 text-black-text border-[none]"
+          class="vc-btn prev text-[22px] cursor-pointer w-10 text-black-text border-none"
           @click="changeMonth(-1)"
         >
           ‹
@@ -14,11 +14,12 @@
         <div class="vc-title-bg flex-1 flex justify-center">
           <span
             class="vc-title bg-blue-bg w-[90%] text-center font-semibold text-base px-0 py-2 rounded-lg"
-            >{{ monthName }} {{ displayYear }}</span
           >
+            {{ monthName }} {{ displayYear }}
+          </span>
         </div>
         <button
-          class="vc-btn nex text-[22px] cursor-pointer w-10 text-black-text border-[none]t"
+          class="vc-btn next text-[22px] cursor-pointer w-10 text-black-text border-none"
           @click="changeMonth(1)"
         >
           ›
@@ -43,20 +44,17 @@
           :key="wIdx"
           class="vc-row flex gap-2.5 relative rounded-[5px]"
         >
-          <!-- background layer with opacity -->
           <div
-            class="vc-row-bg absolute z-0 rounded-[5px] inset-0 bg-blue-bg"
+            class="vc-row-bg absolute rounded-[5px] inset-0 bg-blue-bg"
             :style="{ opacity: 0.9 - wIdx * 0.1 }"
           ></div>
-
-          <!-- days -->
           <div
             v-for="cell in week"
             :key="cell.key"
-            class="vc-day flex-1 h-8 min-w-[34px] flex items-center justify-center relative cursor-default z-[1] rounded-full"
+            class="vc-day flex-1 h-8 min-w-[34px] flex items-center justify-center relative cursor-default rounded-full"
             :class="{
               'vc-day--other opacity-[0.45]': cell.otherMonth,
-              'vc-day--today w-9 h-9 flex items-center justify-center font-semibold  border-2 border-solid border-[black]':
+              'vc-day--today w-9 h-9 flex items-center justify-center font-semibold border-2 border-solid border-black':
                 cell.isToday,
             }"
           >
@@ -74,10 +72,8 @@ import { ref, computed, watch } from 'vue'
 const props = defineProps({
   modelValue: { type: Date, default: () => new Date() },
   events: { type: Array, default: () => [] },
-  startWeekOnMonday: { type: Boolean, default: false },
   locale: { type: String, default: navigator.language || 'en-US' },
   showHeader: { type: Boolean, default: true },
-  maxEventDots: { type: Number, default: 3 },
 })
 
 const emit = defineEmits(['update:modelValue', 'date-click', 'month-change'])
@@ -91,9 +87,7 @@ watch(
 const displayDate = ref(
   new Date(internalValue.value.getFullYear(), internalValue.value.getMonth(), 1),
 )
-watch(internalValue, (v) => {
-  displayDate.value = new Date(v.getFullYear(), v.getMonth(), 1)
-})
+watch(internalValue, (v) => (displayDate.value = new Date(v.getFullYear(), v.getMonth(), 1)))
 
 const monthName = computed(() => displayDate.value.toLocaleString(props.locale, { month: 'long' }))
 const displayYear = computed(() => displayDate.value.getFullYear())
@@ -113,9 +107,7 @@ function changeMonth(delta) {
 const weekdayNames = computed(() => {
   const base = new Date(1970, 0, 4) // Sunday Jan 4 1970
   return Array.from({ length: 7 }).map((_, i) =>
-    new Date(base.getTime() + i * 86400000).toLocaleString(props.locale, {
-      weekday: 'short',
-    }),
+    new Date(base.getTime() + i * 86400000).toLocaleString(props.locale, { weekday: 'short' }),
   )
 })
 
@@ -138,14 +130,10 @@ function isSameDay(a, b) {
 const calendarCells = computed(() => {
   const first = firstDayOfMonth(displayDate.value)
   const last = lastDayOfMonth(displayDate.value)
-
-  const startIdx = first.getDay()
-  const daysBefore = startIdx
+  const daysBefore = first.getDay()
   const totalDays = daysBefore + last.getDate()
   const rows = Math.ceil(totalDays / 7)
-  const cellCount = rows * 7
-
-  return Array.from({ length: cellCount }).map((_, i) => {
+  return Array.from({ length: rows * 7 }).map((_, i) => {
     const dayNumber = i - daysBefore + 1
     const date = new Date(displayDate.value.getFullYear(), displayDate.value.getMonth(), dayNumber)
     return {
@@ -159,9 +147,8 @@ const calendarCells = computed(() => {
 
 const weeks = computed(() => {
   const arr = []
-  for (let i = 0; i < calendarCells.value.length; i += 7) {
+  for (let i = 0; i < calendarCells.value.length; i += 7)
     arr.push(calendarCells.value.slice(i, i + 7))
-  }
   return arr
 })
 </script>

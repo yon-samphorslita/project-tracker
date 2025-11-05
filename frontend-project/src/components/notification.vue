@@ -7,7 +7,7 @@
         class="flex gap-2 text-green-600 cursor-pointer hover:text-green-800"
         @click="markAllAsRead"
       >
-        <MarkIcon/>
+        <MarkIcon />
         Mark all as Read
       </div>
     </div>
@@ -70,7 +70,7 @@
             class="opacity-0 group-hover:opacity-100 ml-3 text-red-500 hover:text-red-700 transition-opacity"
             @click.stop="softDeleteOne(n.id)"
           >
-            <Delete/>
+            <Delete />
           </button>
         </div>
       </div>

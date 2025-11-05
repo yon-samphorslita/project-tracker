@@ -9,7 +9,11 @@ import { NotificationModule } from 'src/notification/notification.module';
 import { ActivityModule } from 'src/activity/activity.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Team, User]), NotificationModule, ActivityModule],
+  imports: [
+    TypeOrmModule.forFeature([Team, User]),
+    NotificationModule,
+    ActivityModule,
+  ],
   controllers: [TeamController],
   providers: [TeamService, UserService],
 })

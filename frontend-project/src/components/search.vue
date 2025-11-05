@@ -14,12 +14,11 @@
 
 <script setup>
 import { ref } from 'vue'
-const query = ref('')
 
+const query = ref('')
 const emit = defineEmits(['update:query'])
+
 const onInput = () => {
-  emit('update', query.value)
+  emit('update:query', query.value)
 }
 </script>
-
-<style scoped></style>

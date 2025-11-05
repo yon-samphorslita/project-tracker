@@ -1,13 +1,10 @@
 <template>
   <ProjectLayout>
-    <div class="container flex flex-col gap-4 pt-6">
+    <div class="container flex flex-col gap-4">
       <div class="text-2xl font-semibold">All Projects</div>
 
-      <!-- Loading -->
-      <div v-if="!isReady" class="text-center py-4 text-sub-text">Loading projects...</div>
-
       <!-- Admin Dashboard -->
-      <div v-if="isReady && userRole === 'admin'" class="flex flex-col gap-4">
+      <div v-if="userRole === 'admin'" class="flex flex-col gap-4">
         <!-- Overview & PieChart -->
         <div class="flex w-full justify-between gap-4">
           <div class="grid grid-cols-2 gap-4 flex-1">
@@ -21,7 +18,6 @@
         <!-- Header: Create + Search + Filter -->
         <div class="flex justify-between items-center w-full gap-4">
           <Button label="+ New Project" @click="showForm = true" />
-
           <Form
             v-model:modelValue="showForm"
             formTitle="Create Project"
@@ -31,8 +27,8 @@
             :fullScreen="true"
           />
           <div class="flex gap-4 items-center">
-            <Search @update="searchQuery = $event" />
-            <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
+            <Search v-model:query="searchQuery" />
+            <Filter title="Sort by" :options="sortOptions" @select="applySort" class="min-w-fit" />
           </div>
         </div>
 
@@ -44,7 +40,7 @@
         >
           <template #actions="{ row }">
             <div class="flex gap-2">
-              <View class="icon-theme w-6 h-6" @click="router.push(`/project/${row.id}`)"/>
+              <View class="icon-theme w-6 h-6" @click="viewProject(row)" />
               <Edit class="icon-theme w-6 h-6" @click="editProject(row)" />
               <Delete class="icon-theme w-6 h-6" @click="deleteProject(row)" />
             </div>
@@ -63,7 +59,7 @@
       </div>
 
       <!-- Non-Admin Project Cards -->
-      <div v-else-if="isReady" class="flex flex-col gap-4">
+      <div v-else class="flex flex-col gap-4">
         <div class="flex justify-between items-center w-full gap-4">
           <Button
             label="+ New Project"
@@ -80,7 +76,7 @@
           />
           <div class="flex gap-4 items-center">
             <Search @update="searchQuery = $event" />
-            <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
+            <Filter title="Sort by" :options="sortOptions" @select="applySort" class="min-w-fit" />
           </div>
         </div>
 
@@ -109,6 +105,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
+// Components
 import ProjectLayout from './pageLayout.vue'
 import ProjectCard from '@/components/projectCard.vue'
 import Search from '@/components/search.vue'
@@ -118,22 +115,26 @@ import Button from '@/components/button.vue'
 import Form from '@/components/form.vue'
 import PieChart from '@/components/pieChart.vue'
 import OverviewCard from '@/components/overviewCard.vue'
+import EditForm from '@/components/editForm.vue'
+
+// Icons
 import View from '@/assets/icons/view.svg'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
+
+// Stores
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
 import { useSubtaskStore } from '@/stores/subtask'
 import { useTeamStore } from '@/stores/team'
 import { useAuthStore } from '@/stores/auth'
-import EditForm from '@/components/editForm.vue'
 
-// Stores
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const subtaskStore = useSubtaskStore()
 const teamStore = useTeamStore()
+const router = useRouter()
 
 // State
 const showForm = ref(false)
@@ -143,9 +144,8 @@ const searchQuery = ref('')
 const selectedSort = ref('')
 const isReady = ref(false)
 const userRole = computed(() => authStore.user?.role || 'user')
-const router = useRouter()
 
-// Table & Sort Options
+// Table Columns & Sort Options
 const tableColumns = [
   { key: 'name', label: 'Project Name' },
   { key: 'description', label: 'Description' },
@@ -204,6 +204,15 @@ const formatDate = (dateStr) =>
       })
 const priorityValue = (priority) => ({ high: 3, medium: 2, low: 1 })[priority?.toLowerCase()] || 0
 
+const getTotalTasks = (project) =>
+  project.tasks?.reduce((total, task) => total + 1 + (task.subtasks?.length || 0), 0) || 0
+const getCompletedTasks = (project) =>
+  project.tasks?.reduce((completed, task) => {
+    let count = task.t_status?.toLowerCase() === 'completed' ? 1 : 0
+    count += task.subtasks?.filter((s) => s.status?.toLowerCase() === 'completed').length || 0
+    return completed + count
+  }, 0) || 0
+
 // Computed: Filtered & Sorted Projects
 const filteredSortedProjects = computed(() => {
   let list = [...projectStore.projects]
@@ -213,7 +222,6 @@ const filteredSortedProjects = computed(() => {
       (p) => p.p_name.toLowerCase().includes(q) || p.p_description?.toLowerCase().includes(q),
     )
   }
-
   switch (selectedSort.value) {
     case 'priority-High':
       return list.sort((a, b) => priorityValue(b.priority) - priorityValue(a.priority))
@@ -243,18 +251,7 @@ const mappedFilteredSortedProjects = computed(() =>
   })),
 )
 
-// Task helpers
-const getTotalTasks = (project) =>
-  project.tasks?.reduce((total, task) => total + 1 + (task.subtasks?.length || 0), 0) || 0
-
-const getCompletedTasks = (project) =>
-  project.tasks?.reduce((completed, task) => {
-    let count = task.t_status?.toLowerCase() === 'completed' ? 1 : 0
-    count += task.subtasks?.filter((s) => s.status?.toLowerCase() === 'completed').length || 0
-    return completed + count
-  }, 0) || 0
-
-// Fetch data on mount
+// Fetch Data
 onMounted(async () => {
   if (!authStore.user) await authStore.fetchProfile()
   await teamStore.fetchTeams()
@@ -267,7 +264,6 @@ onMounted(async () => {
     projectStore.projects.map(async (p) => {
       const tasks = (await taskStore.fetchTasksByProject(p.id)) || []
       taskStore.tasks.push(...tasks)
-
       await Promise.all(
         tasks.map(async (t) => {
           const subtasks = (await subtaskStore.fetchByTask(t.id)) || []
@@ -280,16 +276,15 @@ onMounted(async () => {
   isReady.value = true
 })
 
-// Sorting handler
+// Sorting
 const applySort = (option) => (selectedSort.value = option)
 
-// Project actions
+// Project Actions
 const onProjectCreated = (project) => projectStore.projects.push(project)
 
 const editProject = (row) => {
   const project = projectStore.projects.find((p) => p.id === row.id)
   if (!project) return
-
   editProjectData.value = {
     id: project.id,
     title: project.p_name,
@@ -300,7 +295,6 @@ const editProject = (row) => {
     status: project.status,
     team_id: project.team?.id || null,
   }
-
   showEditProjectForm.value = true
 }
 

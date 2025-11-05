@@ -13,7 +13,7 @@
             'w-6 h-6 transition-colors duration-200',
             activeOption === option.name
               ? 'text-main-text opacity-100'
-              : 'text-[var(--gray-text)] opacity-60 hover:opacity-80'
+              : 'text-[var(--gray-text)] opacity-60 hover:opacity-80',
           ]"
         />
 
@@ -22,7 +22,7 @@
             'transition-colors duration-200',
             activeOption === option.name
               ? 'text-main-text opacity-100 font-bold'
-              : 'text-[var(--gray-text)] opacity-80 hover:opacity-100'
+              : 'text-[var(--gray-text)] opacity-80 hover:opacity-100',
           ]"
         >
           {{ option.name }}
@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits } from 'vue'
+import { ref, defineProps, defineEmits } from 'vue'
 import KanbanIcon from '@/assets/icons/kanban.svg'
 import GanttIcon from '@/assets/icons/gantt.svg'
 import TableIcon from '@/assets/icons/table.svg'
@@ -59,11 +59,6 @@ const options = [
 ]
 
 const activeOption = ref(props.activeOption)
-
-watch(
-  () => props.activeOption,
-  (val) => (activeOption.value = val)
-)
 
 function setActive(name) {
   activeOption.value = name

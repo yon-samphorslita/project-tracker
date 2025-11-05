@@ -1,5 +1,5 @@
 <template>
-  <div class="flex w-full gap-4">
+  <div class="flex w-full gap-4 bg-main-bg">
     <div
       v-for="p in topProjects"
       :key="p.id"

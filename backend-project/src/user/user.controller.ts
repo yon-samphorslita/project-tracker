@@ -17,11 +17,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-@Post()
-create(@Body() createUserDto: CreateUserDto, @Request() req): Promise<User> {
-  const performedById = req.user.id;
-  return this.userService.createUser(createUserDto, performedById);
-}
+  @Post()
+  create(@Body() createUserDto: CreateUserDto, @Request() req): Promise<User> {
+    const performedById = req.user.id;
+    return this.userService.createUser(createUserDto, performedById);
+  }
 
   @Get()
   findAll(): Promise<User[]> {
@@ -38,19 +38,19 @@ create(@Body() createUserDto: CreateUserDto, @Request() req): Promise<User> {
     return this.userService.getUserTeams(id);
   }
 
-@Put(':id')
-update(
-  @Param('id', ParseIntPipe) id: number,
-  @Body() updateUserDto: UpdateUserDto,
-  @Request() req, // add request to get the admin performing the action
-): Promise<User | null> {
-  const performedById = req.user.id; // the user performing the update
-  return this.userService.update(id, updateUserDto, performedById);
-}
+  @Put(':id')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+    @Request() req, // add request to get the admin performing the action
+  ): Promise<User | null> {
+    const performedById = req.user.id; // the user performing the update
+    return this.userService.update(id, updateUserDto, performedById);
+  }
 
-@Delete(':id')
-delete(@Param('id', ParseIntPipe) id: number, @Request() req): Promise<void> {
-  const performedById = req.user.id;
-  return this.userService.delete(id, performedById);
-}
+  @Delete(':id')
+  delete(@Param('id', ParseIntPipe) id: number, @Request() req): Promise<void> {
+    const performedById = req.user.id;
+    return this.userService.delete(id, performedById);
+  }
 }

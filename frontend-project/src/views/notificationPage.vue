@@ -1,12 +1,12 @@
 <template>
   <PageLayout>
-    <div class="flex flex-col gap-4 mt-6">
+    <div class="flex flex-col gap-4">
       <!-- header  -->
       <div class="font-bold text-xl">Notifications</div>
 
       <div class="flex gap-4 w-full items-center justify-end">
         <!-- search function  -->
-        <!-- <search @update="searchQuery = $event" /> -->
+        <!-- <Search v-model:query="searchQuery" /> -->
 
         <div class="flex justify-end items-center bg-purple- gap-3 w-1/2">
           <!-- mark as read button  -->
@@ -14,7 +14,7 @@
             class="flex gap-2 text-green-600 border px-2 py-1 rounded-lg cursor-pointer hover:text-green-800"
             @click="markAllAsRead"
           >
-            <MarkIcon/>
+            <MarkIcon />
             Mark all as Read
           </button>
 
@@ -23,7 +23,7 @@
             class="flex gap-2 text-red-600 border px-2 py-1 rounded-lg cursor-pointer hover:text-red-800"
             @click="deleteAll"
           >
-            <Delete/>
+            <Delete />
             Delete All
           </button>
 

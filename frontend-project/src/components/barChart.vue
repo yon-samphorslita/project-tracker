@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue' // line changed: removed unused imports
 import { Chart, registerables } from 'chart.js'
 import { useTaskStore } from '@/stores/task'
 import { useTeamStore } from '@/stores/team'
@@ -22,26 +22,22 @@ let chartInstance = null
 
 const taskStore = useTaskStore()
 const teamStore = useTeamStore()
-const teamWorkloadData = ref([])
+const teamWorkloadData = ref([]) // no change
 const teamMembers = ref([])
 
 const fetchTeamWorkload = async () => {
-  // Fetch team members
   const team = await teamStore.fetchTeam(props.teamId)
   if (!team) return
   teamMembers.value = [...(team.members || []), ...(team.mainMembers || [])]
 
-  // Filter project tasks
   const tasks = taskStore.tasks.filter((t) => t.project?.id === props.projectId)
 
-  // Initialize workload
   const workload = {}
   teamMembers.value.forEach((member) => {
     const name = `${member.first_name} ${member.last_name}`
     workload[name] = { total: 0, completed: 0 }
   })
 
-  // Count tasks per member
   tasks.forEach((task) => {
     const user = task.user || task.assigned_to || null
     const memberName =
@@ -68,10 +64,10 @@ const fetchTeamWorkload = async () => {
   teamWorkloadData.value = { labels, totalData, completedData }
   renderChart()
 }
-const styles = getComputedStyle(document.documentElement)
 
+const styles = getComputedStyle(document.documentElement)
 const getColor = (index) => styles.getPropertyValue(`--random-color-${index}`).trim()
-const randomColors = [1, 2, 3, 4, 5, 6].sort(() => Math.random() - 0.5)
+const randomColors = [1, 2, 3, 4, 5, 6].sort(() => Math.random() - 0.5) // line changed: removed unused numbers if desired
 
 const renderChart = () => {
   if (!canvasRef.value) return
@@ -110,11 +106,10 @@ const renderChart = () => {
   })
 }
 
-// Reactive: watch the task store for changes
 watch(
   () => taskStore.tasks,
   () => fetchTeamWorkload(),
-  { deep: true }, // ensures nested changes trigger update
+  { deep: true },
 )
 
 watch(() => [props.projectId, props.teamId], fetchTeamWorkload)

@@ -11,7 +11,6 @@ export const useTaskStore = defineStore(
     const loading = ref(false)
     const error = ref(null)
 
-    //  auth headers
     const getAuthHeaders = () => {
       const token = localStorage.getItem('token')
       if (!token) throw new Error('No authentication token found')
@@ -19,48 +18,30 @@ export const useTaskStore = defineStore(
     }
 
     // Fetch all tasks
-    const fetchTasks = async () => {
+    const fetchData = async (url) => {
       loading.value = true
       error.value = null
       try {
-        const res = await axios.get(`${API_BASE_URL}/tasks`, {
-          headers: getAuthHeaders(),
-        })
-        tasks.value = Array.isArray(res.data) ? res.data : res.data?.data || []
+        const res = await axios.get(`${API_BASE_URL}${url}`, { headers: getAuthHeaders() })
+        return Array.isArray(res.data) ? res.data : res.data?.data || []
       } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to fetch tasks'
+        error.value = err.response?.data?.message || 'Request failed'
+        return []
       } finally {
         loading.value = false
       }
     }
 
-    // Fetch tasks by project
-    const fetchTasksByProject = async (projectId) => {
-      if (!projectId) return
-      loading.value = true
-      error.value = null
-      try {
-        const res = await axios.get(`${API_BASE_URL}/tasks/project/${projectId}`, {
-          headers: getAuthHeaders(),
-        })
-
-        const newTasks = Array.isArray(res.data) ? res.data : res.data?.data || []
-
-        // Only store the current project's tasks
-        tasks.value = newTasks
-      } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to fetch tasks for project'
-      } finally {
-        loading.value = false
-      }
-    }
+    const fetchTasks = () => fetchData('/tasks').then((data) => (tasks.value = data))
+    const fetchTasksByProject = (projectId) =>
+      projectId
+        ? fetchData(`/tasks/project/${projectId}`).then((data) => (tasks.value = data))
+        : null
 
     const fetchTask = async (id) => {
       error.value = null
       try {
-        const res = await axios.get(`${API_BASE_URL}/tasks/${id}`, {
-          headers: getAuthHeaders(),
-        })
+        const res = await axios.get(`${API_BASE_URL}/tasks/${id}`, { headers: getAuthHeaders() })
         return res.data
       } catch (err) {
         error.value = err.response?.data?.message || 'Failed to fetch task'

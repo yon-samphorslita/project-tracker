@@ -92,24 +92,16 @@ watch(
   },
   { immediate: true },
 )
+
 const allMembers = computed(() => {
   const team = props.project?.team
   if (!team) return []
-
-  const combined = [
-    ...(team.mainMembers || []),
-    ...(team.members || []),
-    // ...(team.pms || []),
-  ]
-
-  // Remove duplicates by ID
-  const unique = new Map(combined.map((m) => [m.id, m]))
-  return Array.from(unique.values())
+  const combined = [...(team.mainMembers || []), ...(team.members || [])]
+  return Array.from(new Map(combined.map((m) => [m.id, m])).values()) // remove duplicates
 })
+
 const projectTasks = computed(() => tasks.value.filter((t) => t.project?.id === props.project?.id))
-
 const totalTasks = computed(() => projectTasks.value.length)
-
 const completedTasks = computed(
   () => projectTasks.value.filter((t) => t.t_status?.toLowerCase() === 'completed').length,
 )

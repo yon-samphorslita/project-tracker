@@ -30,7 +30,11 @@
       </template>
 
       <template v-else-if="activeOption === 'Gantt'">
-        <GanttChart :rows="ganttRows.length ? ganttRows : []" :format-date="formatDate" title="Tasks"/>
+        <GanttChart
+          :rows="ganttRows.length ? ganttRows : []"
+          :format-date="formatDate"
+          title="Tasks"
+        />
       </template>
 
       <template v-else-if="activeOption === 'Table'">
@@ -42,14 +46,11 @@
         >
           <template #actions="{ row }">
             <div class="flex gap-2">
-              <EditIcon
-  class="w-6 h-6 cursor-pointer icon-theme"
-  @click="editTask(row)"
-/>
-<DeleteIcon
-  class="w-6 h-6 cursor-pointer icon-theme"
-  @click="$emit('onTaskDeleted', row)"
-/>
+              <EditIcon class="w-6 h-6 cursor-pointer icon-theme" @click="editTask(row)" />
+              <DeleteIcon
+                class="w-6 h-6 cursor-pointer icon-theme"
+                @click="$emit('onTaskDeleted', row)"
+              />
             </div>
           </template>
         </Table>

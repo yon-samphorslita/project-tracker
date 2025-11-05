@@ -13,7 +13,6 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { User } from '../user/user.entity';
 import { Status } from '../enums/status.enum';
 import { ActivityService } from 'src/activity/activity.service';
-import { NotificationsGateway } from 'src/notification/notification.gateway';
 import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
@@ -22,7 +21,6 @@ export class ProjectService {
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
     private readonly activityService: ActivityService,
-    private readonly notificationsGateway: NotificationsGateway,
     private readonly notificationService: NotificationService,
   ) {}
 
@@ -91,7 +89,7 @@ export class ProjectService {
       teamIds.push(...user.pmTeams.map((team) => team.id));
     }
 
-    return this.projectRepository
+    const query = this.projectRepository
       .createQueryBuilder('project')
       .leftJoinAndSelect('project.team', 'team')
       .leftJoinAndSelect('team.members', 'member')
@@ -100,9 +98,13 @@ export class ProjectService {
       .leftJoinAndSelect('project.user', 'user')
       .leftJoinAndSelect('project.tasks', 'tasks')
       .leftJoinAndSelect('tasks.user', 'taskUser')
-      .where('project.userId = :userId', { userId })
-      .orWhere('team.id IN (:...teamIds)', { teamIds })
-      .getMany();
+      .where('project.userId = :userId', { userId });
+
+    if (teamIds.length > 0) {
+      query.orWhere('team.id IN (:...teamIds)', { teamIds });
+    }
+
+    return query.getMany();
   }
 
   // Find a single project by ID
@@ -138,10 +140,14 @@ export class ProjectService {
         teamIds.push(...user.pmTeams.map((team) => team.id));
       }
 
-      projectQB.andWhere(
-        'project.userId = :userId OR team.id IN (:...teamIds)',
-        { userId, teamIds },
-      );
+      if (teamIds.length > 0) {
+        projectQB.andWhere(
+          'project.userId = :userId OR team.id IN (:...teamIds)',
+          { userId, teamIds },
+        );
+      } else {
+        projectQB.andWhere('project.userId = :userId', { userId });
+      }
     }
 
     const project = await projectQB.getOne();

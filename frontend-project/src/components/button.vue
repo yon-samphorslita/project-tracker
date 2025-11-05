@@ -2,8 +2,7 @@
   <button
     :class="[
       'px-5 py-2.5 rounded-md text-center text-base shadow-md transition-colors duration-200',
-      btnClass, // dynamic class from parent
-      defaultClass, // default class if none provided
+      btnClass || defaultClass,
     ]"
     :style="inlineStyle"
     @click="$emit('click')"
@@ -30,23 +29,24 @@ const hover = ref(false)
 
 const resolveColor = (color) => {
   if (!color) return null
-  if (color.startsWith('var(')) {
-    return getComputedStyle(document.documentElement)
-      .getPropertyValue(color.replace('var(', '').replace(')', '').trim())
-      .trim()
-  }
-  return color
+  return color.startsWith('var(')
+    ? getComputedStyle(document.documentElement)
+        .getPropertyValue(color.replace('var(', '').replace(')', '').trim())
+        .trim()
+    : color
 }
 
 // Inline style only applied if dynamic colors are provided
-const inlineStyle = computed(() => {
-  const style = { fontSize: props.btntextsize }
-  if (props.btnBg || props.btnText) {
-    style.backgroundColor = hover.value ? resolveColor(props.btnHoverBg) : resolveColor(props.btnBg)
-    style.color = resolveColor(props.btnText)
-  }
-  return style
-})
+const inlineStyle = computed(() => ({
+  fontSize: props.btntextsize,
+  backgroundColor:
+    props.btnBg || props.btnHoverBg
+      ? hover.value
+        ? resolveColor(props.btnHoverBg)
+        : resolveColor(props.btnBg)
+      : undefined,
+  color: props.btnText ? resolveColor(props.btnText) : undefined,
+}))
 
 // Default class if nothing else provided
 const defaultClass = 'btn'

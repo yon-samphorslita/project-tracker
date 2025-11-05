@@ -1,6 +1,6 @@
 <template>
   <ProjectLayout>
-    <div v-if="project" class="container flex flex-col gap-6 pt-6">
+    <div v-if="project" class="container flex flex-col gap-6">
       <!-- Header -->
       <div class="flex justify-between items-center">
         <div class="flex items-center gap-3">
@@ -72,10 +72,11 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import EditForm from '@/components/editForm.vue'
-import Edit from '@/assets/icons/edit.svg'
+
 // Components
 import ProjectLayout from './pageLayout.vue'
+import EditForm from '@/components/editForm.vue'
+import Edit from '@/assets/icons/edit.svg'
 import Status from '@/components/status.vue'
 import Form from '@/components/form.vue'
 import OverviewCard from '@/components/overviewCard.vue'
@@ -98,6 +99,7 @@ const subtaskStore = useSubtaskStore()
 const authStore = useAuthStore()
 const teamStore = useTeamStore()
 
+// State
 const project = computed(() => projectStore.current)
 const tasksWithSubtasks = ref([])
 const TeamMembers = ref([])
@@ -106,7 +108,7 @@ const showEditProjectForm = ref(false)
 const showTaskForm = ref(false)
 const userRole = computed(() => authStore.user?.role || 'user')
 
-//form fields
+// Form Fields
 const projectFields = computed(() => [
   { type: 'text', label: 'Project Title', model: 'title', placeholder: 'Enter project title' },
   {
@@ -165,7 +167,7 @@ const taskFields = computed(() => [
   },
 ])
 
-//table columns
+// Table Columns
 const tableColumns = ref([
   { key: 'title', label: 'Task Name' },
   { key: 'description', label: 'Description' },
@@ -177,7 +179,7 @@ const tableColumns = ref([
   { key: 'actions', label: 'Actions', slot: 'actions' },
 ])
 
-//stats for admin
+// Admin Stats
 const totalTasks = computed(() => tasksWithSubtasks.value.length)
 const completedTasks = computed(
   () => tasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === 'completed').length,
@@ -202,11 +204,11 @@ const statusData = computed(() => {
   })
   return Object.entries(summary).map(([type, value]) => ({ type, value }))
 })
-const projectStatus = ref(project.value?.status || '')
-watch(project, (newVal) => {
-  projectStatus.value = newVal?.status || ''
-})
 
+const projectStatus = ref(project.value?.status || '')
+watch(project, (newVal) => (projectStatus.value = newVal?.status || ''))
+
+// Methods
 async function onProjectUpdated() {
   const updated = await projectStore.fetchProjectById(project.value.id)
   projectStore.setCurrent(updated)
@@ -214,7 +216,6 @@ async function onProjectUpdated() {
   showEditProjectForm.value = false
 }
 
-//fetch tasks
 async function fetchProjectTasks(projectId) {
   tasksWithSubtasks.value = []
   await taskStore.fetchTasksByProject(projectId)
@@ -234,7 +235,6 @@ async function fetchProjectTasks(projectId) {
         : subtasksData
           ? Object.values(subtasksData)
           : []
-
       return {
         id: task.id,
         title: task.t_name,
@@ -258,7 +258,6 @@ async function fetchProjectTasks(projectId) {
   )
 }
 
-//fetch team members
 async function fetchProjectTeamMembers(teamId) {
   const team = teamStore.teams.find((t) => t.id === Number(teamId))
   if (!team) return
@@ -295,7 +294,6 @@ async function handleTaskCreated(taskData) {
     projectId: project.value.id,
     userId: taskData.user?.id || null,
   }
-
   await taskStore.createTask(payload)
   await fetchProjectTasks(project.value.id)
   showTaskForm.value = false

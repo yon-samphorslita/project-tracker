@@ -3,12 +3,7 @@
     <div class="flex flex-col gap-6">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Team Details</h1>
-        <button
-          @click="goBack"
-          class="bg-blue-500 text-white-text px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Back to Teams
-        </button>
+        <Button @click="goBack" label="Back to Teams" />
       </div>
 
       <div class="border rounded-lg p-6 bg-main-bg shadow-sm">
@@ -202,6 +197,7 @@ import axios from 'axios'
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
 import { useTeamStore } from '@/stores/team'
+import Button from '@/components/button.vue'
 
 // initialize store
 const route = useRoute()
@@ -275,7 +271,7 @@ onMounted(async () => {
 
     taskStore.tasks = []
     await Promise.all(
-      team.value.projects.map((project:any) => taskStore.fetchTasksByProject(project.id))
+      team.value.projects.map((project: any) => taskStore.fetchTasksByProject(project.id)),
     )
 
     isReady.value = true
