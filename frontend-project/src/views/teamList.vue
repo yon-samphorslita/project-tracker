@@ -2,7 +2,7 @@
   <TeamLayout>
     <div class="flex flex-col">
       <!-- Header (New team button , search, filter + Table header) -->
-      <div class="flex flex-col gap-4 sticky top-[91px] pt-5 bg-main-bg">
+      <div class="flex flex-col gap-4 sticky top-[91px] bg-main-bg">
         <div class="flex justify-between items-center">
           <Button
             label="+ New Team"

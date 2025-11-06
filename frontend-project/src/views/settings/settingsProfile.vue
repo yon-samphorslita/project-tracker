@@ -1,7 +1,12 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold mb-6">Account Settings</h1>
-
+    <div class="flex gap-2">
+      <Back
+        class="mr-4 w-8 h-8 text-[var(--graysvg-text)] opacity-80 hover:opacity-100 cursor-pointer"
+        @click="goBack"
+      />
+      <h1 class="text-2xl font-bold mb-6">Account Settings</h1>
+    </div>
     <div class="mx-auto bg-main-bg shadow-md rounded-2xl p-8">
       <!-- Profile Section -->
       <div class="flex items-center justify-between gap-6 mb-8">
@@ -108,7 +113,10 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import Button from '@/components/button.vue'
 import Camera from '@/assets/icons/camera.svg'
+import Back from '@/assets/icons/back.svg'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const fallbackImg = '/assets/profile.jpg'
 
@@ -120,6 +128,10 @@ const form = ref({
 })
 
 const isEditing = ref(false)
+
+const goBack = () => {
+  router.push('/settings')
+}
 
 // Validation errors
 const errors = ref({

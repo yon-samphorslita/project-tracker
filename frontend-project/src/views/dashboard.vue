@@ -1,7 +1,7 @@
 <template>
   <DashboardLayout>
     <div class="flex flex-col">
-      <div class="py-6 flex gap-6">
+      <div class="flex gap-6">
         <!-- left side: project overview, charts, recent projects -->
         <div class="w-2/3 flex flex-col items-start gap-6">
           <div class="flex flex-col gap-4 mb-2">

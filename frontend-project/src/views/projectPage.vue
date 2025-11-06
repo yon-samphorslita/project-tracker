@@ -4,8 +4,16 @@
       <!-- Header -->
       <div class="flex justify-between items-center">
         <div class="flex items-center gap-3">
+          <Back
+            class="mr-4 w-8 h-8 text-[var(--graysvg-text)] opacity-80 hover:opacity-100 cursor-pointer"
+            @click="goBack"
+          />
           <h1 class="text-2xl font-bold">{{ project.p_name }}</h1>
-          <Edit class="icon-theme w-7 h-7" @click="openEditProjectForm(project)" />
+          <Edit
+            v-if="userRole === 'admin' || userRole === 'project_manager'"
+            class="icon-theme w-7 h-7"
+            @click="openEditProjectForm(project)"
+          />
           <EditForm
             v-model="showEditProjectForm"
             title="Edit Project"
@@ -18,6 +26,7 @@
         </div>
 
         <Button
+          v-if="userRole === 'admin' || userRole === 'project_manager'"
           label="+ New Task"
           btn-color="var(--blue-bg)"
           btntext="var(--black-text)"
@@ -71,12 +80,13 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 // Components
 import ProjectLayout from './pageLayout.vue'
 import EditForm from '@/components/editForm.vue'
 import Edit from '@/assets/icons/edit.svg'
+import Back from '@/assets/icons/back.svg'
 import Status from '@/components/status.vue'
 import Form from '@/components/form.vue'
 import OverviewCard from '@/components/overviewCard.vue'
@@ -93,6 +103,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useTeamStore } from '@/stores/team'
 
 const route = useRoute()
+const router = useRouter()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const subtaskStore = useSubtaskStore()
@@ -107,6 +118,10 @@ const editProjectData = ref(null)
 const showEditProjectForm = ref(false)
 const showTaskForm = ref(false)
 const userRole = computed(() => authStore.user?.role || 'user')
+
+const goBack = () => {
+  router.push({ name: 'Projects' })
+}
 
 // Form Fields
 const projectFields = computed(() => [
@@ -168,16 +183,24 @@ const taskFields = computed(() => [
 ])
 
 // Table Columns
-const tableColumns = ref([
-  { key: 'title', label: 'Task Name' },
-  { key: 'description', label: 'Description' },
-  { key: 'priority', label: 'Priority' },
-  { key: 'status', label: 'Status' },
-  { key: 'start_date', label: 'Start Date' },
-  { key: 'due_date', label: 'Due Date' },
-  { key: 'icon', label: 'Assignee' },
-  { key: 'actions', label: 'Actions', slot: 'actions' },
-])
+const tableColumns = computed(() => {
+  const baseColumns = [
+    { key: 'title', label: 'Task Name' },
+    { key: 'description', label: 'Description' },
+    { key: 'priority', label: 'Priority' },
+    { key: 'status', label: 'Status' },
+    { key: 'start_date', label: 'Start Date' },
+    { key: 'due_date', label: 'Due Date' },
+    { key: 'icon', label: 'Assignee' },
+  ]
+
+  // Only admin or project_manager see actions column
+  if (userRole.value === 'admin' || userRole.value === 'project_manager') {
+    baseColumns.push({ key: 'actions', label: 'Actions', slot: 'actions' })
+  }
+
+  return baseColumns
+})
 
 // Admin Stats
 const totalTasks = computed(() => tasksWithSubtasks.value.length)

@@ -11,6 +11,7 @@ import ForgotPassword from '@/views/authentication/forgotPassword.vue'
 import SettingsLayout from '@/views/settings/settingsLayout.vue'
 import CalendarPage from '@/views/calendarPage.vue'
 import UserPage from '@/views/userPage.vue'
+import UserDetail from '@/views/userDetail.vue'
 import { useAuthStore } from '@/stores/auth'
 import TeamList from '@/views/teamList.vue'
 import TeamEditPage from '@/views/teamEditPage.vue'
@@ -27,7 +28,12 @@ const routes = [
   { path: '/login', component: AuthPage, name: 'Login' },
   { path: '/change-password', component: ChangePassword, meta: { requiresAuth: true } },
   { path: '/forgot-password', component: ForgotPassword },
-  { path: '/projects', component: ProjectList, meta: { requiresAuth: true, title: 'Projects' } },
+  {
+    path: '/projects',
+    component: ProjectList,
+    meta: { requiresAuth: true, title: 'Projects' },
+    name: 'Projects',
+  },
   {
     path: '/project/:id',
     component: ProjectPage,
@@ -48,7 +54,18 @@ const routes = [
   },
   { path: '/help', component: GetHelp, meta: { requiresAuth: true, title: 'Get Help' } },
   { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true, title: 'Calendar' } },
-  { path: '/user', component: UserPage, meta: { requiresAuth: true, title: 'User' } },
+  {
+    path: '/users',
+    component: UserPage,
+    meta: { requiresAuth: true, title: 'Users' },
+    name: 'Users',
+  },
+  {
+    path: '/user/:id',
+    name: 'UserDetail',
+    component: UserDetail,
+    meta: { requiresAdmin: true, title: 'Users' },
+  },
   {
     path: '/user/profile/:id',
     component: UserProfile,

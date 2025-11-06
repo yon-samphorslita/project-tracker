@@ -44,7 +44,10 @@
           :format-date="formatDate"
           @statusUpdated="handleStatusUpdate"
         >
-          <template #actions="{ row }">
+          <template
+            v-if="userRole === 'admin' || userRole === 'project_manager'"
+            #actions="{ row }"
+          >
             <div class="flex gap-2">
               <EditIcon class="w-6 h-6 cursor-pointer icon-theme" @click="editTask(row)" />
               <DeleteIcon

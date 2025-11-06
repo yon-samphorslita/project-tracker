@@ -1,7 +1,7 @@
 <template>
   <ProjectLayout>
     <div class="container flex flex-col gap-4">
-      <div class="text-2xl font-semibold">All Projects</div>
+      <!-- <div class="text-2xl font-semibold">All Projects</div> -->
 
       <!-- Admin Dashboard -->
       <div v-if="userRole === 'admin'" class="flex flex-col gap-4">
@@ -62,6 +62,7 @@
       <div v-else class="flex flex-col gap-4">
         <div class="flex justify-between items-center w-full gap-4">
           <Button
+            v-if="userRole === 'admin' || userRole === 'project_manager'"
             label="+ New Project"
             btn-color="var(--blue-bg)"
             btntext="var(--black-text)"
@@ -74,7 +75,7 @@
             endpoint="projects"
             @submitted="onProjectCreated"
           />
-          <div class="flex gap-4 items-center">
+          <div class="flex gap-4 items-center w-full justify-between">
             <Search @update="searchQuery = $event" />
             <Filter title="Sort by" :options="sortOptions" @select="applySort" class="min-w-fit" />
           </div>
@@ -125,14 +126,12 @@ import Delete from '@/assets/icons/delete.svg'
 // Stores
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
-import { useSubtaskStore } from '@/stores/subtask'
 import { useTeamStore } from '@/stores/team'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
-const subtaskStore = useSubtaskStore()
 const teamStore = useTeamStore()
 const router = useRouter()
 
@@ -204,14 +203,10 @@ const formatDate = (dateStr) =>
       })
 const priorityValue = (priority) => ({ high: 3, medium: 2, low: 1 })[priority?.toLowerCase()] || 0
 
-const getTotalTasks = (project) =>
-  project.tasks?.reduce((total, task) => total + 1 + (task.subtasks?.length || 0), 0) || 0
+const getTotalTasks = (project) => project.tasks?.length || 0
+
 const getCompletedTasks = (project) =>
-  project.tasks?.reduce((completed, task) => {
-    let count = task.t_status?.toLowerCase() === 'completed' ? 1 : 0
-    count += task.subtasks?.filter((s) => s.status?.toLowerCase() === 'completed').length || 0
-    return completed + count
-  }, 0) || 0
+  project.tasks?.filter((t) => t.t_status?.toLowerCase() === 'completed').length || 0
 
 // Computed: Filtered & Sorted Projects
 const filteredSortedProjects = computed(() => {
@@ -258,18 +253,12 @@ onMounted(async () => {
   await projectStore.fetchProjects()
 
   taskStore.tasks = []
-  subtaskStore.subtasks = []
 
+  // Fetch tasks
   await Promise.all(
     projectStore.projects.map(async (p) => {
       const tasks = (await taskStore.fetchTasksByProject(p.id)) || []
       taskStore.tasks.push(...tasks)
-      await Promise.all(
-        tasks.map(async (t) => {
-          const subtasks = (await subtaskStore.fetchByTask(t.id)) || []
-          subtaskStore.subtasks.push(...subtasks)
-        }),
-      )
     }),
   )
 

@@ -44,7 +44,7 @@ const mainItems = ref([
   { name: 'calendars', label: 'Calendar', route: '/calendar', icon: CalendarIcon },
 ])
 
-const adminMenu = { name: 'users', label: 'User Management', route: '/user', icon: UserIcon }
+const adminMenu = { name: 'users', label: 'User Management', route: '/users', icon: UserIcon }
 
 const displayedMainItems = computed(() => {
   return user.value?.role === 'admin' ? [...mainItems.value, adminMenu] : mainItems.value

@@ -65,11 +65,11 @@ import {
 } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
-
+import { useAuthStore } from '@/stores/auth'
 // Stores
 const taskStore = useTaskStore()
 const eventStore = useEventStore()
-
+const authStore = useAuthStore()
 // Weekday names
 const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -81,7 +81,7 @@ const props = defineProps({
 
 // Fetch both events and tasks on mount
 onMounted(async () => {
-  await Promise.all([eventStore.fetchEvents(), taskStore.fetchTasks()])
+  await Promise.all([eventStore.fetchEvents(authStore.user.role), taskStore.fetchTasks()])
 })
 
 // Generate calendar days

@@ -2,7 +2,7 @@
   <TaskLayout>
     <div class="flex flex-col gap-4">
       <!-- Header  -->
-      <div class="flex flex-col gap-4 pt-5 bg-main-bg">
+      <div class="flex flex-col gap-4 bg-main-bg">
         <!-- Filter Project  -->
         <div class="flex justify-between items-center">
           <div class="relative inline-block text-left">

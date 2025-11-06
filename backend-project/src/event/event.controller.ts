@@ -15,6 +15,9 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { EventGuard } from './event.guard';
+import { Role } from 'src/enums/role.enum';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('events')
@@ -23,8 +26,13 @@ export class EventController {
 
   @Get()
   findAll(@Request() req): Promise<Event[]> {
-    if (req.user.role === 'admin') return this.eventService.findAll();
-    return this.eventService.findAll(req.user.id);
+    return this.eventService.findAll(req.user);
+  }
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('summary')
+  async getAdminSummary() {
+    return this.eventService.getAdminSummary();
   }
 
   @Get(':id')
@@ -54,6 +62,6 @@ export class EventController {
   @Delete(':id')
   @UseGuards(EventGuard)
   delete(@Param('id') id: string, @Request() req): Promise<void> {
-    return this.eventService.delete(+id, req.user.id);
+    return this.eventService.delete(+id, req.user);
   }
 }

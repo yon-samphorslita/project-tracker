@@ -1,65 +1,96 @@
 <template>
   <CalendarLayout>
-    <div class="flex gap-8 w-full">
-      <!-- Left Sidebar -->
-      <div class="container w-fit p-4 flex flex-col gap-4 border rounded-md">
-        <!-- View Option -->
-        <Option v-model="viewType" />
+    <div class="flex flex-col gap-6 w-full">
+      <!-- Admin Dashboard (cards + charts) -->
+      <div v-if="userRole === 'admin'">
+        <!-- Top Overview Section -->
+        <div class="grid grid-cols-2 gap-12">
+          <div class="grid grid-cols-2 gap-8">
+            <OverviewCard title="Total Projects" :value="projectStore.projects.length" />
+            <OverviewCard title="Total Events" :value="eventStore.events.length" />
+            <OverviewCard title="Active Teams" :value="teamStore.teams.length" />
+            <OverviewCard title="Upcoming Events" :value="upcomingEventsCount" />
+          </div>
 
-        <!-- Mini Calendar -->
-        <Calendar />
-
-        <!-- Add Schedule -->
-        <div class="flex items-center">
-          <div>Add Schedule</div>
-          <button class="ml-auto btn text-main-text px-2 py-1 rounded transition" @click="openForm">
-            <Plus />
-          </button>
-
-          <Form
-            v-model:modelValue="showForm"
-            formTitle="Schedule Event"
-            :fields="eventFields"
-            :initialData="editEventData"
-            endpoint="events"
-            @submitted="handleSubmit"
-          />
+          <!-- Pie Chart -->
+          <div class="bg-white-bg border rounded-lg p-4">
+            <h2 class="text-xl font-semibold mb-2">Event Distribution by Project</h2>
+            <PieChart :data="pieChartData" :height="300" />
+          </div>
         </div>
 
-        <!-- Categories / Projects -->
-        <div>
-          <div class="font-semibold mb-2">Categories</div>
-          <ul class="flex flex-col gap-2 h-[200px] overflow-y-scroll">
-            <li
-              v-for="project in projectStore.projects"
-              :key="project.id"
-              class="flex items-center gap-2"
-            >
-              <!-- Colored Circle -->
-              <div
-                class="w-2 h-2 rounded-full"
-                :style="{ backgroundColor: getProjectColor(project.id) }"
-              ></div>
+        <!-- Charts Section -->
+        <div class="grid grid-cols-2 gap-4 pt-6">
+          <div class="bg-white-bg border rounded-lg p-4">
+            <h2 class="text-xl font-semibold mb-2">Event Count by User</h2>
+            <BarChart :eventData="adminBarChartData" class="h-[90%]" />
+          </div>
 
-              <!-- Project Name -->
-              <div class="px-2 py-1 cursor-pointer" @click="selectProject(project)">
-                {{ project.p_name }}
-              </div>
-            </li>
-          </ul>
+          <div class="bg-white-bg border rounded-lg p-4">
+            <h2 class="text-xl font-semibold mb-2">Team Workload Overview</h2>
+            <BarChart class="h-[90%]" />
+          </div>
         </div>
       </div>
 
-      <!-- Main Calendar View -->
-      <div class="flex-1">
-        <div class="flex items-center mb-4">
-          <h2 class="text-2xl font-semibold mr-4">{{ currentMonthYear }}</h2>
+      <!-- Calendar & Sidebar (all users) -->
+      <div class="flex gap-8 w-full">
+        <!-- Left Sidebar -->
+        <div class="container w-fit p-4 flex flex-col gap-4 border rounded-md">
+          <Option v-model="viewType" />
+          <Calendar />
+
+          <!-- Add Schedule (all users) -->
+          <div class="flex items-center">
+            <div>Add Schedule</div>
+            <button
+              class="ml-auto btn text-main-text px-2 py-1 rounded transition"
+              @click="openForm"
+            >
+              <Plus />
+            </button>
+
+            <Form
+              v-model:modelValue="showForm"
+              formTitle="Schedule Event"
+              :fields="eventFields"
+              :initialData="editEventData"
+              endpoint="events"
+              @submitted="handleSubmit"
+            />
+          </div>
+
+          <!-- Categories / Projects -->
+          <div>
+            <div class="font-semibold mb-2">Categories</div>
+            <ul class="flex flex-col gap-2 h-[200px] overflow-y-scroll">
+              <li
+                v-for="project in projectStore.projects"
+                :key="project.id"
+                class="flex items-center gap-2"
+              >
+                <div
+                  class="w-2 h-2 rounded-full"
+                  :style="{ backgroundColor: getProjectColor(project.id) }"
+                ></div>
+                <div class="px-2 py-1 cursor-pointer" @click="selectProject(project)">
+                  {{ project.p_name }}
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <!-- Conditional Calendar Views -->
-        <DayCalendar v-if="viewType === 'Day'" />
-        <WeekCalendar v-else-if="viewType === 'Week'" />
-        <MonthCalendar v-else-if="viewType === 'Month'" />
+        <!-- Main Calendar View -->
+        <div class="flex-1">
+          <div class="flex items-center mb-4">
+            <h2 class="text-2xl font-semibold mr-4">{{ currentMonthYear }}</h2>
+          </div>
+
+          <DayCalendar v-if="viewType === 'Day'" />
+          <WeekCalendar v-else-if="viewType === 'Week'" />
+          <MonthCalendar v-else-if="viewType === 'Month'" />
+        </div>
       </div>
     </div>
   </CalendarLayout>
@@ -70,6 +101,9 @@ import { ref, computed, onMounted } from 'vue'
 import { format } from 'date-fns'
 import { useEventStore } from '@/stores/event'
 import { useProjectStore } from '@/stores/project'
+import { useTeamStore } from '@/stores/team'
+import { useAuthStore } from '@/stores/auth'
+import { useTaskStore } from '@/stores/task'
 
 import Form from '@/components/form.vue'
 import CalendarLayout from './pageLayout.vue'
@@ -79,29 +113,41 @@ import DayCalendar from '@/components/dayCalendar.vue'
 import Option from '@/components/option.vue'
 import Calendar from '@/components/calendar.vue'
 import Plus from '@/assets/icons/add.svg'
-
-// Refs
-const showForm = ref(false)
-const editEventData = ref(null)
-const viewType = ref('Day')
-const currentDate = ref(new Date())
-
-// Computed
-const currentMonthYear = computed(() => format(currentDate.value, 'MMMM yyyy'))
+import OverviewCard from '@/components/overviewCard.vue'
+import PieChart from '@/components/pieChart.vue'
+import BarChart from '@/components/barChart.vue'
 
 // Stores
-const projectStore = useProjectStore()
+const authStore = useAuthStore()
 const eventStore = useEventStore()
+const projectStore = useProjectStore()
+const teamStore = useTeamStore()
+const taskStore = useTaskStore()
+// Role restriction
+const userRole = computed(() => authStore.user?.role || 'user')
 
-// Fetch projects on mount
-onMounted(() => projectStore.fetchProjects())
+// Calendar state
+const showForm = ref(false)
+const editEventData = ref(null)
+const viewType = ref('Month')
+const currentDate = ref(new Date())
+const currentMonthYear = computed(() => format(currentDate.value, 'MMMM yyyy'))
 
-// Project selection
-function selectProject(project) {
-  projectStore.setCurrent(project)
-}
+// Fetch initial data
+onMounted(async () => {
+  await Promise.all([
+    projectStore.fetchProjects(),
+    eventStore.fetchEvents(),
+    teamStore.fetchTeams(),
+    taskStore.fetchTasks(),
+  ])
 
-// Form fields
+  if (userRole.value === 'admin') {
+    await eventStore.fetchAdminEventSummary()
+  }
+})
+
+// Event form
 const eventFields = computed(() => [
   { model: 'title', label: 'Title', type: 'text', required: true },
   { model: 'startDate', label: 'Start Date & Time', type: 'datetime-local', required: true },
@@ -117,13 +163,6 @@ const eventFields = computed(() => [
   { model: 'description', label: 'Description', type: 'textarea' },
 ])
 
-// Colors
-const colors = ['#FFE578', '#FFD5DB', '#D9CBFB']
-function getProjectColor(projectId) {
-  return colors[projectId % colors.length]
-}
-
-// Form functions
 function openForm() {
   editEventData.value = null
   showForm.value = true
@@ -133,6 +172,8 @@ async function handleSubmit(formData) {
   try {
     if (editEventData.value?.id) {
       await eventStore.updateEvent({ id: editEventData.value.id, ...formData })
+    } else {
+      await eventStore.createEvent(formData)
     }
     await eventStore.fetchEvents()
   } catch (err) {
@@ -141,5 +182,34 @@ async function handleSubmit(formData) {
     showForm.value = false
     editEventData.value = null
   }
+}
+
+// Chart data
+const pieChartData = computed(() => {
+  const counts = {}
+  eventStore.events.forEach((event) => {
+    const projectName = event.project?.p_name || 'Unassigned'
+    counts[projectName] = (counts[projectName] || 0) + 1
+  })
+  return Object.entries(counts).map(([type, value]) => ({ type, value }))
+})
+const adminBarChartData = computed(() => {
+  if (!eventStore.adminEventSummary.length) return { labels: [], data: [] }
+
+  const labels = eventStore.adminEventSummary.map((e) => e.userName)
+  const data = eventStore.adminEventSummary.map((e) => e.eventCount)
+
+  return { labels, data }
+})
+
+const upcomingEventsCount = computed(() => {
+  const now = new Date()
+  return eventStore.events.filter((event) => new Date(event.start_date) >= now).length
+})
+
+// Project color helper
+const colors = ['#FFE578', '#FFD5DB', '#D9CBFB']
+function getProjectColor(projectId) {
+  return colors[projectId % colors.length]
 }
 </script>

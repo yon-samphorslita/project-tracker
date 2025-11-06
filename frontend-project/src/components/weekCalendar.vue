@@ -77,8 +77,9 @@
           <div
             v-for="item in getItemsForDay(day.date)"
             :key="item.id"
-            class="absolute left-1 right-1 bg-main-bg rounded shadow p-1 text-xs border border-gray-200 overflow-hidden"
+            class="absolute left-1 right-1 bg-main-bg rounded shadow p-1 text-xs border border-gray-200 overflow-hidden cursor-pointer"
             :style="getItemStyle(item)"
+            @click="openEventPopup(item, $event)"
           >
             <span
               class="block w-full h-[3px] rounded-sm mb-1"
@@ -93,13 +94,25 @@
       </div>
     </div>
   </div>
+
+  <!-- Event Popup -->
+  <teleport to="body">
+    <EventPopup
+      :visible="showEventPopup"
+      :event="selectedEvent"
+      :item-top="popupItemTop"
+      :item-left="popupItemLeft"
+      @close="showEventPopup = false"
+    />
+  </teleport>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
-import { startOfMonth, endOfMonth, addDays, format, differenceInMinutes } from 'date-fns'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { format, differenceInMinutes, startOfMonth, endOfMonth, addDays } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
+import EventPopup from './eventPopup.vue'
 
 const props = defineProps({
   monthStartDate: { type: Date, default: () => new Date() },
@@ -126,6 +139,10 @@ const eventStore = useEventStore()
 
 const outerScroll = ref(null)
 const currentTime = ref(new Date())
+const selectedEvent = ref(null)
+const showEventPopup = ref(false)
+const popupItemTop = ref(0)
+const popupItemLeft = ref(0)
 let timer
 
 onMounted(async () => {
@@ -231,5 +248,24 @@ function getColor(item) {
     default:
       return '#000000'
   }
+}
+
+/* ---------- Popup Handling ---------- */
+function openEventPopup(item, e) {
+  selectedEvent.value = { ...item }
+  const rect = e.currentTarget.getBoundingClientRect()
+  const popupWidth = 320,
+    popupHeight = 400
+  let left = rect.left + rect.width / 2
+  let top = rect.top + rect.height / 2
+
+  if (left + popupWidth / 2 > window.innerWidth) left = window.innerWidth - popupWidth / 2 - 10
+  if (left - popupWidth / 2 < 0) left = popupWidth / 2 + 10
+  if (top + popupHeight / 2 > window.innerHeight) top = window.innerHeight - popupHeight / 2 - 10
+  if (top - popupHeight / 2 < 0) top = popupHeight / 2 + 10
+
+  popupItemLeft.value = left
+  popupItemTop.value = top
+  showEventPopup.value = true
 }
 </script>

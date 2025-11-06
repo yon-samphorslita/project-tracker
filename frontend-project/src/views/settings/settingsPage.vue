@@ -3,7 +3,7 @@
     <!-- Settings Options -->
     <div class="grid grid-cols-1 gap-6">
       <!-- Notifications -->
-      <div class="bg-main-bg shadow-md rounded-2xl p-6 flex flex-col gap-4 hover:brightness-90">
+      <div class="bg-main-bg shadow-md rounded-2xl p-6 flex flex-col gap-4 hover:scale-[1.02]">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="font-semibold text-lg">Notifications</h2>

@@ -37,6 +37,15 @@ export class UserService {
   async findOne(id: number, includePassword = false): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
+      relations: [
+        'team',
+        'pmTeams',
+        'secondaryTeams',
+        'projects',
+        'tasks',
+        'activities',
+        'notifications',
+      ],
       select: includePassword
         ? [
             'id',

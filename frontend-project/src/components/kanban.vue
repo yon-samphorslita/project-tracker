@@ -36,7 +36,10 @@
           </div>
           <div class="flex justify-between gap-1 md:gap-2">
             <button @click="$emit('editTask', kanban)" title="Edit">
-              <Edit class="w-5 h-5 icon-theme" />
+              <Edit
+                v-if="userRole === 'admin' || userRole === 'project_manager'"
+                class="w-5 h-5 icon-theme"
+              />
             </button>
             <More class="w-5 h-5 icon-theme" />
           </div>

@@ -21,7 +21,7 @@
         <DescriptionLabel label="Start Date" :description="formatDate(startdate)" />
         <DescriptionLabel label="End Date" :description="formatDate(enddate)" />
         <DescriptionLabel label="Progress">
-          <ProgressBar :completed="completedTasks" :total="totalTasks" />
+          <ProgressBar :completed="getCompletedTasks(project)" :total="getTotalTasks(project)" />
         </DescriptionLabel>
         <DescriptionLabel label="Members">
           <div class="flex -space-x-2">
@@ -87,8 +87,9 @@ watch(
   () => props.project,
   async (newProject) => {
     if (!newProject?.id) return
-    taskStore.tasks = [] // reset previous tasks
-    await taskStore.fetchTasksByProject(newProject.id)
+    taskStore.tasks = [] // reset
+    const projectTasks = await taskStore.fetchTasksByProject(newProject.id)
+    taskStore.tasks.push(...projectTasks)
   },
   { immediate: true },
 )
@@ -100,11 +101,11 @@ const allMembers = computed(() => {
   return Array.from(new Map(combined.map((m) => [m.id, m])).values()) // remove duplicates
 })
 
-const projectTasks = computed(() => tasks.value.filter((t) => t.project?.id === props.project?.id))
-const totalTasks = computed(() => projectTasks.value.length)
-const completedTasks = computed(
-  () => projectTasks.value.filter((t) => t.t_status?.toLowerCase() === 'completed').length,
-)
+const getTotalTasks = (project) => project.tasks?.length || 0
+
+// Only consider task's own status
+const getCompletedTasks = (project) =>
+  project.tasks?.filter((t) => t.t_status?.toLowerCase() === 'completed').length || 0
 
 function goToProjectPage() {
   if (props.project?.id) router.push(`/project/${props.project.id}`)

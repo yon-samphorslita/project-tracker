@@ -1,10 +1,17 @@
 <template>
-  <div v-if="isAdmin" class="relative">
-    <h1 class="text-2xl font-bold">Activity Logs</h1>
+  <div v-if="isAdmin" class="relative flex gap-4 flex-col">
+    <div class="flex gap-2">
+      <Back
+        class="mr-4 w-8 h-8 text-[var(--graysvg-text)] opacity-80 hover:opacity-100 cursor-pointer"
+        @click="goBack"
+      />
+      <h1 class="text-2xl font-bold">Activity Logs</h1>
+    </div>
 
-    <div class="flex items-center py-4 justify-start gap-4">
-      <Search v-model:query="searchQuery" />
-
+    <div class="flex items-center gap-4">
+      <div class="w-full">
+        <Search v-model:query="searchQuery" />
+      </div>
       <Filter
         class="min-w-fit"
         title="Sort / Filter"
@@ -15,7 +22,7 @@
       <Button @click="exportCSV" class="btn text-nowrap" label="Export CSV" />
     </div>
 
-    <div class="overflow-x-auto bg-main-bg shadow rounded-2xl p-8">
+    <div class="overflow-x-auto bg-main-bg shadow-lg rounded-2xl p-8">
       <GenericTable :data="tableData" :columns="columns" class="h-[500px]" />
     </div>
   </div>
@@ -33,13 +40,17 @@ import GenericTable from '@/components/table.vue'
 import Search from '@/components/search.vue'
 import Filter from '@/components/filter.vue'
 import Button from '@/components/button.vue'
-
+import Back from '@/assets/icons/back.svg'
 const auth = useAuthStore()
 const router = useRouter()
 
 const logs = ref([])
 const searchQuery = ref('')
 const isAdmin = computed(() => auth.user?.role === 'admin')
+
+const goBack = () => {
+  router.push('/settings')
+}
 
 // Table columns
 const columns = computed(() => [

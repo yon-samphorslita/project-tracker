@@ -62,9 +62,9 @@ export class EventService {
   async update(
     id: number,
     updateEventDto: UpdateEventDto,
-    user?: User,
+    user: User,
   ): Promise<Event> {
-    const event = await this.findOne(id, user?.id);
+    const event = await this.findOne(id, user.id);
     const oldEventData = { ...event };
 
     Object.assign(event, updateEventDto);
@@ -74,17 +74,17 @@ export class EventService {
       const changes: string[] = [];
       if (oldEventData.e_title !== updatedEvent.e_title)
         changes.push(
-          `Title: "${oldEventData.e_title}" → "${updatedEvent.e_title}"`,
+          `Title: "${oldEventData.e_title}" to "${updatedEvent.e_title}"`,
         );
       if (oldEventData.e_description !== updatedEvent.e_description)
         changes.push('Description changed');
       if (oldEventData.start_date !== updatedEvent.start_date)
         changes.push(
-          `Start: ${this.formatDate(oldEventData.start_date)} → ${this.formatDate(updatedEvent.start_date)}`,
+          `Start: ${this.formatDate(oldEventData.start_date)} to ${this.formatDate(updatedEvent.start_date)}`,
         );
       if (oldEventData.end_date !== updatedEvent.end_date)
         changes.push(
-          `End: ${this.formatDate(oldEventData.end_date)} → ${this.formatDate(updatedEvent.end_date)}`,
+          `End: ${this.formatDate(oldEventData.end_date)} to ${this.formatDate(updatedEvent.end_date)}`,
         );
 
       const changesStr =
@@ -98,42 +98,59 @@ export class EventService {
     return updatedEvent;
   }
 
-  async delete(id: number, userId?: number): Promise<void> {
-    const event = await this.findOne(id, userId);
+  async delete(id: number, user: User): Promise<void> {
+    const event = await this.findOne(id, user.id);
     await this.eventRepository.delete(event.id);
 
-    if (userId) {
+    if (user.id) {
       await this.activityService.logAction(
-        userId,
+        user.id,
         `Deleted event "${event.e_title}" from project "${event.project?.p_name}".`,
       );
     }
   }
 
-  async findAll(userId?: number, projectId?: number): Promise<Event[]> {
-    const where: any = {};
-    if (userId) where.user = { id: userId };
-    if (projectId) where.project = { id: projectId };
-
-    return this.eventRepository.find({ where, relations: ['user', 'project'] });
+  async findAll(user: User): Promise<Event[]> {
+    return this.eventRepository.find({
+      where: { user: { id: user.id } }, // restrict to their own events
+      relations: ['user', 'project'],
+    });
   }
 
-  async findOne(
-    id: number,
-    userId?: number,
-    projectId?: number,
-  ): Promise<Event> {
+  async findOne(id: number, userId: number): Promise<Event> {
     const event = await this.eventRepository.findOne({
       where: { id },
       relations: ['user', 'project'],
     });
 
     if (!event) throw new NotFoundException('Event not found');
-    if (userId && event.user?.id !== userId)
+
+    if (event.user?.id !== userId) {
       throw new ForbiddenException('You do not have access to this event');
-    if (projectId && event.project?.id !== projectId)
-      throw new ForbiddenException('Event does not belong to this project');
+    }
 
     return event;
+  }
+
+  async findAllForAdmin(): Promise<Event[]> {
+    return this.eventRepository.find({ relations: ['user', 'project'] });
+  }
+  async getAdminSummary() {
+    const events = await this.findAllForAdmin();
+
+    const summary: Record<string, number> = {};
+
+    events.forEach((event) => {
+      const userName = event.user
+        ? `${event.user.first_name} ${event.user.last_name}`
+        : 'Unknown';
+      if (!summary[userName]) summary[userName] = 0;
+      summary[userName]++;
+    });
+
+    return Object.entries(summary).map(([userName, eventCount]) => ({
+      userName,
+      eventCount,
+    }));
   }
 }

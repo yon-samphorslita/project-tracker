@@ -7,7 +7,7 @@
       </div>
 
       <div v-else class="flex flex-col gap-4">
-        <h1 class="text-2xl font-bold">User Management</h1>
+        <!-- <h1 class="text-2xl font-bold">User Management</h1> -->
 
         <!-- Overview & PieChart -->
         <div class="flex w-full justify-between gap-4">
@@ -53,6 +53,9 @@
         <Table v-if="isReady" :data="filteredUsers" :columns="tableColumns">
           <template #actions="{ row }">
             <div class="flex gap-2">
+              <router-link :to="`/user/${row.id}`">
+                <View class="icon-theme w-6 h-6" />
+              </router-link>
               <Edit class="icon-theme w-6 h-6" @click="editUser(row)" />
               <Delete class="icon-theme w-6 h-6" @click="deleteUser(row)" />
             </div>
@@ -79,6 +82,7 @@ import OverviewCard from '@/components/overviewCard.vue'
 import PieChart from '@/components/pieChart.vue'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
+import View from '@/assets/icons/view.svg'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -91,6 +95,8 @@ const showForm = ref(false)
 const editUserData = ref(null)
 const searchQuery = ref('')
 const sortOption = ref('role-all')
+const showViewModal = ref(false)
+const viewUserData = ref(null)
 
 // Computed
 const userRole = computed(() => authStore.user?.role || 'user')

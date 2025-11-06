@@ -1,9 +1,15 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <h1 class="text-2xl font-bold">Theme Settings</h1>
+  <div class="flex flex-col gap-4">
+    <div class="flex gap-2">
+      <Back
+        class="mr-4 w-8 h-8 text-[var(--graysvg-text)] opacity-80 hover:opacity-100 cursor-pointer"
+        @click="goBack"
+      />
+      <h1 class="text-2xl font-bold mb-6">Theme Settings</h1>
+    </div>
     <p class="text-sub-text">Choose your preferred theme for the app.</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
       <div
         v-for="option in themes"
         :key="option.value"
@@ -27,9 +33,16 @@
 <script setup>
 import { computed } from 'vue'
 import { useThemeStore } from '@/stores/theme'
+import { useRouter } from 'vue-router'
+import Back from '@/assets/icons/back.svg'
 
+const router = useRouter()
 const themeStore = useThemeStore()
 const theme = computed(() => themeStore.theme)
+
+const goBack = () => {
+  router.push('/settings')
+}
 
 const themes = [
   {

@@ -105,14 +105,14 @@ export class TeamService {
 
     // --- Name / Description ---
     if (dto.name && dto.name !== team.name) {
-      actions.push(`Changed name from "${team.name}" → "${dto.name}"`);
+      actions.push(`Changed name from "${team.name}" to "${dto.name}"`);
       await this.teamRepository.update(id, { name: dto.name });
       team.name = dto.name;
     }
 
     if (dto.description && dto.description !== team.description) {
       actions.push(
-        `Changed description from "${team.description}" → "${dto.description}"`,
+        `Changed description from "${team.description}" to "${dto.description}"`,
       );
       await this.teamRepository.update(id, { description: dto.description });
       team.description = dto.description;

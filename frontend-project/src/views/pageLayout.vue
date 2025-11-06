@@ -3,7 +3,7 @@
     <div class="flex flex-col ml-[250px]">
       <Header />
       <sidebar />
-      <div class="flex-grow pt-32 pb-10 px-20 min-h-[600px]">
+      <div class="flex-grow pt-36 pb-10 px-20 min-h-[600px]">
         <slot />
       </div>
     </div>
