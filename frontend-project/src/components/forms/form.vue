@@ -124,7 +124,7 @@
 import { ref, reactive, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
-import Button from './button.vue'
+import Button from '@/components/common-used/button.vue'
 const props = defineProps({
   fullScreen: { type: Boolean, default: true },
   formTitle: { type: String, required: true },

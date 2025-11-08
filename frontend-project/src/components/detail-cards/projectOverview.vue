@@ -39,7 +39,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import ProgressBar from './progressBar.vue'
+import ProgressBar from '@/components/progressBar.vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({

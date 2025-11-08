@@ -73,7 +73,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import Status from './status.vue'
+import Status from '@/components/status.vue'
 import More from '@/assets/icons/more.svg'
 import Edit from '@/assets/icons/edit.svg'
 const props = defineProps({

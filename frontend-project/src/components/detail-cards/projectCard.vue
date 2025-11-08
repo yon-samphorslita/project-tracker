@@ -64,9 +64,9 @@ import { useRouter } from 'vue-router'
 import { useTaskStore } from '@/stores/task'
 import { storeToRefs } from 'pinia'
 
-import Status from './status.vue'
-import DescriptionLabel from './descriptionLabel.vue'
-import ProgressBar from './progressBar.vue'
+import Status from '@/components/status.vue'
+import DescriptionLabel from '@/components/descriptionLabel.vue'
+import ProgressBar from '@/components/progressBar.vue'
 
 const props = defineProps({
   name: String,

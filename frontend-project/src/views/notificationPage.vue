@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { useNotificationStore } from '@/stores/notification'
-import PageLayout from './pageLayout.vue'
+import PageLayout from '@/views/pageLayout.vue'
 import search from '@/components/common-used/search.vue'
 import Filter from '@/components/common-used/filter.vue'
 import { computed, ref, watch } from 'vue'

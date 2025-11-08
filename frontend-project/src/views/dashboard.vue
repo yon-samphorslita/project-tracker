@@ -95,7 +95,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import DashboardLayout from './pageLayout.vue'
+import DashboardLayout from '@/views/pageLayout.vue'
 import OverviewCard from '@/components/detail-cards/overviewCard.vue'
 import PieChart from '@/components/charts/pieChart.vue'
 import Calendar from '@/components/calendars/calendar.vue'

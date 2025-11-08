@@ -72,10 +72,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import UserLayout from './pageLayout.vue'
+import UserLayout from '@/views/pageLayout.vue'
 import Table from '@/components/charts/table.vue'
 import Button from '@/components/common-used/button.vue'
-import Form from '@/components/form.vue'
+import Form from '@/components/forms/form.vue'
 import Search from '@/components/common-used/search.vue'
 import Filter from '@/components/common-used/filter.vue'
 import OverviewCard from '@/components/detail-cards/overviewCard.vue'

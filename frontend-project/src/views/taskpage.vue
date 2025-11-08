@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import TaskCard from '@/components/detail-cards/taskCard.vue'
-import TaskLayout from './pageLayout.vue'
+import TaskLayout from '@/views/pageLayout.vue'
 import Search from '@/components/common-used/search.vue'
 import Filter from '@/components/common-used/filter.vue'
 import { computed, onMounted, ref, watch } from 'vue'

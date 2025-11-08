@@ -107,16 +107,16 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Components
-import ProjectLayout from './pageLayout.vue'
-import ProjectCard from '@/components/projectCard.vue'
+import ProjectLayout from '@/views/pageLayout.vue'
+import ProjectCard from '@/components/detail-cards/projectCard.vue'
 import Search from '@/components/common-used/search.vue'
 import Filter from '@/components/common-used/filter.vue'
 import Table from '@/components/charts/table.vue'
 import Button from '@/components/common-used/button.vue'
-import Form from '@/components/form.vue'
+import Form from '@/components/forms/form.vue'
 import PieChart from '@/components/charts/pieChart.vue'
 import OverviewCard from '@/components/detail-cards/overviewCard.vue'
-import EditForm from '@/components/editForm.vue'
+import EditForm from '@/components/forms/editForm.vue'
 
 // Icons
 import View from '@/assets/icons/view.svg'

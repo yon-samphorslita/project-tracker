@@ -112,7 +112,7 @@ import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { format, differenceInMinutes, startOfMonth, endOfMonth, addDays } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
-import EventPopup from './eventPopup.vue'
+import EventPopup from '@/components/detail-cards/eventPopup.vue'
 
 const props = defineProps({
   monthStartDate: { type: Date, default: () => new Date() },

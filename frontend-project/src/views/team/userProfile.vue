@@ -40,7 +40,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import TeamLayout from './pageLayout.vue'
+import TeamLayout from '@/views/pageLayout.vue'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()

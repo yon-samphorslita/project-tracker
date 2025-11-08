@@ -190,8 +190,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import TeamLayout from '../pageLayout.vue'
-import ProjectCard from '@/components/projectCard.vue'
+import TeamLayout from '@/views/pageLayout.vue'
+import ProjectCard from '@/components/detail-cards/projectCard.vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useProjectStore } from '@/stores/project'

@@ -83,7 +83,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { format, parseISO, isSameDay } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
-import EventPopup from './eventPopup.vue'
+import EventPopup from '@/components/detail-cards/eventPopup.vue'
 
 const props = defineProps({ day: { type: Date, default: () => new Date() } })
 

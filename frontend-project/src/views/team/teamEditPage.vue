@@ -45,12 +45,11 @@
           :options="memberCandidates"
           :multiple="true"
           track-by="id"
-          :custom-label="
-            (user) => `${user.fullName}${user.team ? ' (' + user.team.name + ')' : ''}`
-          "
+          :custom-label="(user) => `${user.fullName}${user.team ? ' (' + user.team.name + ')' : ''}`"
           placeholder="Select team members"
           :close-on-select="false"
           :option-disabled="(option) => option.hasMainTeam && !option.isOnThisTeam"
+          @select="onSelectMainMember"
         />
 
         <!-- Secondary Members -->
@@ -59,12 +58,10 @@
         >
         <Multiselect
           v-model="team.secondaryMemberIds"
-          :options="memberCandidates"
+          :options="memberCandidates.filter(m => !team.memberIds.some(mm => mm.id === m.id))"
           :multiple="true"
           track-by="id"
-          :custom-label="
-            (user) => `${user.fullName}${user.team ? ' (' + user.team.name + ')' : ''}`
-          "
+          :custom-label="(user) => `${user.fullName}${user.team ? ' (' + user.team.name + ')' : ''}`"
           placeholder="Select secondary members"
           :close-on-select="false"
         />
@@ -79,8 +76,8 @@
 </template>
 
 <script setup>
-import TeamLayout from './pageLayout.vue'
-import { onMounted, ref } from 'vue'
+import TeamLayout from '@/views/pageLayout.vue'
+import { onMounted, ref, watch } from 'vue'
 import { useTeamStore } from '@/stores/team'
 import { useRoute, useRouter } from 'vue-router'
 import Multiselect from 'vue-multiselect'
@@ -115,13 +112,6 @@ async function fetchCandidates() {
     pmCandidates.value = res.data
       .filter((u) => u.role === 'project_manager')
       .map((u) => ({ ...u, fullName: `${u.first_name} ${u.last_name}` }))
-
-    // memberCandidates.value = res.data
-    //   .filter(
-    //     u => u.role === 'member' &&
-    //     (!u.team || u.team.id === team.value.id)
-    //   )
-    //   .map(u => ({ ...u, fullName: `${u.first_name} ${u.last_name}` }))
     memberCandidates.value = res.data
       .filter((u) => u.role === 'member')
       .map((u) => ({
@@ -130,10 +120,24 @@ async function fetchCandidates() {
         hasMainTeam: !!u.team,
         isOnThisTeam: u.team && u.team.id === team.value.id,
       }))
+
+    console.log('Main members:', team.value.memberIds)
+    console.log('Show membercandidate: ',memberCandidates.value.map(u => u.id))
+
   } catch (err) {
     console.error('Error fetching candidates:', err)
   }
 }
+
+function onSelectMainMember(selected) {
+  // `selected` is the user object the user just clicked
+  if (selected.hasMainTeam && !selected.isOnThisTeam) {
+    alert(`${selected.fullName} is already assigned as a main member in another team. Please choose a different member.`)
+    // Remove it from selection immediately
+    team.value.memberIds = team.value.memberIds.filter((m) => m.id !== selected.id)
+  }
+}
+
 
 async function saveChanges() {
   try {
@@ -178,15 +182,14 @@ onMounted(async () => {
 
   existingPms.value = data.pms?.map((p) => p.id) || []
   existingMembers.value = data.mainMembers?.map((m) => m.id) || []
-  existingSecondaryMembers.value = data.members?.map((m) => m.id) || []
+  existingSecondaryMembers.value = data.members
+    ?.filter((m) => !data.mainMembers.some((mm) => mm.id === m.id))
+    .map((m) => m.id) || []
 
   await fetchCandidates()
 
   team.value.pmIds = pmCandidates.value.filter((pm) => existingPms.value.includes(pm.id))
-  // .map(pm => ({ ...pm }))
-
   team.value.memberIds = memberCandidates.value.filter((m) => existingMembers.value.includes(m.id))
-  // .map(m => ({ ...m }))
 
   team.value.secondaryMemberIds = memberCandidates.value.filter((m) =>
     existingSecondaryMembers.value.includes(m.id),
@@ -194,6 +197,18 @@ onMounted(async () => {
 
   console.log('Fetched team:', team.value)
 })
+
+watch(
+  () => team.value.memberIds,
+  (newMain) => {
+    const mainIds = newMain.map((m) => (typeof m === 'object' ? m.id : m))
+    team.value.secondaryMemberIds = team.value.secondaryMemberIds.filter(
+      (s) => !mainIds.includes(typeof s === 'object' ? s.id : s)
+    )
+  },
+  { deep: true }
+)
+
 </script>
 
 <style scoped></style>

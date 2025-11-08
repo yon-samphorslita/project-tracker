@@ -141,7 +141,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import UserLayout from './pageLayout.vue'
+import UserLayout from '@/views/pageLayout.vue'
 import Status from '@/components/status.vue'
 import Back from '@/assets/icons/back.svg'
 const route = useRoute()
