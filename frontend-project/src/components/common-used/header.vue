@@ -36,7 +36,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '@/stores/notification'
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import Notification from '@/components/notification.vue'
-import ProfileDropdown from '@/components/profileDropdown.vue'
+import ProfileDropdown from '@/components/common-used/profileDropdown.vue'
 import NotificationIcon from '@/assets/icons/notification.svg'
 import HelpIcon from '@/assets/icons/help.svg'
 const router = useRouter()

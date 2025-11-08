@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import sidebar from '@/components/sidebar.vue'
-import Header from '@/components/header.vue'
-import Footer from '@/components/footer.vue'
+import sidebar from '@/components/common-used/sidebar.vue'
+import Header from '@/components/common-used/header.vue'
+import Footer from '@/components/common-used/footer.vue'
 </script>

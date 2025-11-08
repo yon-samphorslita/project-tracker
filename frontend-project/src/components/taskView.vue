@@ -73,12 +73,12 @@
 
 <script setup>
 import { ref, computed, reactive } from 'vue'
-import Table from '@/components/table.vue'
+import Table from '@/components/charts/table.vue'
 import Kanban from '@/components/kanban.vue'
-import GanttChart from '@/components/gantt.vue'
-import Search from '@/components/search.vue'
-import Filter from '@/components/filter.vue'
-import TypeList from '@/components/typeList.vue'
+import GanttChart from '@/components/charts/gantt.vue'
+import Search from '@/components/common-used/search.vue'
+import Filter from '@/components/common-used/filter.vue'
+import TypeList from '@/components/charts/typeList.vue'
 import EditForm from '@/components/editForm.vue'
 import EditIcon from '@/assets/icons/edit.svg'
 import DeleteIcon from '@/assets/icons/delete.svg'

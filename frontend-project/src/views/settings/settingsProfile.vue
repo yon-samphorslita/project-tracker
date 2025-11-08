@@ -111,7 +111,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import Button from '@/components/button.vue'
+import Button from '@/components/common-used/button.vue'
 import Camera from '@/assets/icons/camera.svg'
 import Back from '@/assets/icons/back.svg'
 import { useRouter } from 'vue-router'

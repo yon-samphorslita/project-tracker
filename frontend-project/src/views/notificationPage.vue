@@ -97,11 +97,11 @@
 <script setup lang="ts">
 import { useNotificationStore } from '@/stores/notification'
 import PageLayout from './pageLayout.vue'
-import search from '@/components/search.vue'
-import Filter from '@/components/filter.vue'
+import search from '@/components/common-used/search.vue'
+import Filter from '@/components/common-used/filter.vue'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import NotificationCard from '@/components/notificationCard.vue'
+import NotificationCard from '@/components/detail-cards/notificationCard.vue'
 import MarkIcon from '@/assets/icons/mark.svg'
 import Delete from '@/assets/icons/delete.svg'
 // Stores

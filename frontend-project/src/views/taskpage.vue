@@ -60,10 +60,10 @@
 </template>
 
 <script setup lang="ts">
-import TaskCard from '@/components/taskCard.vue'
+import TaskCard from '@/components/detail-cards/taskCard.vue'
 import TaskLayout from './pageLayout.vue'
-import Search from '@/components/search.vue'
-import Filter from '@/components/filter.vue'
+import Search from '@/components/common-used/search.vue'
+import Filter from '@/components/common-used/filter.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import axios from 'axios'

@@ -16,9 +16,9 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import Sidebar from '@/components/sidebar.vue'
-import Header from '@/components/header.vue'
-import Footer from '@/components/footer.vue'
+import Sidebar from '@/components/common-used/sidebar.vue'
+import Header from '@/components/common-used/header.vue'
+import Footer from '@/components/common-used/footer.vue'
 
 const auth = useAuthStore()
 

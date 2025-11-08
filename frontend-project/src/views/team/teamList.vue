@@ -32,11 +32,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import TeamLayout from './pageLayout.vue'
-import teamCard from '@/components/teamCard.vue'
-import teamform from '@/components/teamform.vue'
-import Search from '@/components/search.vue'
-import Filter from '@/components/filter.vue'
-import Button from '@/components/button.vue'
+import teamCard from '@/components/detail-cards/teamCard.vue'
+import teamform from '@/components/forms/teamform.vue'
+import Search from '@/components/common-used/search.vue'
+import Filter from '@/components/common-used/filter.vue'
+import Button from '@/components/common-used/button.vue'
 import { useTeamStore } from '@/stores/team'
 import { storeToRefs } from 'pinia'
 

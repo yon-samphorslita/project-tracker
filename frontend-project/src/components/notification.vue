@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { useNotificationStore } from '@/stores/notification'
+import { useNotificationStore } from '../stores/notification'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { routeLocationKey, useRouter } from 'vue-router'

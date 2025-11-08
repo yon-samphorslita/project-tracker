@@ -96,12 +96,12 @@
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import DashboardLayout from './pageLayout.vue'
-import OverviewCard from '@/components/overviewCard.vue'
-import PieChart from '@/components/pieChart.vue'
-import Calendar from '@/components/calendar.vue'
+import OverviewCard from '@/components/detail-cards/overviewCard.vue'
+import PieChart from '@/components/charts/pieChart.vue'
+import Calendar from '@/components/calendars/calendar.vue'
 import FlipDigit from '@/components/flipDigit.vue'
-import ProjectOverview from '@/components/projectOverview.vue'
-import GanttChart from '@/components/gantt.vue'
+import ProjectOverview from '@/components/detail-cards/projectOverview.vue'
+import GanttChart from '@/components/charts/gantt.vue'
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
 

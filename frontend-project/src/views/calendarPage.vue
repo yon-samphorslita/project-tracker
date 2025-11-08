@@ -107,15 +107,15 @@ import { useTaskStore } from '@/stores/task'
 
 import Form from '@/components/form.vue'
 import CalendarLayout from './pageLayout.vue'
-import MonthCalendar from '@/components/monthCalendar.vue'
+import MonthCalendar from '@/components/calendars/monthCalendar.vue'
 import WeekCalendar from '@/components/weekCalendar.vue'
 import DayCalendar from '@/components/dayCalendar.vue'
 import Option from '@/components/option.vue'
-import Calendar from '@/components/calendar.vue'
+import Calendar from '@/components/calendars/calendar.vue'
 import Plus from '@/assets/icons/add.svg'
-import OverviewCard from '@/components/overviewCard.vue'
-import PieChart from '@/components/pieChart.vue'
-import BarChart from '@/components/barChart.vue'
+import OverviewCard from '@/components/detail-cards/overviewCard.vue'
+import PieChart from '@/components/charts/pieChart.vue'
+import BarChart from '@/components/charts/barChart.vue'
 
 // Stores
 const authStore = useAuthStore()

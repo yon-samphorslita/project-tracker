@@ -190,14 +190,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import TeamLayout from './pageLayout.vue'
+import TeamLayout from '../pageLayout.vue'
 import ProjectCard from '@/components/projectCard.vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
 import { useTeamStore } from '@/stores/team'
-import Button from '@/components/button.vue'
+import Button from '@/components/common-used/button.vue'
 
 // initialize store
 const route = useRoute()

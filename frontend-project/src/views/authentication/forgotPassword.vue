@@ -88,7 +88,7 @@
 import { ref, reactive, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import Button from '@/components/button.vue'
+import Button from '@/components/common-used/button.vue'
 
 export default {
   setup() {
