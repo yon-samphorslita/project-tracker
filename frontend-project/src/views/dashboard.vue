@@ -1,7 +1,7 @@
 <template>
   <DashboardLayout>
     <div class="flex flex-col">
-      <div class="py-6 flex gap-6">
+      <div class="flex gap-6">
         <!-- left side: project overview, charts, recent projects -->
         <div class="w-2/3 flex flex-col items-start gap-6">
           <div class="flex flex-col gap-4 mb-2">
@@ -78,22 +78,22 @@
           >
             <!-- Date Information -->
             <div
-              class="flex flex-col items-center justify-center gap-2 w-64 h-24 bg-gray-100 rounded-xl shadow-md border border-gray-200"
+              class="flex flex-col items-center justify-center gap-2 w-64 h-24 bg-[var(--gray50-bg)] rounded-xl shadow-md border border-gray-200"
             >
               <div class="text-gray-800 text-3xl font-bold tracking-wide">{{ weekday }}</div>
-              <div class="text-gray-500 text-lg font-medium">{{ formattedDate }}</div>
+              <div class="text-sub-text text-lg font-medium">{{ formattedDate }}</div>
             </div>
 
             <!-- Digital Clock with Flip Animation -->
             <div
-              class="flex items-center justify-center gap-4 p-6 bg-gray-100 rounded-xl shadow-md"
+              class="flex items-center justify-center gap-4 p-6 bg-[var(--gray50-bg)] rounded-xl shadow-md"
             >
               <!-- Hours -->
               <div class="flex gap-1">
                 <FlipDigit :digit="hours[0]" />
                 <FlipDigit :digit="hours[1]" />
               </div>
-              <div class="text-3xl font-bold text-gray-700">:</div>
+              <div class="text-3xl font-bold text-gray-text">:</div>
 
               <!-- Minutes -->
               <div class="flex gap-1">
@@ -102,7 +102,7 @@
               </div>
 
               <!-- AM/PM -->
-              <div class="text-2xl font-bold text-gray-700">{{ ampm }}</div>
+              <div class="text-2xl font-bold text-gray-text">{{ ampm }}</div>
             </div>
           </div>
 
@@ -128,10 +128,10 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import DashboardLayout from './pageLayout.vue'
-import OverviewCard from '@/components/overviewCard.vue'
-import PieChart from '@/components/pieChart.vue'
-import Calendar from '@/components/calendar.vue'
+import DashboardLayout from '@/views/pageLayout.vue'
+import OverviewCard from '@/components/detail-cards/overviewCard.vue'
+import PieChart from '@/components/charts/pieChart.vue'
+import Calendar from '@/components/calendars/calendar.vue'
 import FlipDigit from '@/components/flipDigit.vue'
 import ProjectOverview from '@/components/projectOverview.vue'
 import GanttChart from '@/components/gantt.vue'
@@ -206,15 +206,14 @@ const taskStatus = computed(() => {
 const ganttRows = computed(() =>
   projectStore.projects.map((project) => ({
     label: project.p_name,
-    tasks: [
-      {
-        name: project.p_name,
-        start: new Date(project.start_date),
-        end: new Date(project.due_date),
-        status: project.status,
-        color: getStatusColor(project.status),
-      },
-    ],
+    tasks:
+      project.tasks?.map((t) => ({
+        id: t.id,
+        name: t.t_name,
+        start: t.start_date ? new Date(t.start_date) : new Date(),
+        end: t.due_date ? new Date(t.due_date) : new Date(),
+        icon: t.user?.img_url || null,
+      })) || [],
   })),
 )
 

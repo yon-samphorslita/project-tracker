@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 import { useUserStore } from './user'
+import { useNotificationStore } from './notification'
+
 const API_BASE_URL = 'http://localhost:3000'
 
 export const useAuthStore = defineStore(
@@ -10,120 +12,97 @@ export const useAuthStore = defineStore(
     const user = ref(null)
     const token = ref(localStorage.getItem('token') || null)
     const isAuthenticated = ref(!!token.value)
-    const users = ref([]) // for admin list
+    const users = ref([])
 
-    // Set auth state
-    function setAuthData(userData, accessToken) {
-      user.value = userData
-      token.value = accessToken
-      isAuthenticated.value = true
-      localStorage.setItem('token', accessToken)
-    }
-
-    function clearAuthData() {
-      user.value = null
-      token.value = null
-      isAuthenticated.value = false
-      localStorage.removeItem('token')
-    }
-
-    // Axios instance with auth header
     const api = axios.create({ baseURL: API_BASE_URL })
     api.interceptors.request.use((config) => {
       if (token.value) config.headers.Authorization = `Bearer ${token.value}`
       return config
     })
 
-    // Login
-    async function login(credentials) {
-      const response = await api.post('/auth/login', credentials)
-      const { user: u, accessToken } = response.data
+    const setAuthData = (userData, accessToken) => {
+      user.value = userData
+      token.value = accessToken
+      isAuthenticated.value = true
+      localStorage.setItem('token', accessToken)
+    }
+
+    const clearAuthData = () => {
+      user.value = null
+      token.value = null
+      isAuthenticated.value = false
+      localStorage.removeItem('token')
+    }
+
+    const login = async (credentials) => {
+      const { user: u, accessToken } = (await api.post('/auth/login', credentials)).data
       setAuthData(u, accessToken)
       return u
     }
 
-    // Logout
-    async function logout() {
+    const logout = async (router) => {
       try {
         if (token.value) await api.post('/auth/logout')
       } catch {
-        console.warn('Backend logout failed, clearing local auth anyway')
+        console.warn('Backend logout failed')
       } finally {
+        useNotificationStore().disconnect()
         clearAuthData()
+        if (router) router.push('/login')
       }
     }
 
-    // Fetch profile
-    async function fetchProfile() {
+    const fetchProfile = async () => {
       if (!token.value) return null
       try {
-        const response = await api.get('/auth/profile')
-        user.value = response.data
-        const userStore = useUserStore()
-        userStore.currentUser = response.data
-        return user.value
+        const data = (await api.get('/auth/profile')).data
+        user.value = data
+        useUserStore().currentUser = data
+        return data
       } catch (err) {
         if (err.response?.status === 401) logout()
         return null
       }
     }
 
-    // Fetch all users (admin)
-    async function fetchAllUsers() {
+    const fetchAllUsers = async () => {
       if (!token.value) return []
-      const response = await api.get('/auth/users')
-      users.value = response.data
+      users.value = (await api.get('/auth/users')).data
       return users.value
     }
 
-    // Update own profile (excluding password/email)
-    async function updateProfile(updateUserDto) {
+    const updateProfile = async (updateUserDto) => {
       if (!token.value) return null
-      const response = await api.patch('/auth/profile', updateUserDto)
-      user.value = response.data
-      const userStore = useUserStore()
-      userStore.currentUser = response.data
-      return user.value
+      const data = (await api.patch('/auth/profile', updateUserDto)).data
+      user.value = data
+      useUserStore().currentUser = data
+      return data
     }
 
-    // Update another user (admin)
-    async function updateUser(updateUserDto) {
+    const updateUser = async ({ id, ...updateUserDto }) => {
       if (!token.value) return null
-      if (!updateUserDto.id) throw new Error('User ID required')
-      const response = await api.patch(`/auth/user/${updateUserDto.id}`, updateUserDto)
-      return response.data
+      if (!id) throw new Error('User ID required')
+      return (await api.patch(`/auth/user/${id}`, updateUserDto)).data
     }
 
-    // Update password
-    async function updatePassword(oldPassword, newPassword) {
+    const updatePassword = async (oldPassword, newPassword) => {
       if (!token.value) return null
-      const response = await api.patch('/auth/update-password', { oldPassword, newPassword })
-      return response.data
+      return (await api.patch('/auth/update-password', { oldPassword, newPassword })).data
     }
 
-    // Create user (admin)
-    async function createUser(userDto) {
+    const createUser = async (userDto) => {
       if (!token.value) throw new Error('Not authenticated')
-      const payload = Object.fromEntries(
-        Object.entries(userDto).filter(([_, v]) => v !== undefined && v !== null),
-      )
-      const response = await api.post('/auth/user', payload)
-      return response.data
-    }
-    async function requestOtp(email) {
-      const response = await api.post('/auth/request-otp', { email })
-      return response.data
+      const payload = Object.fromEntries(Object.entries(userDto).filter(([_, v]) => v != null))
+      return (await api.post('/auth/user', payload)).data
     }
 
-    async function resetPassword({ email, otp, newPassword }) {
-      const response = await api.post('/auth/reset-password', { email, otp, newPassword })
-      return response.data
-    }
+    const requestOtp = async (email) => (await api.post('/auth/request-otp', { email })).data
 
-    async function verifyOtp({ email, otp }) {
-      const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, { email, otp })
-      return response.data
-    }
+    const resetPassword = async ({ email, otp, newPassword }) =>
+      (await api.post('/auth/reset-password', { email, otp, newPassword })).data
+
+    const verifyOtp = async ({ email, otp }) =>
+      (await axios.post(`${API_BASE_URL}/auth/verify-otp`, { email, otp })).data
 
     return {
       user,

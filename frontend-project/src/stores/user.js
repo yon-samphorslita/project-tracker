@@ -9,53 +9,45 @@ export const useUserStore = defineStore(
   () => {
     const users = ref([])
     const currentUser = ref(null)
-    async function fetchUsers() {
+
+    const getAuthHeaders = () => {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('No authentication token found')
+      return { Authorization: `Bearer ${token}` }
+    }
+
+    const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem('token')
-        const res = await axios.get(`${API_BASE_URL}/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await axios.get(`${API_BASE_URL}/users`, { headers: getAuthHeaders() })
         users.value = res.data
-        console.log('Fetched users:', users.value)
       } catch (err) {
         console.error('Error fetching users:', err)
       }
     }
 
-    // Fetch logged-in user profile
-    async function fetchCurrentUser() {
+    const fetchCurrentUser = async () => {
       try {
-        const token = localStorage.getItem('token')
-        const res = await axios.get(`${API_BASE_URL}/auth/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await axios.get(`${API_BASE_URL}/auth/profile`, { headers: getAuthHeaders() })
         currentUser.value = res.data
-        console.log('Fetched current user:', currentUser.value)
       } catch (err) {
         console.error('Error fetching current user:', err)
       }
     }
 
-    // Fetch a user by ID
-    async function fetchUserById(id) {
+    const fetchUserById = async (id) => {
       try {
-        const token = localStorage.getItem('token')
-        const res = await axios.get(`${API_BASE_URL}/users/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        return res.data // returns only that user
+        const res = await axios.get(`${API_BASE_URL}/users/${id}`, { headers: getAuthHeaders() })
+        return res.data
       } catch (err) {
         console.error(`Error fetching user ${id}:`, err)
         return null
       }
     }
 
-    // Create a new user
-    async function createUser(userDto) {
+    const createUser = async (userDto) => {
       try {
-        const token = localStorage.getItem('token')
         const res = await axios.post(`${API_BASE_URL}/users`, userDto, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: getAuthHeaders(),
         })
         users.value.push(res.data)
         return res.data
@@ -65,12 +57,10 @@ export const useUserStore = defineStore(
       }
     }
 
-    // Update a user
-    async function updateUser(id, updateDto) {
+    const updateUser = async (id, updateDto) => {
       try {
-        const token = localStorage.getItem('token')
         const res = await axios.put(`${API_BASE_URL}/users/${id}`, updateDto, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: getAuthHeaders(),
         })
         const index = users.value.findIndex((u) => u.id === id)
         if (index !== -1) users.value[index] = res.data
@@ -81,13 +71,9 @@ export const useUserStore = defineStore(
       }
     }
 
-    // Delete a user
-    async function deleteUser(id) {
+    const deleteUser = async (id) => {
       try {
-        const token = localStorage.getItem('token')
-        await axios.delete(`${API_BASE_URL}/users/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        await axios.delete(`${API_BASE_URL}/users/${id}`, { headers: getAuthHeaders() })
         users.value = users.value.filter((u) => u.id !== id)
       } catch (err) {
         console.error(`Error deleting user ${id}:`, err)
@@ -96,16 +82,14 @@ export const useUserStore = defineStore(
 
     return {
       users,
+      currentUser,
       fetchUsers,
+      fetchCurrentUser,
+      fetchUserById,
       createUser,
       updateUser,
       deleteUser,
-      fetchCurrentUser,
-      currentUser,
-      fetchUserById,
     }
   },
-  {
-    persist: true,
-  },
+  { persist: true },
 )

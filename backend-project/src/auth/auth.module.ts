@@ -7,17 +7,17 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from 'src/user/user.entity';
 import { JwtStrategy } from './jwt.strategy';
-import { PassportModule, AuthGuard } from '@nestjs/passport';
+import { PassportModule } from '@nestjs/passport';
 import { EmailService } from 'src/mail/email.service';
 @Module({
   imports: [
     PassportModule,
     TypeOrmModule.forFeature([User]),
     UserModule,
-    ConfigModule, // Import ConfigModule here
+    ConfigModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule], // import ConfigModule to get access to ConfigService
-      inject: [ConfigService], // inject ConfigService
+      imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'), // get secret from env
         signOptions: {
@@ -27,7 +27,7 @@ import { EmailService } from 'src/mail/email.service';
           ),
         },
       }),
-      global: true, // make JwtModule global if needed
+      global: true,
     }),
   ],
   providers: [AuthService, JwtStrategy, EmailService],

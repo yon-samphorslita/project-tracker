@@ -5,29 +5,47 @@ import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private readonly activityService: ActivityService,
   ) {}
 
-  // Create a new user
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
+  async createUser(
+    createUserDto: CreateUserDto,
+    performedById: number,
+  ): Promise<User> {
     const user = this.userRepository.create({ ...createUserDto });
-    return this.userRepository.save(user);
+    await this.userRepository.save(user);
+
+    await this.activityService.logAction(
+      performedById,
+      `Created user "${user.first_name} ${user.last_name}" (email: ${user.email}, role: ${user.role})`,
+    );
+
+    return user;
   }
 
-  // Find all users
   async findAll(): Promise<User[]> {
     return this.userRepository.find({ relations: ['team'] });
   }
 
-  // Find user by ID
   async findOne(id: number, includePassword = false): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
+      relations: [
+        'team',
+        'pmTeams',
+        'secondaryTeams',
+        'projects',
+        'tasks',
+        'activities',
+        'notifications',
+      ],
       select: includePassword
         ? [
             'id',
@@ -54,32 +72,64 @@ export class UserService {
     });
   }
 
-  // Update user (supports partial updates)
   async update(
     userId: number,
-    updateUserDto: UpdateUserDto & any,
+    updateUserDto: UpdateUserDto,
+    performedById: number,
   ): Promise<User | null> {
     if (!userId) return null;
+
+    const existingUser = await this.findOne(userId);
+    if (!existingUser) throw new NotFoundException('User not found');
 
     const fieldsToUpdate = { ...updateUserDto };
     Object.keys(fieldsToUpdate).forEach(
       (key) => fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key],
     );
+    if (Object.keys(fieldsToUpdate).length === 0) return existingUser;
 
-    if (Object.keys(fieldsToUpdate).length === 0) {
-      return this.findOne(userId);
+    const changes: string[] = [];
+    for (const [key, newValue] of Object.entries(fieldsToUpdate)) {
+      const oldValue = (existingUser as any)[key];
+      const formatValue = (val: any) =>
+        val === null || val === undefined
+          ? 'empty'
+          : typeof val === 'boolean'
+            ? val
+              ? 'enabled'
+              : 'disabled'
+            : `"${val}"`;
+      if (oldValue !== newValue)
+        changes.push(
+          `${key} changed from ${formatValue(oldValue)} to ${formatValue(newValue)}`,
+        );
     }
 
     await this.userRepository.update(userId, fieldsToUpdate);
-    return this.findOne(userId);
+    const updatedUser = await this.findOne(userId);
+
+    if (changes.length > 0 && updatedUser) {
+      await this.activityService.logAction(
+        performedById,
+        `Updated user "${updatedUser.first_name} ${updatedUser.last_name}": ${changes.join(', ')}`,
+      );
+    }
+
+    return updatedUser;
   }
 
-  // Delete user
-  async delete(id: number): Promise<void> {
+  async delete(id: number, performedById: number): Promise<void> {
+    const user = await this.findOne(id);
+    if (!user) throw new NotFoundException('User not found');
+
     await this.userRepository.softDelete(id);
+
+    await this.activityService.logAction(
+      performedById,
+      `Deleted user "${user.first_name} ${user.last_name}" (email: ${user.email})`,
+    );
   }
 
-  // Find user by email, optionally include password
   async findOneByEmail(
     email: string,
     includePassword = false,
@@ -119,19 +169,25 @@ export class UserService {
     });
   }
 
-  // Update password and optionally mark password_changed
   async updatePassword(
     userId: number,
     newPassword: string,
+    performedById: number,
     markChanged = true,
   ): Promise<User> {
     const user = await this.findOne(userId, true);
     if (!user) throw new NotFoundException('User not found');
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
+    user.password = await bcrypt.hash(newPassword, 10);
     if (markChanged) user.password_changed = true;
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    await this.activityService.logAction(
+      performedById,
+      `Changed password for user "${savedUser.first_name} ${savedUser.last_name}"`,
+    );
+
+    return savedUser;
   }
 }

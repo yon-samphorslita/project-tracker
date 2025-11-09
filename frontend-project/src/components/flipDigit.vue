@@ -2,7 +2,7 @@
   <div class="relative w-16 h-24 perspective-500">
     <!-- top half -->
     <div
-      class="absolute inset-0 bg-gray-900 text-white flex items-center justify-center text-4xl font-mono rounded-lg border border-gray-700 overflow-hidden"
+      class="absolute inset-0 bg-[var(--darkgray-bg)] text-[var(--white-text)] flex items-center justify-center text-4xl font-mono rounded-lg border border-[var(--gray-text)] overflow-hidden"
     >
       {{ currentDigit }}
     </div>
@@ -12,7 +12,7 @@
       <div
         v-if="isFlipping"
         key="flip"
-        class="absolute inset-0 bg-gray-800 text-white flex items-center justify-center text-4xl font-mono rounded-lg border border-gray-700 overflow-hidden"
+        class="absolute inset-0 bg-[var(--darkgray-bg)] text-[var(--white-text)] flex items-center justify-center text-4xl font-mono rounded-lg border border-[var(--gray-text)] overflow-hidden"
       >
         {{ nextDigit }}
       </div>

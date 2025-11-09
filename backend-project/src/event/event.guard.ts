@@ -18,12 +18,9 @@ export class EventGuard implements CanActivate {
 
     if (!user) throw new ForbiddenException('User not authenticated');
 
-    const event = await this.eventService.findOne(eventId);
+    const event = await this.eventService.findOne(eventId, user.id);
 
     if (!event) throw new NotFoundException('Event not found');
-
-    // Admin can access everything
-    if (user.role === 'admin') return true;
 
     // Only the owner of the event can access
     if (event.user?.id !== user.id) {

@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { SubtaskService } from './subtask.service';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
@@ -23,8 +24,12 @@ export class SubtaskController {
 
   // Create a new subtask
   @Post()
-  create(@Body() createSubtaskDto: CreateSubtaskDto): Promise<Subtask> {
-    return this.subtaskService.create(createSubtaskDto);
+  create(
+    @Body() createSubtaskDto: CreateSubtaskDto,
+    @Req() req,
+  ): Promise<Subtask> {
+    const userId = req.user.id;
+    return this.subtaskService.create(createSubtaskDto, userId);
   }
 
   // Retrieve all subtasks
@@ -57,14 +62,17 @@ export class SubtaskController {
   update(
     @Param('id') id: string,
     @Body() updateSubtaskDto: UpdateSubtaskDto,
-  ): Promise<Subtask | null> {
-    return this.subtaskService.update(+id, updateSubtaskDto);
+    @Req() req,
+  ): Promise<Subtask> {
+    const userId = req.user.id;
+    return this.subtaskService.update(+id, updateSubtaskDto, userId);
   }
 
   // Delete a specific subtask by ID
   @Delete(':id')
   @UseGuards(SubtaskGuard)
-  remove(@Param('id') id: string): Promise<Subtask> {
-    return this.subtaskService.remove(+id);
+  remove(@Param('id') id: string, @Req() req): Promise<Subtask> {
+    const userId = req.user.id;
+    return this.subtaskService.remove(+id, userId);
   }
 }

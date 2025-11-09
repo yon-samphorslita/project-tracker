@@ -1,12 +1,12 @@
 <template>
   <PageLayout>
-    <div class="flex flex-col gap-4 mt-6">
+    <div class="flex flex-col gap-4">
       <!-- header  -->
       <div class="font-bold text-xl">Notifications</div>
 
       <div class="flex gap-4 w-full items-center justify-end">
         <!-- search function  -->
-        <!-- <search @update="searchQuery = $event" /> -->
+        <!-- <Search v-model:query="searchQuery" /> -->
 
         <div class="flex justify-end items-center bg-purple- gap-3 w-1/2">
           <!-- mark as read button  -->
@@ -14,16 +14,7 @@
             class="flex gap-2 text-green-600 border px-2 py-1 rounded-lg cursor-pointer hover:text-green-800"
             @click="markAllAsRead"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="m7 17l-5-5m5 0l5 5L22 7m-10 5l5-5"
-              />
-            </svg>
+            <MarkIcon />
             Mark all as Read
           </button>
 
@@ -32,12 +23,7 @@
             class="flex gap-2 text-red-600 border px-2 py-1 rounded-lg cursor-pointer hover:text-red-800"
             @click="deleteAll"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"
-              />
-            </svg>
+            <Delete />
             Delete All
           </button>
 
@@ -58,12 +44,14 @@
       <div>
         <!-- tab  -->
         <div
-          class="flex justify-between border rounded-t-2xl border-b-2 pb-2 p-4 bg-white text-lg font-semibold"
+          class="flex justify-between border rounded-t-2xl border-b-2 pb-2 p-4 bg-main-bg text-lg font-semibold"
         >
           <div
             class="w-1/3 cursor-pointer pb-2"
             :class="
-              currentTab === 'all' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'
+              currentTab === 'all'
+                ? 'border-b-2 border-[var(--main-border)] font-semibold'
+                : 'text-sub-text'
             "
             @click="showAllNotifications"
           >
@@ -72,7 +60,9 @@
           <div
             class="w-1/3 cursor-pointer pb-2"
             :class="
-              currentTab === 'read' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'
+              currentTab === 'read'
+                ? 'border-b-2 border-[var(--main-border)] font-semibold'
+                : 'text-sub-text'
             "
             @click="showReadNotifications"
           >
@@ -81,7 +71,9 @@
           <div
             class="w-1/3 cursor-pointer pb-2"
             :class="
-              currentTab === 'unread' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'
+              currentTab === 'unread'
+                ? 'border-b-2 border-[var(--main-border)] font-semibold'
+                : 'text-sub-text'
             "
             @click="showUnreadNotifications"
           >
@@ -90,10 +82,10 @@
         </div>
 
         <!-- notification list  -->
-        <div class="flex flex-col gap-3 border rounded-b-2xl p-4 bg-white h-full">
+        <div class="flex flex-col gap-3 border rounded-b-2xl p-4 bg-main-bg h-full">
           <NotificationCard :notifications="filteredSortedNotifications" />
 
-          <div v-if="!filteredSortedNotifications.length" class="text-center text-gray-500 py-3">
+          <div v-if="!filteredSortedNotifications.length" class="text-center text-sub-text py-3">
             No notifications found
           </div>
         </div>
@@ -104,13 +96,14 @@
 
 <script setup lang="ts">
 import { useNotificationStore } from '@/stores/notification'
-import PageLayout from './pageLayout.vue'
-import search from '@/components/search.vue'
-import Filter from '@/components/filter.vue'
+import PageLayout from '@/views/pageLayout.vue'
+import search from '@/components/common-used/search.vue'
+import Filter from '@/components/common-used/filter.vue'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import NotificationCard from '@/components/notificationCard.vue'
-
+import NotificationCard from '@/components/detail-cards/notificationCard.vue'
+import MarkIcon from '@/assets/icons/mark.svg'
+import Delete from '@/assets/icons/delete.svg'
 // Stores
 const notificationStore = useNotificationStore()
 const { notifications } = storeToRefs(notificationStore)

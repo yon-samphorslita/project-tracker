@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-blue-100 p-4">
-    <div class="bg-white rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
+  <div class="min-h-screen flex items-center justify-center bg-blue-bg p-4">
+    <div class="bg-main-bg rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
       <!-- Image Section -->
       <div class="flex-1 min-w-[300px] flex justify-center items-center p-6">
         <img src="../../assets/images/auth.png" alt="Logo" class="max-w-full h-auto" />
@@ -20,13 +20,12 @@
             required
             class="rounded-[20px] border border-gray-300 p-[10px]"
           />
-
-          <button
+          <Button
             @click="requestOtp"
-            class="bg-[#20A1FF] text-white py-3 rounded-[20px] font-bold hover:bg-blue-700 transition"
-          >
-            Send OTP
-          </button>
+            btn-color="var(--blue-bg)"
+            btntext="var(--main-text)"
+            label="Send OTP"
+          />
         </div>
 
         <!-- Step 2a: Enter OTP -->
@@ -45,13 +44,12 @@
               ref="setOtpRef"
             />
           </div>
-
-          <button
+          <Button
             @click="verifyOtp"
-            class="bg-[#20A1FF] text-white py-3 rounded-[20px] font-bold hover:bg-blue-700 transition mt-4"
-          >
-            Verify OTP
-          </button>
+            btn-color="var(--blue-bg)"
+            btntext="var(--main-text)"
+            label="Verify OTP"
+          />
         </div>
 
         <!-- Step 2b: Reset Password -->
@@ -74,12 +72,12 @@
             class="rounded-[20px] border border-gray-300 p-[10px]"
           />
 
-          <button
+          <Button
             @click="resetPassword"
-            class="bg-[#20A1FF] text-white py-3 rounded-[20px] font-bold hover:bg-blue-700 transition"
-          >
-            Reset Password
-          </button>
+            btn-color="var(--blue-bg)"
+            btntext="var(--main-text)"
+            label="Reset Password"
+          />
         </div>
       </div>
     </div>
@@ -90,6 +88,7 @@
 import { ref, reactive, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import Button from '@/components/common-used/button.vue'
 
 export default {
   setup() {
@@ -108,7 +107,6 @@ export default {
       if (el) otpRefs.push(el)
     }
 
-    // Step 1: Request OTP
     const requestOtp = async () => {
       try {
         await auth.requestOtp(email.value)
@@ -121,30 +119,20 @@ export default {
       }
     }
 
-    // Handle OTP input
     const onOtpInput = (index, e) => {
-      const target = e.target
-      otpDigits[index] = target.value.replace(/\D/g, '') // only digits
-
-      if (target.value && index < 5) {
-        otpRefs[index + 1]?.focus()
-      }
-
-      if (otpDigits.every((d) => d !== '')) {
-        verifyOtp()
-      }
+      otpDigits[index] = e.target.value.replace(/\D/g, '')
+      if (otpDigits[index] && index < 5) otpRefs[index + 1]?.focus()
+      if (otpDigits.every((d) => d !== '')) verifyOtp()
     }
 
-    // Paste full OTP
     const onPasteOtp = (e) => {
       const paste = e.clipboardData.getData('text') || ''
-      if (paste.length === 6 && /^\d{6}$/.test(paste)) {
-        paste.split('').forEach((digit, i) => (otpDigits[i] = digit))
+      if (/^\d{6}$/.test(paste)) {
+        paste.split('').forEach((d, i) => (otpDigits[i] = d))
         nextTick(() => verifyOtp())
       }
     }
 
-    // Verify OTP
     const verifyOtp = async () => {
       try {
         await auth.verifyOtp({ email: email.value, otp: otpDigits.join('') })
@@ -161,7 +149,6 @@ export default {
         alert('Passwords do not match.')
         return
       }
-
       try {
         await auth.resetPassword({
           email: email.value,
@@ -193,13 +180,3 @@ export default {
   },
 }
 </script>
-
-<style scoped>
-@media (max-width: 640px) {
-  input[type='text'] {
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1.25rem;
-  }
-}
-</style>

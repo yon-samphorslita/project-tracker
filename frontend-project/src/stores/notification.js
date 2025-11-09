@@ -14,7 +14,9 @@ export const useNotificationStore = defineStore('notification', {
   actions: {
     async connect(userId) {
       this.userId = userId
-
+      if (!this.notificationsEnabled) {
+        return
+      }
       if (this.socket) this.socket.disconnect()
       this.socket = io('http://localhost:3000', { query: { userId } })
 
@@ -37,16 +39,19 @@ export const useNotificationStore = defineStore('notification', {
       if (!enabled && this.socket) {
         console.log('Notifications turned OFF')
         this.socket.off('notification')
-      } else if (enabled && this.socket && this.userId) {
+        this.socket.disconnect()
+      } else if (enabled) {
         console.log('Notifications turned ON')
-        this.socket.on('notification', (payload) => {
-          if (!payload.deleted_at && !this.notifications.find((n) => n.id === payload.id)) {
-            this.notifications.unshift(payload)
-          }
-        })
+        this.connect(this.userId)
       }
     },
-
+    disconnect() {
+      if (this.socket) {
+        this.socket.off('notification')
+        this.socket.disconnect()
+        console.log('Socket disconnected')
+      }
+    },
     async fetchNotifications() {
       if (!this.userId) return
 

@@ -59,6 +59,7 @@ export class Project {
 
   @OneToMany(() => Event, (event) => event.project)
   events: Event[];
+
   @BeforeInsert()
   @BeforeUpdate()
   validateDates() {

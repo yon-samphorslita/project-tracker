@@ -10,91 +10,91 @@ export const useEventStore = defineStore(
     const events = ref([])
     const loading = ref(false)
     const error = ref(null)
+    const adminEventSummary = ref([])
 
-    // Fetch all events
-    async function fetchEvents() {
+    const authHeaders = () => {
+      const token = localStorage.getItem('token')
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    }
+
+    const normalizeEvent = (e) => ({
+      ...e,
+      date: e.start_date,
+      time:
+        e.start_date && e.end_date
+          ? `${new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(e.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          : '',
+    })
+
+    const fetchEvents = async () => {
       loading.value = true
       try {
-        const token = localStorage.getItem('token')
-        const res = await axios.get(`${API_BASE_URL}/events`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        // Normalize events so calendar can consume them easily
-        events.value = res.data.map((e) => ({
-          ...e,
-          date: e.start_date, // alias for calendar display
-          time:
-            e.start_date && e.end_date
-              ? `${new Date(e.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(e.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-              : '',
-        }))
+        const res = await axios.get(`${API_BASE_URL}/events`, { headers: authHeaders() })
+        events.value = res.data.map(normalizeEvent)
       } catch (err) {
         error.value = err.response?.data?.message || 'Failed to fetch events'
-        console.error(error.value)
       } finally {
         loading.value = false
       }
     }
 
-    // Fetch single event by ID
-    async function fetchEvent(id) {
+    const fetchEvent = async (id) => {
       try {
-        const token = localStorage.getItem('token')
-        const res = await axios.get(`${API_BASE_URL}/events/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await axios.get(`${API_BASE_URL}/events/${id}`, { headers: authHeaders() })
         return res.data
       } catch (err) {
         error.value = err.response?.data?.message || 'Failed to fetch event'
-        console.error(error.value)
         return null
       }
     }
 
-    // Create a new event
-    async function createEvent(eventData) {
+    const createEvent = async (eventData) => {
       try {
-        const token = localStorage.getItem('token')
         const res = await axios.post(`${API_BASE_URL}/events`, eventData, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: authHeaders(),
         })
         events.value.push(res.data)
         return res.data
       } catch (err) {
         error.value = err.response?.data?.message || 'Failed to create event'
-        console.error(error.value)
         return null
       }
     }
 
-    // Update an existing event
-    async function updateEvent(id, eventData) {
+    const updateEvent = async (id, eventData) => {
       try {
-        const token = localStorage.getItem('token')
         const res = await axios.patch(`${API_BASE_URL}/events/${id}`, eventData, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: authHeaders(),
         })
+        const normalizedEvent = normalizeEvent(res.data)
         const index = events.value.findIndex((e) => e.id === id)
-        if (index !== -1) events.value[index] = res.data
-        return res.data
+        if (index !== -1) {
+          events.value[index] = normalizedEvent
+        }
+        return normalizedEvent
       } catch (err) {
         error.value = err.response?.data?.message || 'Failed to update event'
-        console.error(error.value)
         return null
       }
     }
 
-    // Delete an event
-    async function deleteEvent(id) {
+    const deleteEvent = async (id) => {
       try {
-        const token = localStorage.getItem('token')
-        await axios.delete(`${API_BASE_URL}/events/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        await axios.delete(`${API_BASE_URL}/events/${id}`, { headers: authHeaders() })
         events.value = events.value.filter((e) => e.id !== id)
       } catch (err) {
         error.value = err.response?.data?.message || 'Failed to delete event'
-        console.error(error.value)
+      }
+    }
+
+    async function fetchAdminEventSummary() {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/events/summary`, {
+          headers: authHeaders(),
+        })
+        adminEventSummary.value = res.data
+      } catch (err) {
+        console.error('Failed to fetch admin summary:', err)
       }
     }
 
@@ -102,11 +102,13 @@ export const useEventStore = defineStore(
       events,
       loading,
       error,
+      adminEventSummary,
       fetchEvents,
       fetchEvent,
       createEvent,
       updateEvent,
       deleteEvent,
+      fetchAdminEventSummary,
     }
   },
   { persist: true },

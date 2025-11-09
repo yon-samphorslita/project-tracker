@@ -153,6 +153,7 @@ export class TaskService {
         'team',
         'team.pms',
         'team.members',
+        'team.mainMembers',
         'tasks',
         'tasks.user',
         'tasks.subtasks',
@@ -235,6 +236,7 @@ export class TaskService {
 
     const teamMembers = [
       ...(project.team?.members || []),
+      ...(project.team?.mainMembers || []),
       ...(project.team?.pms || []),
     ];
 

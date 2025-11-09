@@ -37,6 +37,20 @@ export const useTeamStore = defineStore('team', () => {
     teams.value.unshift(newTeam)
   }
 
+  async function createTeam(payload) {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.post(`${API_BASE_URL}/teams`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      teams.value.unshift(res.data) // add new team to top
+      return res.data
+    } catch (err) {
+      console.error('Error creating team:', err.response?.data || err.message)
+      throw err
+    }
+  }
+
   async function updateTeam(id, payload) {
     try {
       const token = localStorage.getItem('token')
@@ -59,7 +73,7 @@ export const useTeamStore = defineStore('team', () => {
       })
       teams.value = teams.value.filter((t) => t.id !== id)
     } catch (err) {
-      console.error('Error deleting team:', err)
+      console.error('Error deleting team:', err.response?.data || err.message)
     }
   }
 
@@ -68,6 +82,7 @@ export const useTeamStore = defineStore('team', () => {
     fetchTeams,
     fetchTeam,
     addTeam,
+    createTeam,
     updateTeam,
     deleteTeam,
   }

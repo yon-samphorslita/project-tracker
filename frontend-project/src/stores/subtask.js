@@ -11,16 +11,17 @@ export const useSubtaskStore = defineStore(
     const loading = ref(false)
     const error = ref(null)
 
-    // Fetch all subtasks
+    const authHeaders = () => {
+      const token = localStorage.getItem('token')
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    }
+
     async function fetchSubtasks() {
       loading.value = true
       error.value = null
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.get(`${API_BASE_URL}/subtasks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        subtasks.value = response.data
+        const res = await axios.get(`${API_BASE_URL}/subtasks`, { headers: authHeaders() })
+        subtasks.value = res.data
       } catch (err) {
         error.value = err.response?.data?.message || err.message
       } finally {
@@ -28,16 +29,14 @@ export const useSubtaskStore = defineStore(
       }
     }
 
-    // Fetch subtasks by task ID
     async function fetchByTask(taskId) {
       loading.value = true
       error.value = null
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.get(`${API_BASE_URL}/subtasks/task/${taskId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await axios.get(`${API_BASE_URL}/subtasks/task/${taskId}`, {
+          headers: authHeaders(),
         })
-        return response.data
+        return res.data
       } catch (err) {
         error.value = err.response?.data?.message || err.message
         return []
@@ -46,17 +45,15 @@ export const useSubtaskStore = defineStore(
       }
     }
 
-    // Create subtask
     async function createSubtask(payload) {
       loading.value = true
       error.value = null
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.post(`${API_BASE_URL}/subtasks`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await axios.post(`${API_BASE_URL}/subtasks`, payload, {
+          headers: authHeaders(),
         })
-        subtasks.value.push(response.data)
-        return response.data
+        subtasks.value.push(res.data)
+        return res.data
       } catch (err) {
         error.value = err.response?.data?.message || err.message
         return null
@@ -65,23 +62,17 @@ export const useSubtaskStore = defineStore(
       }
     }
 
-    // Update subtask
     async function updateSubtask(id, payload) {
       loading.value = true
       error.value = null
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.patch(`${API_BASE_URL}/subtasks/${id}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await axios.patch(`${API_BASE_URL}/subtasks/${id}`, payload, {
+          headers: authHeaders(),
         })
-
         const index = subtasks.value.findIndex((s) => s.id === id)
-        if (index !== -1) {
-          subtasks.value[index] = { ...subtasks.value[index], ...response.data }
-        } else if (payload.taskId) {
-          await fetchByTask(payload.taskId)
-        }
-        return response.data
+        if (index !== -1) subtasks.value[index] = { ...subtasks.value[index], ...res.data }
+        else if (payload.taskId) await fetchByTask(payload.taskId)
+        return res.data
       } catch (err) {
         error.value = err.response?.data?.message || err.message
         return null
@@ -90,15 +81,11 @@ export const useSubtaskStore = defineStore(
       }
     }
 
-    // Delete subtask
     async function deleteSubtask(id) {
       loading.value = true
       error.value = null
       try {
-        const token = localStorage.getItem('token')
-        await axios.delete(`${API_BASE_URL}/subtasks/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        await axios.delete(`${API_BASE_URL}/subtasks/${id}`, { headers: authHeaders() })
         subtasks.value = subtasks.value.filter((s) => s.id !== id)
       } catch (err) {
         error.value = err.response?.data?.message || err.message
@@ -118,7 +105,5 @@ export const useSubtaskStore = defineStore(
       deleteSubtask,
     }
   },
-  {
-    persist: true,
-  },
+  { persist: true },
 )

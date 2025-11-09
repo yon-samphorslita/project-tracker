@@ -6,16 +6,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Subtask } from './subtask.entity';
 import { Status } from 'src/enums/status.enum';
 import { Task } from 'src/task/task.entity';
+import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class SubtaskService {
   constructor(
     @InjectRepository(Subtask)
     private subtaskRepository: Repository<Subtask>,
+    private readonly activityService: ActivityService, // Inject ActivityService
   ) {}
 
-  async create(createSubtaskDto: CreateSubtaskDto): Promise<Subtask> {
-    const { taskId, name, status } = createSubtaskDto;
+  async create(
+    createSubtaskDto: CreateSubtaskDto,
+    userId: number,
+  ): Promise<Subtask> {
+    const { taskId, name } = createSubtaskDto;
 
     const task = await this.subtaskRepository.manager.findOne(Task, {
       where: { id: taskId },
@@ -30,7 +35,15 @@ export class SubtaskService {
       task,
       taskId,
     });
-    return this.subtaskRepository.save(subtask);
+    const savedSubtask = await this.subtaskRepository.save(subtask);
+
+    // Log activity
+    await this.activityService.logAction(
+      userId,
+      `Created subtask "${savedSubtask.name}" for task "${task.t_name}".`,
+    );
+
+    return savedSubtask;
   }
 
   async findAll(): Promise<Subtask[]> {
@@ -46,34 +59,51 @@ export class SubtaskService {
     });
   }
 
-  // async update(
-  //   id: number,
-  //   updateSubtaskDto: UpdateSubtaskDto,
-  // ): Promise<Subtask | null> {
-  //   await this.subtaskRepository.update(id, updateSubtaskDto);
-  //   return this.findOne(id);
-  // }
-
-  // async remove(id: number): Promise<void> {
-  //   const result = await this.subtaskRepository.delete(id);
-  //   if (result.affected === 0) {
-  //     throw new NotFoundException(`Subtask with id ${id} not found`);
-  //   }
-  // }
-
-  async update(id: number, dto: UpdateSubtaskDto): Promise<Subtask> {
-    const subtask = await this.subtaskRepository.findOne({ where: { id } });
+  async update(
+    id: number,
+    dto: UpdateSubtaskDto,
+    userId?: number,
+  ): Promise<Subtask> {
+    const subtask = await this.subtaskRepository.findOne({
+      where: { id },
+      relations: ['task'],
+    });
     if (!subtask)
       throw new NotFoundException(`Subtask with id ${id} not found`);
+
+    const oldName = subtask.name;
     Object.assign(subtask, dto);
-    return this.subtaskRepository.save(subtask);
+    const updatedSubtask = await this.subtaskRepository.save(subtask);
+
+    // Log activity
+    if (userId) {
+      await this.activityService.logAction(
+        userId,
+        `Updated subtask "${oldName}" to "${updatedSubtask.name}" for task "${subtask.task.t_name}".`,
+      );
+    }
+
+    return updatedSubtask;
   }
 
-  async remove(id: number): Promise<Subtask> {
-    const subtask = await this.subtaskRepository.findOne({ where: { id } });
+  async remove(id: number, userId?: number): Promise<Subtask> {
+    const subtask = await this.subtaskRepository.findOne({
+      where: { id },
+      relations: ['task'],
+    });
     if (!subtask)
       throw new NotFoundException(`Subtask with id ${id} not found`);
+
     await this.subtaskRepository.remove(subtask);
+
+    // Log activity
+    if (userId) {
+      await this.activityService.logAction(
+        userId,
+        `Deleted subtask "${subtask.name}" from task "${subtask.task.t_name}".`,
+      );
+    }
+
     return subtask;
   }
 

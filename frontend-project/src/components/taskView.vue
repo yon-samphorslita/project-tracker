@@ -30,7 +30,11 @@
       </template>
 
       <template v-else-if="activeOption === 'Gantt'">
-        <GanttChart :rows="ganttRows.length ? ganttRows : []" :format-date="formatDate" />
+        <GanttChart
+          :rows="ganttRows.length ? ganttRows : []"
+          :format-date="formatDate"
+          title="Tasks"
+        />
       </template>
 
       <template v-else-if="activeOption === 'Table'">
@@ -40,18 +44,14 @@
           :format-date="formatDate"
           @statusUpdated="handleStatusUpdate"
         >
-          <template #actions="{ row }">
+          <template
+            v-if="userRole === 'admin' || userRole === 'project_manager'"
+            #actions="{ row }"
+          >
             <div class="flex gap-2">
-              <img
-                src="../assets/icons/edit.svg"
-                alt="Edit"
-                class="cursor-pointer"
-                @click="editTask(row)"
-              />
-              <img
-                src="../assets/icons/delete.svg"
-                alt="Delete"
-                class="cursor-pointer"
+              <EditIcon class="w-6 h-6 cursor-pointer icon-theme" @click="editTask(row)" />
+              <DeleteIcon
+                class="w-6 h-6 cursor-pointer icon-theme"
                 @click="$emit('onTaskDeleted', row)"
               />
             </div>
@@ -59,12 +59,10 @@
         </Table>
       </template>
     </div>
-
     <!-- Edit Task Form -->
-    <Form
-      v-if="showEditTaskForm"
-      v-model:modelValue="showEditTaskForm"
-      formTitle="Edit Task"
+    <EditForm
+      v-model="showEditTaskForm"
+      title="Edit Task"
       :fields="taskFields"
       :initialData="editTaskData"
       endpoint="tasks"
@@ -75,13 +73,15 @@
 
 <script setup>
 import { ref, computed, reactive } from 'vue'
-import Table from '@/components/table.vue'
-import Kanban from '@/components/kanban.vue'
-import GanttChart from '@/components/gantt.vue'
-import Search from '@/components/search.vue'
-import Filter from '@/components/filter.vue'
-import TypeList from '@/components/typeList.vue'
-import Form from '@/components/form.vue'
+import Table from '@/components/charts/table.vue'
+import Kanban from '@/components/charts/kanban.vue'
+import GanttChart from '@/components/charts/gantt.vue'
+import Search from '@/components/common-used/search.vue'
+import Filter from '@/components/common-used/filter.vue'
+import TypeList from '@/components/charts/typeList.vue'
+import EditForm from '@/components/forms/editForm.vue'
+import EditIcon from '@/assets/icons/edit.svg'
+import DeleteIcon from '@/assets/icons/delete.svg'
 import { useTaskStore } from '@/stores/task'
 const props = defineProps({
   project: Object,
@@ -105,7 +105,7 @@ const activeFilters = reactive({
 
 const filteredTasksByStatus = (status) =>
   filteredTasksWithSubtasks.value.filter((t) => t.status?.toLowerCase() === status.toLowerCase())
-const filterFields = [
+const filterFields = computed(() => [
   {
     key: 'priority',
     label: 'Priority',
@@ -121,9 +121,12 @@ const filterFields = [
     key: 'user',
     label: 'Assigned To',
     type: 'select',
-    options: props.TeamMembers.map((u) => ({ value: u.id, label: u.name })),
+    options: [
+      { value: '', label: 'All' },
+      ...(props.TeamMembers || []).map((u) => ({ value: u.id, label: u.name })),
+    ],
   },
-]
+])
 //search and filter tasks
 const filteredTasksWithSubtasks = computed(() => {
   const q = searchQuery.value.toLowerCase()
@@ -150,7 +153,14 @@ const ganttRows = computed(() =>
         name: st.name,
         start: st.start ? new Date(st.start) : new Date(task.start_date),
         end: st.end ? new Date(st.end) : new Date(task.due_date),
-        color: st.status === 'completed' ? '#8BD3B7' : '#FFD966',
+        color:
+          st.status === 'completed'
+            ? '#BBDFCE'
+            : '' || st.status === 'not started'
+              ? '#FFD5DB'
+              : '' || st.status === 'in progress'
+                ? '#D9CBFB'
+                : '',
         icon: task.user?.img_url || null,
       })) || [],
   })),

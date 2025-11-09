@@ -75,6 +75,7 @@ export class User {
   // Main team (priority team)
   @ManyToOne(() => Team, (team) => team.mainMembers, { nullable: true })
   team: Team;
+
   @ManyToMany(() => Team, (team) => team.pms)
   pmTeams: Team[];
 

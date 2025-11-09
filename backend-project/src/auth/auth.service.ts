@@ -34,12 +34,15 @@ export class AuthService {
     return user;
   }
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
+  async createUser(
+    createUserDto: CreateUserDto,
+    performedById: number,
+  ): Promise<User> {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    return this.userService.createUser({
-      ...createUserDto,
-      password: hashedPassword,
-    });
+    return this.userService.createUser(
+      { ...createUserDto, password: hashedPassword },
+      performedById,
+    );
   }
 
   async login(user: User): Promise<{ accessToken: string }> {
@@ -60,9 +63,15 @@ export class AuthService {
   async updateUserPassword(
     userId: number,
     newPassword: string,
+    performedById: number,
     markChanged = true,
   ): Promise<User> {
-    return this.userService.updatePassword(userId, newPassword, markChanged);
+    return this.userService.updatePassword(
+      userId,
+      newPassword,
+      performedById,
+      markChanged,
+    );
   }
 
   async generateOtp(userId: number): Promise<string> {
@@ -72,10 +81,14 @@ export class AuthService {
     const otp = randomInt(100000, 999999).toString();
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
 
-    await this.userService.update(userId, {
-      otp_code: otp,
-      otp_expiry: expiry,
-    });
+    await this.userService.update(
+      userId,
+      {
+        otp_code: otp,
+        otp_expiry: expiry,
+      },
+      0,
+    );
     await this.emailService.sendOtp(user.email, otp);
 
     return otp;
@@ -95,10 +108,14 @@ export class AuthService {
       String(user.otp_code).trim() === String(otp).trim() &&
       otpExpiry.getTime() > now.getTime()
     ) {
-      await this.userService.update(userId, {
-        otp_code: null,
-        otp_expiry: null,
-      });
+      await this.userService.update(
+        userId,
+        {
+          otp_code: undefined,
+          otp_expiry: undefined,
+        },
+        0,
+      );
       return true;
     }
 

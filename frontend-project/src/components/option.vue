@@ -7,8 +7,8 @@
       :class="[
         'px-6 py-2 text-sm font-medium focus:outline-none w-full',
         selected === option
-          ? 'bg-white text-gray-700 '
-          : 'bg-gray-300 text-gray-900 hover:bg-gray-400',
+          ? 'bg-main-bg text-gray-text'
+          : 'bg-[var(--gray-bg)] text-sub-text hover:bg-black/15',
       ]"
     >
       {{ option }}
@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -31,8 +31,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-
 const selected = ref(props.modelValue)
+
+// Keep selected reactive to modelValue changes
+watch(
+  () => props.modelValue,
+  (val) => {
+    selected.value = val
+  },
+)
 
 function select(option) {
   selected.value = option

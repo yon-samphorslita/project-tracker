@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/homepage.vue'
-import AuthPage from '../views/authentication/authPage.vue'
-import ProjectList from '@/views/projectList.vue'
-import ProjectPage from '@/views/projectPage.vue'
+import Home from '@/views/tests/homepage.vue'
+import AuthPage from '@/views/authentication/authPage.vue'
+import ProjectList from '@/views/project/projectList.vue'
+import ProjectPage from '@/views/project/projectPage.vue'
 import SettingsProfile from '@/views/settings/settingsProfile.vue'
 import ActivityLogs from '@/views/settings/activityLogs.vue'
 import SettingsPage from '@/views/settings/settingsPage.vue'
@@ -10,23 +10,30 @@ import ChangePassword from '@/views/authentication/changePassword.vue'
 import ForgotPassword from '@/views/authentication/forgotPassword.vue'
 import SettingsLayout from '@/views/settings/settingsLayout.vue'
 import CalendarPage from '@/views/calendarPage.vue'
-import UserPage from '@/views/userPage.vue'
+import UserPage from '@/views/user/userPage.vue'
+import UserDetail from '@/views/user/userDetail.vue'
 import { useAuthStore } from '@/stores/auth'
-import TeamList from '@/views/teamList.vue'
-import TeamEditPage from '@/views/teamEditPage.vue'
-import TeamDetail from '@/views/teamDetail.vue'
-import UserProfile from '@/views/userProfile.vue'
+import TeamList from '@/views/team/teamList.vue'
+import TeamEditPage from '@/views/team/teamEditPage.vue'
+import TeamDetail from '@/views/team/teamDetail.vue'
+import UserProfile from '@/views/team/userProfile.vue'
 import NotificationPage from '@/views/notificationPage.vue'
 import Taskpage from '@/views/taskpage.vue'
 import Dashboard from '@/views/dashboard.vue'
 import GetHelp from '@/views/settings/getHelp.vue'
+import ThemeSettings from '@/views/settings/ThemeSettings.vue'
 const routes = [
   { path: '/', redirect: '/login' },
   { path: '/home', name: 'Home', component: Home, meta: { requiresAuth: true } },
   { path: '/login', component: AuthPage, name: 'Login' },
   { path: '/change-password', component: ChangePassword, meta: { requiresAuth: true } },
   { path: '/forgot-password', component: ForgotPassword },
-  { path: '/projects', component: ProjectList, meta: { requiresAuth: true, title: 'Projects' } },
+  {
+    path: '/projects',
+    component: ProjectList,
+    meta: { requiresAuth: true, title: 'Projects' },
+    name: 'Projects',
+  },
   {
     path: '/project/:id',
     component: ProjectPage,
@@ -42,11 +49,23 @@ const routes = [
       { path: '', component: SettingsPage },
       { path: 'profile', component: SettingsProfile },
       { path: 'activity-logs', component: ActivityLogs },
+      { path: 'theme', component: ThemeSettings },
     ],
   },
   { path: '/help', component: GetHelp, meta: { requiresAuth: true, title: 'Get Help' } },
   { path: '/calendar', component: CalendarPage, meta: { requiresAuth: true, title: 'Calendar' } },
-  { path: '/user', component: UserPage, meta: { requiresAuth: true, title: 'User' } },
+  {
+    path: '/users',
+    component: UserPage,
+    meta: { requiresAuth: true, title: 'Users' },
+    name: 'Users',
+  },
+  {
+    path: '/user/:id',
+    name: 'UserDetail',
+    component: UserDetail,
+    meta: { requiresAdmin: true, title: 'Users' },
+  },
   {
     path: '/user/profile/:id',
     component: UserProfile,
@@ -100,10 +119,7 @@ router.beforeEach(async (to, from, next) => {
   // Prevent logged-in users from visiting login page
   if (to.path === '/login' && isLoggedIn) {
     const role = authStore.user?.role
-    if (role === 'admin') return next('/settings/profile')
-    if (role === 'project_manager') return next('/projects')
-    if (role === 'member') return next('/dashboard')
-    return next('/') // fallback
+    return next('/dashboard') // fallback
   }
 
   next()

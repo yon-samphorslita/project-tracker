@@ -7,9 +7,9 @@ export class EmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      service: 'gmail', // or your SMTP provider
+      service: 'gmail',
       auth: {
-        user: process.env.MAIL_USER, // your email
+        user: process.env.MAIL_USER, // email address to send otp (from env)
         pass: process.env.MAIL_PASS, // app password for Gmail
       },
     });

@@ -16,8 +16,6 @@ export class UploadController {
       storage: diskStorage({
         destination: './upload/images',
         filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
           const name = randomBytes(4).toString('hex');
           cb(null, `${name}${ext}`);

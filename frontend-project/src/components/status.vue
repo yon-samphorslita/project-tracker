@@ -1,7 +1,7 @@
 <template>
   <span
     :class="badgeClass"
-    class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize relative"
+    class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize relative z-0"
   >
     {{ displayValue }}
 
@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 
 const props = defineProps({
   status: { type: String, default: '' },
@@ -35,20 +35,17 @@ const props = defineProps({
 
 const emit = defineEmits(['update:status'])
 
-const currentValue = ref(props.status || props.priority || (props.active ? 'Active' : 'Inactive'))
+const currentValue = ref(getInitialValue())
 
-watch(
-  () => props.status,
-  (val) => (currentValue.value = val),
-)
-watch(
-  () => props.priority,
-  (val) => (currentValue.value = val),
-)
-watch(
-  () => props.active,
-  (val) => (currentValue.value = val ? 'Active' : 'Inactive'),
-)
+function getInitialValue() {
+  if (props.status) return props.status
+  if (props.priority) return props.priority
+  return props.active ? 'Active' : 'Inactive'
+}
+
+watchEffect(() => {
+  currentValue.value = getInitialValue()
+})
 
 function emitChange() {
   emit('update:status', currentValue.value)
@@ -57,33 +54,21 @@ function emitChange() {
 const displayValue = computed(() => currentValue.value)
 
 const badgeClass = computed(() => {
-  if (props.status) {
-    switch (props.status.toLowerCase()) {
-      case 'completed':
-        return 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
-      case 'in progress':
-        return 'bg-[rgba(250,192,54,0.15)] text-[#fac036]'
-      case 'not started':
-        return 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'
-      default:
-        return 'bg-gray-200 text-gray-700'
-    }
-  } else if (props.priority) {
-    switch (props.priority.toLowerCase()) {
-      case 'high':
-        return 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'
-      case 'medium':
-        return 'bg-[rgba(250,192,54,0.15)] text-[#fac036]'
-      case 'low':
-        return 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
-      default:
-        return 'bg-gray-200 text-gray-700'
-    }
-  } else if (props.active !== undefined) {
-    return props.active
-      ? 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
-      : 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'
+  const val = currentValue.value?.toLowerCase()
+  switch (val) {
+    case 'completed':
+    case 'low':
+    case 'active':
+      return 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
+    case 'in progress':
+    case 'medium':
+      return 'bg-[rgba(250,192,54,0.15)] text-[#fac036]'
+    case 'not started':
+    case 'high':
+    case 'inactive':
+      return 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'
+    default:
+      return 'bg-gray-200 text-gray-text'
   }
-  return 'bg-gray-200 text-gray-700'
 })
 </script>

@@ -2,17 +2,17 @@
   <TaskLayout>
     <div class="flex flex-col gap-4">
       <!-- Header  -->
-      <div class="flex flex-col gap-4 pt-5 bg-white">
+      <div class="flex flex-col gap-4 bg-main-bg">
         <!-- Filter Project  -->
         <div class="flex justify-between items-center">
           <div class="relative inline-block text-left">
             <button
               @click="toggleProjectDropdown"
-              class="inline-flex justify-between items-center w-64 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50"
+              class="inline-flex justify-between items-center w-64 px-4 py-2 text-sm font-medium text-gray-text bg-main-bg border border-gray-300 rounded-lg shadow-sm hover:brightness-90"
             >
               {{ selectedProjectLabel }}
               <svg
-                class="w-4 h-4 ml-2 text-gray-500"
+                class="w-4 h-4 ml-2 text-sub-text"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -29,14 +29,14 @@
 
             <div
               v-if="isProjectDropdownOpen"
-              class="absolute z-10 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg"
+              class="absolute z-10 mt-2 w-64 bg-main-bg border border-gray-200 rounded-lg shadow-lg"
             >
               <ul class="py-1">
                 <li
                   v-for="option in projectOptions"
                   :key="option.value"
                   @click="selectProject(option)"
-                  class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                  class="px-4 py-2 text-sm text-gray-text hover:bg-black/15 cursor-pointer"
                 >
                   {{ option.label }}
                 </li>
@@ -46,13 +46,13 @@
 
           <!-- Search and Sort by funtion  -->
           <div class="flex gap-4 items-center">
-            <Search class="w-[300px] h-4" @update="searchQuery = $event" />
+            <Search v-model:query="searchQuery" />
             <Filter class="min-w-fit" title="Sort by" :options="sortOptions" @select="applySort" />
           </div>
         </div>
       </div>
 
-      <div class="flex flex-col gap-3 border rounded-2xl p-4 bg-white h-full">
+      <div class="flex flex-col gap-3 border rounded-2xl p-4 bg-main-bg h-full">
         <TaskCard :tasks="filteredTasks" @edit-task="handleEdit" @delete-task="handleDelete" />
       </div>
     </div>
@@ -60,10 +60,10 @@
 </template>
 
 <script setup lang="ts">
-import TaskCard from '@/components/taskCard.vue'
-import TaskLayout from './pageLayout.vue'
-import Search from '@/components/search.vue'
-import Filter from '@/components/filter.vue'
+import TaskCard from '@/components/detail-cards/taskCard.vue'
+import TaskLayout from '@/views/pageLayout.vue'
+import Search from '@/components/common-used/search.vue'
+import Filter from '@/components/common-used/filter.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import axios from 'axios'

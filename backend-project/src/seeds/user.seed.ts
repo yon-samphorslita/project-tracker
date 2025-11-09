@@ -4,24 +4,17 @@ import { Role } from '../enums/role.enum';
 import * as bcrypt from 'bcrypt';
 
 export const createInitialAdmin = async (dataSource: DataSource) => {
-  if (!dataSource) {
-    console.error('DataSource is undefined! Check your app.get(DataSource)');
-    return;
-  }
+  if (!dataSource) return;
 
   try {
     const userRepository = dataSource.getRepository(User);
-    console.log('User repository obtained');
 
     // Check if admin already exists
     const existingAdmin = await userRepository.findOne({
       where: { role: Role.ADMIN },
     });
 
-    if (existingAdmin) {
-      console.log(`Admin already exists: ${existingAdmin.email}`);
-      return;
-    }
+    if (existingAdmin) return;
 
     // Create new admin if none exists
     const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -35,7 +28,6 @@ export const createInitialAdmin = async (dataSource: DataSource) => {
     });
 
     await userRepository.save(newAdmin);
-    console.log(`Initial admin created: ${newAdmin.email} / admin123`);
   } catch (err) {
     console.error('Failed to create admin:', err);
   }

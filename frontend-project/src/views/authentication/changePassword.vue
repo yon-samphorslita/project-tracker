@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-blue-100 p-4">
-    <div class="bg-white rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
+  <div class="min-h-screen flex items-center justify-center bg-blue-bg p-4">
+    <div class="bg-main-bg rounded-2xl shadow-lg flex flex-wrap max-w-4xl w-full overflow-hidden">
       <!-- Image Section -->
       <div class="flex-1 min-w-[300px] flex justify-center items-center p-6">
         <img src="../../assets/images/auth.png" alt="Logo" class="max-w-full h-auto" />
@@ -17,9 +17,11 @@
               v-model="form.oldPassword"
               type="password"
               placeholder="Old Password"
-              required
               class="rounded-[20px] border border-gray-300 p-[10px]"
             />
+            <span v-if="errors.oldPassword" class="text-red-500 text-sm mt-1">{{
+              errors.oldPassword
+            }}</span>
           </div>
 
           <div class="flex flex-col">
@@ -28,9 +30,11 @@
               v-model="form.newPassword"
               type="password"
               placeholder="New Password"
-              required
               class="rounded-[20px] border border-gray-300 p-[10px]"
             />
+            <span v-if="errors.newPassword" class="text-red-500 text-sm mt-1">{{
+              errors.newPassword
+            }}</span>
           </div>
 
           <div class="flex flex-col">
@@ -39,17 +43,24 @@
               v-model="form.confirmPassword"
               type="password"
               placeholder="Confirm New Password"
-              required
               class="rounded-[20px] border border-gray-300 p-[10px]"
             />
+            <span v-if="errors.confirmPassword" class="text-red-500 text-sm mt-1">{{
+              errors.confirmPassword
+            }}</span>
           </div>
 
-          <button
+          <div v-if="errors.general" class="text-red-500 text-sm text-center">
+            {{ errors.general }}
+          </div>
+
+          <Button
             type="submit"
-            class="bg-[#20A1FF] text-white py-3 rounded-[20px] font-bold hover:bg-blue-700 transition"
-          >
-            Update Password
-          </button>
+            :disabled="loading"
+            btn-color="var(--blue-bg)"
+            btntext="var(--main-text)"
+            label="Update Password"
+          />
         </form>
       </div>
     </div>
@@ -60,6 +71,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import Button from '@/components/common-used/button.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -70,20 +82,57 @@ const form = ref({
   confirmPassword: '',
 })
 
-async function handleChangePassword() {
-  if (form.value.newPassword !== form.value.confirmPassword) {
-    alert('Passwords do not match')
-    return
-  }
+const errors = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+  general: '',
+})
 
+const loading = ref(false)
+
+function validateForm() {
+  let valid = true
+  errors.value.oldPassword = ''
+  errors.value.newPassword = ''
+  errors.value.confirmPassword = ''
+  errors.value.general = ''
+
+  if (!form.value.oldPassword) {
+    errors.value.oldPassword = 'Old password is required'
+    valid = false
+  }
+  if (!form.value.newPassword) {
+    errors.value.newPassword = 'New password is required'
+    valid = false
+  }
+  if (!form.value.confirmPassword) {
+    errors.value.confirmPassword = 'Please confirm your new password'
+    valid = false
+  }
+  if (
+    form.value.newPassword &&
+    form.value.confirmPassword &&
+    form.value.newPassword !== form.value.confirmPassword
+  ) {
+    errors.value.confirmPassword = 'Passwords do not match'
+    valid = false
+  }
+  return valid
+}
+
+async function handleChangePassword() {
+  if (!validateForm()) return
+
+  loading.value = true
   try {
     await auth.updatePassword(form.value.oldPassword, form.value.newPassword)
-
-    alert('Password updated successfully')
     router.push('/') // redirect to dashboard
   } catch (err) {
     console.error(err)
-    alert(err.response?.data?.message || 'Failed to update password')
+    errors.value.general = err.response?.data?.message || 'Failed to update password'
+  } finally {
+    loading.value = false
   }
 }
 </script>

@@ -1,13 +1,18 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ActivityLog } from './activity.entity';
 import { ActivityService } from './activity.service';
 import { ActivityController } from './activity.controller';
 import { ActivityGateway } from './activity.gateway';
 import { AuthModule } from 'src/auth/auth.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ActivityLog]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([ActivityLog]),
+    forwardRef(() => AuthModule),
+    forwardRef(() => UserModule),
+  ],
   providers: [ActivityService, ActivityGateway],
   controllers: [ActivityController],
   exports: [ActivityService],
