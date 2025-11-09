@@ -5,33 +5,60 @@
         <!-- left side: project overview, charts, recent projects -->
         <div class="w-2/3 flex flex-col items-start gap-6">
           <div class="flex flex-col gap-4 mb-2">
-            <div class="text-xl font-semibold">Project Overview</div>
-            <div class="flex gap-4 w-full">
-              <OverviewCard title="Total Projects" :value="totalProjects" class="w-[230px]" />
-              <OverviewCard title="Overdue Projects" :value="overdueProjects" class="w-[230px]" />
-              <OverviewCard
-                title="Completed Projects"
-                :value="completedProjects"
-                class="w-[230px]"
-              />
+            <div v-if="userRole === 'admin' || userRole === 'project_manager' ">
+              <div class="text-xl font-semibold">Project Overview</div>
+              <div class="flex gap-4 w-full">
+                <OverviewCard title="Total Projects" :value="totalProjects" class="w-[230px]" />
+                <OverviewCard title="Overdue Projects" :value="overdueProjects" class="w-[230px]" />
+                <OverviewCard title="Completed Projects" :value="completedProjects" class="w-[230px]" />
+              </div>
             </div>
+
+            <div v-else class="w-full">
+              <!-- <div class="text-xl font-semibold mb-3">My Focus Tasks</div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Focustask
+                  v-for="task in focusTasks"
+                  :key="task.id"
+                  :focus-task="task"
+                />
+              </div> -->
+
+              <div class="text-xl font-semibold">Task Overview</div>
+              <div class="flex gap-4 w-full">
+                <OverviewCard title="Total Tasks" :value="totalTasks" class="w-[230px]" />
+                <OverviewCard title="Overdue Tasks" :value="overdueTasks" class="w-[230px]" />
+                <OverviewCard title="Completed Tasks" :value="completedTasks" class="w-[230px]"/>
+              </div>
+            </div>
+            
           </div>
 
           <!-- project and task status charts -->
           <div class="flex w-full gap-10 my-2">
-            <div>
-              <div class="text-xl font-semibold">Total Project</div>
-              <PieChart :data="projectStatus" :height="280" class="w-[350px]" />
+            <div v-if="userRole === 'admin' || userRole === 'project_manager' ">
+              <div>
+                <div class="text-xl font-semibold">Total Project</div>
+                <PieChart :data="projectStatus" :height="280" class="w-[350px]" />
+              </div>
+
+              <div>
+                <div class="text-xl font-semibold">Total Tasks</div>
+                <PieChart :data="taskStatus" :height="280" class="w-[350px]" />
+              </div>
             </div>
 
-            <div>
-              <div class="text-xl font-semibold">Total Tasks</div>
-              <PieChart :data="taskStatus" :height="280" class="w-[350px]" />
+            <div v-else>
+              <div>
+                <div class="text-xl font-semibold">My Task Status</div>
+                <PieChart :data="memberTaskStatus" :height="280" class="w-[350px]" />
+              </div>
             </div>
+
           </div>
 
           <!-- showcase recent project's status -->
-          <div class="w-full my-2">
+          <div v-if="userRole === 'project_manager'" class="w-full my-2">
             <div class="text-xl font-semibold mb-2">Top 3 Priority Projects</div>
             <div>
               <ProjectOverview
@@ -45,9 +72,9 @@
         </div>
 
         <!-- right side: date & time, calendar -->
-        <div class="w-1/3 flex flex-col gap-4">
+        <div class="w-1/3 flex flex-col gap-4 bg-[#C6E7FF] rounded-xl shadow-md ">
           <div
-            class="flex flex-col justify-end items-center gap-4 p-4 bg-[#C6E7FF] rounded-xl shadow-md"
+            class="flex flex-col justify-end items-center gap-4 p-4 bg-[#C6E7FF] rounded-t-xl"
           >
             <!-- Date Information -->
             <div
@@ -79,16 +106,22 @@
             </div>
           </div>
 
-          <div class="flex justify-end">
-            <Calendar class="w-[700px]" />
+          <div class="flex justify-center p-4 ">
+            <Calendar class="w-[700px] bg-white" />
           </div>
         </div>
       </div>
 
       <div class="py-6">
-        <div class="text-xl font-semibold mb-3">Project Timeline</div>
-        <GanttChart :rows="ganttRows" :format-date="formatDate" />
+        <div class="text-xl font-semibold mb-3">
+          {{ userRole === 'admin' || userRole === 'project_manager' ? 'Project Timeline' : 'My Task Timeline' }}
+        </div>
+        <GanttChart
+          :rows="userRole === 'admin' || userRole === 'project_manager' ? ganttRows : memberGanttRows"
+          :format-date="formatDate"
+        />
       </div>
+
     </div>
   </DashboardLayout>
 </template>
@@ -102,11 +135,16 @@ import Calendar from '@/components/calendar.vue'
 import FlipDigit from '@/components/flipDigit.vue'
 import ProjectOverview from '@/components/projectOverview.vue'
 import GanttChart from '@/components/gantt.vue'
+import Focustask from '@/components/myfocustask.vue'
+
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
+
 const currentTime = ref(new Date())
 let timer: ReturnType<typeof setInterval>
 
@@ -178,6 +216,72 @@ const ganttRows = computed(() =>
       },
     ],
   })),
+)
+
+// Member Tasks Computation 
+const userRole = computed(() => authStore.user?.role || 'user')
+const userId = computed(() => authStore.user?.id)
+
+const memberTasks = computed(() =>
+  taskStore.tasks.filter((t) => t.userId === userId.value)
+)
+
+const totalTasks = computed(() => memberTasks.value.length)
+
+const overdueTasks = computed(() => {
+  const today = new Date()
+  return memberTasks.value.filter(
+    (t) => new Date(t.due_date) < today && t.t_status?.toLowerCase() !== 'completed',
+  ).length
+})
+
+const completedTasks = computed(() =>
+  memberTasks.value.filter((t) => t.t_status?.toLowerCase() === 'completed').length
+)
+
+const memberTaskStatus = computed(() => {
+  const summary = { 'Not Started': 0, 'In Progress': 0, Completed: 0 }
+  memberTasks.value.forEach((t) => {
+    switch (t.t_status?.toLowerCase()) {
+      case 'not started':
+        summary['Not Started']++
+        break
+      case 'in progress':
+        summary['In Progress']++
+        break
+      case 'completed':
+        summary['Completed']++
+        break
+      default:
+        summary['Not Started']++
+    }
+  })
+  return Object.entries(summary).map(([type, value]) => ({ type, value }))
+})
+
+const memberGanttRows = computed(() =>
+  memberTasks.value.map((t) => ({
+    label: t.t_name,
+    tasks: [
+      {
+        name: t.t_name,
+        start: new Date(t.start_date),
+        end: new Date(t.due_date),
+        status: t.t_status,
+        color: getStatusColor(t.t_status),
+      },
+    ],
+  })),
+)
+
+const focusTasks = computed(() =>
+  taskStore.tasks
+    .filter(
+      (t) =>
+        t.userId === authStore.user?.id &&
+        t.t_status.toLowerCase() !== 'completed'
+    )
+    .slice(0, 2)
 )
 
 function getStatusColor(status: string) {
