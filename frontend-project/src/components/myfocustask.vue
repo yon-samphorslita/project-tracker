@@ -2,8 +2,10 @@
   <div class="w-full p-4 bg-pink-100 rounded-xl shadow-md hover:shadow-lg transition">
     <div class="flex flex-col">
       <!-- Header -->
-      <div class="flex justify-between mb-2">
-        <div class="text-lg font-semibold text-gray-800 truncate">
+      <div class="flex justify-between mb-3 gap-2">
+        <div class="text-lg font-semibold text-gray-800"  @click="goToTaskPage"
+ 
+        >
           {{ focusTask.t_name }}
         </div>
         <div class="text-sm text-gray-500">
@@ -12,12 +14,16 @@
       </div>
 
       <!-- Status Badge -->
-      <div
-        class="text-sm font-medium mb-3 inline-block px-2 py-1 rounded-md"
+      <!-- <div
+        class="text-sm font-medium mb-3 w-max inline-block px-2 py-1 rounded-md"
         :class="statusColorClass(focusTask.t_status)"
       >
-        {{ focusTask.t_status }}
+        {{ focusTask.t_status }}       
+      </div> -->
+      <div class="flex flex-grow items-center">
+        <ProgressBar :completed="completedSubtasks" :total="totalSubtasks" />
       </div>
+
 
       <!-- Subtask Checklist -->
       <div v-if="subtasks.length" class="flex flex-col gap-2">
@@ -52,7 +58,9 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue'
+import ProgressBar from '@/components/progressBar.vue'
 import { useSubtaskStore } from '@/stores/subtask'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   focusTask: {
@@ -61,6 +69,7 @@ const props = defineProps({
   },
 })
 
+const router = useRouter()
 const subtaskStore = useSubtaskStore()
 const subtasks = ref<any[]>([])
 
@@ -68,6 +77,13 @@ const subtasks = ref<any[]>([])
 onMounted(async () => {
   subtasks.value = await subtaskStore.fetchByTask(props.focusTask.id)
 })
+
+// Computed properties for subtask stats
+const totalSubtasks = computed(() => subtasks.value.length)
+const completedSubtasks = computed(() => 
+  subtasks.value.filter(s => s.status === 'completed').length
+)
+
 
 // Calculate days remaining
 const daysRemaining = computed(() => {
@@ -101,4 +117,19 @@ function statusColorClass(status: string) {
       return 'bg-gray-200 text-gray-700'
   }
 }
+
+// Navigation to task page
+// function goToTaskPage() {
+//   if (props.focusTask?.id) router.push(`/task/${props.focusTask.id}`)
+  
+// }
+function goToTaskPage() {
+  if (props.focusTask?.id) {
+    router.push({
+      path: `/task`,
+      query: { highlight: props.focusTask.id }  // <-- add this
+    })
+  }
+}
+
 </script>

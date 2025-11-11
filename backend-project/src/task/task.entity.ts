@@ -48,7 +48,7 @@ export class Task {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne((type) => Project, (project) => project.tasks)
+  @ManyToOne((type) => Project, (project) => project.tasks ,  { onDelete: 'CASCADE' })
   project: Project;
 
   @ManyToOne((type) => User, (user) => user.tasks, { nullable: true })

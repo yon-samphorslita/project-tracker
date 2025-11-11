@@ -7,7 +7,7 @@
           <div class="flex flex-col gap-4 mb-2">
             <div v-if="userRole === 'admin' || userRole === 'project_manager' ">
               <div class="text-xl font-semibold">Project Overview</div>
-              <div class="flex gap-4 w-full">
+              <div class="flex justify-between item-center w-full">
                 <OverviewCard title="Total Projects" :value="totalProjects" class="w-[230px]" />
                 <OverviewCard title="Overdue Projects" :value="overdueProjects" class="w-[230px]" />
                 <OverviewCard title="Completed Projects" :value="completedProjects" class="w-[230px]" />
@@ -15,28 +15,19 @@
             </div>
 
             <div v-else class="w-full">
-              <div class="text-xl font-semibold mb-3">My Focus Tasks</div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Focustask
-                  v-for="task in focusTasks"
-                  :key="task.id"
-                  :focus-task="task"
-                />
-              </div>
-
-              <!-- <div class="text-xl font-semibold">Task Overview</div>
-              <div class="flex gap-4 w-full">
+              <div class="text-xl font-semibold">Task Overview</div>
+              <div class="flex justify- item-center gap-4 w-full">
                 <OverviewCard title="Total Tasks" :value="totalTasks" class="w-[230px]" />
                 <OverviewCard title="Overdue Tasks" :value="overdueTasks" class="w-[230px]" />
                 <OverviewCard title="Completed Tasks" :value="completedTasks" class="w-[230px]"/>
-              </div> -->
+              </div>
             </div>
             
           </div>
 
           <!-- project and task status charts -->
-          <div class="flex w-full gap-10 my-2">
-            <div v-if="userRole === 'admin' || userRole === 'project_manager' ">
+          <div class="flex w-full gap-10">
+            <div v-if="userRole === 'admin' || userRole === 'project_manager' " class="flex gap-10">
               <div>
                 <div class="text-xl font-semibold">Total Project</div>
                 <PieChart :data="projectStatus" :height="280" class="w-[350px]" />
@@ -48,7 +39,7 @@
               </div>
             </div>
 
-            <div v-else>
+            <div v-else-if="userRole === 'member'">
               <div>
                 <div class="text-xl font-semibold">My Task Status</div>
                 <PieChart :data="memberTaskStatus" :height="280" class="w-[350px]" />
@@ -62,12 +53,23 @@
             <div class="text-xl font-semibold mb-2">Top 3 Priority Projects</div>
             <div>
               <ProjectOverview
-                v-if="projectStore.projects.length && taskStore.tasks.length"
+                v-if="projectStore.projects.length && !taskStore.loading"
                 :projects="projectStore.projects"
                 :tasks="taskStore.tasks"
               />
               <div v-else>Loading projects...</div>
             </div>
+          </div>
+
+          <div v-if="userRole === 'member'" >
+              <div class="text-xl font-semibold mb-3">My Focus Tasks</div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Focustask
+                  v-for="task in focusTasks"
+                  :key="task.id"
+                  :focus-task="task"
+                />
+              </div>
           </div>
         </div>
 
@@ -121,13 +123,12 @@
           :format-date="formatDate"
         />
       </div>
-
     </div>
   </DashboardLayout>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import DashboardLayout from '@/views/pageLayout.vue'
 import OverviewCard from '@/components/detail-cards/overviewCard.vue'
 import PieChart from '@/components/charts/pieChart.vue'
@@ -222,7 +223,7 @@ const userRole = computed(() => authStore.user?.role || 'user')
 const userId = computed(() => authStore.user?.id)
 
 const memberTasks = computed(() =>
-  taskStore.tasks.filter((t) => t.userId === userId.value)
+  taskStore.tasks.filter((t) => t.user?.id === userId.value)
 )
 
 const totalTasks = computed(() => memberTasks.value.length)
@@ -239,7 +240,7 @@ const completedTasks = computed(() =>
 )
 
 const memberTaskStatus = computed(() => {
-  const summary = { 'Not Started': 0, 'In Progress': 0, Completed: 0 }
+  const summary = { 'Not Started': 0, 'In Progress': 0, 'Completed': 0 }
   memberTasks.value.forEach((t) => {
     switch (t.t_status?.toLowerCase()) {
       case 'not started':
@@ -255,6 +256,7 @@ const memberTaskStatus = computed(() => {
         summary['Not Started']++
     }
   })
+  console.log(memberTaskStatus)
   return Object.entries(summary).map(([type, value]) => ({ type, value }))
 })
 
@@ -273,15 +275,31 @@ const memberGanttRows = computed(() =>
   })),
 )
 
-const focusTasks = computed(() =>
-  taskStore.tasks
-    .filter(
-      (t) =>
-        t.userId === authStore.user?.id &&
-        t.t_status.toLowerCase() !== 'completed'
+const focusTasks = computed(() => {
+  const today = new Date()
+  const endOfWeek = new Date()
+  endOfWeek.setDate(today.getDate() + 7) // tasks due within a week
+
+  return taskStore.tasks
+    .filter(t => 
+      t.user?.id === authStore.user?.id && 
+      t.t_status.toLowerCase() !== 'completed'
     )
-    .slice(0, 2)
-)
+    .sort((a, b) => {
+      // First, tasks due sooner come first
+      const aDue = new Date(a.due_date).getTime()
+      const bDue = new Date(b.due_date).getTime()
+
+      // If due dates are equal, prioritize by task priority
+      if (aDue === bDue) {
+        const priorityOrder = { high: 1, medium: 2, low: 3 }
+        return (priorityOrder[a.priority?.toLowerCase()] || 4) - (priorityOrder[b.priority?.toLowerCase()] || 4)
+      }
+      return aDue - bDue
+    })
+    .slice(0, 2) // pick top 2 urgent tasks
+})
+
 
 function getStatusColor(status: string) {
   switch ((status || '').toLowerCase()) {
@@ -334,10 +352,15 @@ const formattedTime = computed(() =>
     // second: '2-digit',
   }),
 )
+watch(focusTasks, (val) => {
+  console.log('Focus tasks:', val)
+}, { immediate: true })
 
-onMounted(() => {
-  projectStore.fetchProjects()
-  taskStore.fetchTasks()
+onMounted(async () => {
+  await projectStore.fetchProjects()
+  await taskStore.fetchTasks()
+  console.log('Projects:', projectStore.projects)
+  console.log('Tasks:', taskStore.tasks)
 
   timer = setInterval(() => {
     currentTime.value = new Date()

@@ -53,7 +53,7 @@
       </div>
 
       <div class="flex flex-col gap-3 border rounded-2xl p-4 bg-main-bg h-full">
-        <TaskCard :tasks="filteredTasks" @edit-task="handleEdit" @delete-task="handleDelete" />
+        <TaskCard :tasks="filteredTasks" :highlighted-id="highlightedId" @edit-task="handleEdit" @delete-task="handleDelete" />
       </div>
     </div>
   </TaskLayout>
@@ -68,6 +68,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import axios from 'axios'
 import { useTaskStore } from '@/stores/task'
+import { useRoute } from 'vue-router'
 
 // state
 const showTaskForm = ref(false)
@@ -171,4 +172,21 @@ onMounted(async () => {
   await projectStore.fetchProjects()
   await taskStore.fetchTasks()
 })
+
+const route = useRoute()
+const highlightedId = ref<string | null>(null)
+
+watch(
+  () => route.query.highlight,
+  (val) => {
+    if (val) {
+      highlightedId.value = String(val)
+      // remove after a short delay (optional)
+      setTimeout(() => {
+        highlightedId.value = null
+      }, 800)
+    }
+  },
+  { immediate: true }
+)
 </script>
