@@ -1,17 +1,25 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { randomInt } from 'crypto';
 import { EmailService } from 'src/mail/email.service';
+import { UpdateOtpDto } from 'src/user/dto/update-otp.dto';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AuthService {
   private blacklistedTokens = new Set<string>();
 
   constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
@@ -34,21 +42,9 @@ export class AuthService {
     return user;
   }
 
-  async createUser(
-    createUserDto: CreateUserDto,
-    performedById: number,
-  ): Promise<User> {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    return this.userService.createUser(
-      { ...createUserDto, password: hashedPassword },
-      performedById,
-    );
-  }
-
-  async login(user: User): Promise<{ accessToken: string }> {
+  async login(user: User) {
     const payload = { sub: user.id, email: user.email, role: user.role };
-    const accessToken = await this.jwtService.signAsync(payload);
-    return { accessToken };
+    return { accessToken: await this.jwtService.signAsync(payload) };
   }
 
   async logout(token: string) {
@@ -56,69 +52,36 @@ export class AuthService {
     return true;
   }
 
-  isTokenBlacklisted(token: string): boolean {
-    return this.blacklistedTokens.has(token);
-  }
+  async generateOtp(email: string): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) throw new NotFoundException('User not found');
 
-  async updateUserPassword(
-    userId: number,
-    newPassword: string,
-    performedById: number,
-    markChanged = true,
-  ): Promise<User> {
-    return this.userService.updatePassword(
-      userId,
-      newPassword,
-      performedById,
-      markChanged,
-    );
-  }
+    const otp = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-  async generateOtp(userId: number): Promise<string> {
-    const user = await this.userService.findOne(userId);
-    if (!user) throw new Error('User not found');
+    await this.userRepository.update(user.id, {
+      otp_code: otp,
+      otp_expiry: expiry,
+    });
 
-    const otp = randomInt(100000, 999999).toString();
-    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
-
-    await this.userService.update(
-      userId,
-      {
-        otp_code: otp,
-        otp_expiry: expiry,
-      },
-      0,
-    );
-    await this.emailService.sendOtp(user.email, otp);
+    await this.emailService.sendOtp(email, otp);
+    console.log(`Generated OTP for ${email}: ${otp}`);
 
     return otp;
   }
 
-  async verifyOtp(userId: number, otp: string): Promise<boolean> {
-    const user = await this.userService.findOne(userId, true);
+  async verifyOtp(email: string, otp: string): Promise<boolean> {
+    const user = await this.userService.findOneByEmail(email, true);
+    if (!user) return false;
 
-    if (!user || !user.otp_code || !user.otp_expiry) {
-      return false;
-    }
-
-    const otpExpiry = new Date(user.otp_expiry);
     const now = new Date();
-
     if (
-      String(user.otp_code).trim() === String(otp).trim() &&
-      otpExpiry.getTime() > now.getTime()
+      user.otp_code === otp &&
+      user.otp_expiry &&
+      new Date(user.otp_expiry) > now
     ) {
-      await this.userService.update(
-        userId,
-        {
-          otp_code: undefined,
-          otp_expiry: undefined,
-        },
-        0,
-      );
       return true;
     }
-
     return false;
   }
 }

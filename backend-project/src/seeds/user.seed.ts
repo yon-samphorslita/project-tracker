@@ -23,6 +23,7 @@ export const createInitialAdmin = async (dataSource: DataSource) => {
       last_name: 'Admin',
       email: 'admin@email.com',
       password: hashedPassword,
+      password_changed: true,
       role: Role.ADMIN,
       active: true,
     });

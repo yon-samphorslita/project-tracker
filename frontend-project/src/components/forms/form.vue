@@ -18,6 +18,10 @@
           :key="field.label"
           class="w-full"
           :class="{
+            'col-span-1':
+              field.model === 'first_name' ||
+              field.model === 'last_name' ||
+              field.model === 'location',
             'col-span-2':
               field.type === 'text' ||
               field.type === 'email' ||
@@ -27,7 +31,7 @@
           }"
         >
           <label :for="field.label" class="block mb-2 text-gray-text font-medium">
-            {{ field.label }}
+            {{ field.label }}<span v-if="field.required" class="ml-1 text-red-500">*</span>
           </label>
 
           <!-- Text input -->
@@ -48,7 +52,7 @@
           <textarea
             v-else-if="field.type === 'textarea'"
             :id="field.label"
-            class="w-full px-4 py-3 border bg-main-bg rounded-lg text-base transition duration-300 min-h-[120px] resize-y focus:outline-none"
+            class="w-full px-4 py-3 border bg-main-bg rounded-lg text-base transition duration-300 row-span-2 resize-y focus:outline-none"
             :class="
               errors[field.model]
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
@@ -103,18 +107,9 @@
       </div>
 
       <!-- Buttons -->
-      <div class="flex justify-around w-full mt-5">
-        <button
-          class="px-5 py-3 rounded text-base cursor-pointer transition-colors btn-red"
-          @click="cancel"
-        >
-          Cancel
-        </button>
-        <Button
-          @click="submitForm"
-          label="Save"
-          class="px-5 py-3 rounded text-base cursor-pointer transition-colors btn"
-        />
+      <div class="flex justify-end gap-4 w-full mt-5">
+        <Button class="btn-red" @click="cancel" label="Cancel" />
+        <Button @click="submitForm" label="Save" class="btn" />
       </div>
     </div>
   </div>
@@ -183,7 +178,7 @@ function validate() {
 
   props.fields.forEach((field) => {
     const value = formData[field.model]
-    if (field.type !== 'select' && (!value || value.toString().trim() === '')) {
+    if (field.required && (!value || value.toString().trim() === '')) {
       errors[field.model] = `${field.label} is required`
       valid = false
     } else if (field.type === 'email' && value) {
@@ -209,7 +204,7 @@ function mapPayload() {
       return {
         p_name: formData.title,
         p_description: formData.description,
-        team: formData.team_id ? { id: formData.team_id } : null,
+        team_id: formData.team_id || null,
         status: formData.status || 'not started',
         priority: formData.priority || 'medium',
         start_date: formData.startDate ? new Date(formData.startDate) : null,
@@ -228,7 +223,7 @@ function mapPayload() {
       }
     case 'events':
       return {
-        e_title: formData.title,
+        e_name: formData.title,
         e_description: formData.description,
         start_date: formData.startDate ? new Date(formData.startDate) : null,
         end_date: formData.endDate ? new Date(formData.endDate) : null,
@@ -238,7 +233,7 @@ function mapPayload() {
       }
     case 'subtask':
       return { name: formData.title }
-    case 'auth/user':
+    case 'users':
       return {
         first_name: formData.first_name?.trim() || '',
         last_name: formData.last_name?.trim() || '',

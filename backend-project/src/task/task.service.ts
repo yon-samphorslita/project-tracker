@@ -16,7 +16,7 @@ import { NotificationsGateway } from 'src/notification/notification.gateway';
 import { NotificationService } from 'src/notification/notification.service';
 import { ProjectService } from '../project/project.service';
 import { ActivityService } from 'src/activity/activity.service';
-
+import { Status } from 'src/enums/status.enum';
 @Injectable()
 export class TaskService {
   constructor(
@@ -251,5 +251,38 @@ export class TaskService {
     }
 
     return assignee;
+  }
+
+  async updateTaskStatus(
+    id: number,
+    t_status: Status,
+    actor: User,
+  ): Promise<Task> {
+    const task = await this.findOne(id, actor.id, actor.role === 'admin');
+
+    // Members can only update t_status
+    if (actor.role === 'member') {
+      // Optional: check team membership
+      if (
+        !task.project?.team?.members.some((m) => m.id === actor.id) &&
+        task.user?.id !== actor.id
+      ) {
+        throw new ForbiddenException('You cannot update this task');
+      }
+    }
+
+    task.t_status = t_status;
+    const savedTask = await this.taskRepository.save(task);
+
+    await this.activityService.logAction(
+      actor.id,
+      `Task "${task.t_name}" status changed to "${t_status}"`,
+    );
+
+    if (task.project?.id) {
+      await this.projectService.refreshProjectStatus(task.project.id);
+    }
+
+    return savedTask;
   }
 }

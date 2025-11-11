@@ -53,7 +53,7 @@ export class EventService {
 
     await this.activityService.logAction(
       user.id,
-      `Created event "${savedEvent.e_title}" in project "${project.p_name}" starting at ${this.formatDate(savedEvent.start_date)} and ending at ${this.formatDate(savedEvent.end_date)}.`,
+      `Created event "${savedEvent.e_name}" in project "${project.p_name}" starting at ${this.formatDate(savedEvent.start_date)} and ending at ${this.formatDate(savedEvent.end_date)}.`,
     );
 
     return savedEvent;
@@ -72,9 +72,9 @@ export class EventService {
 
     if (user) {
       const changes: string[] = [];
-      if (oldEventData.e_title !== updatedEvent.e_title)
+      if (oldEventData.e_name !== updatedEvent.e_name)
         changes.push(
-          `Title: "${oldEventData.e_title}" to "${updatedEvent.e_title}"`,
+          `Title: "${oldEventData.e_name}" to "${updatedEvent.e_name}"`,
         );
       if (oldEventData.e_description !== updatedEvent.e_description)
         changes.push('Description changed');
@@ -91,7 +91,7 @@ export class EventService {
         changes.length > 0 ? changes.join('; ') : 'No significant changes';
       await this.activityService.logAction(
         user.id,
-        `Updated event "${updatedEvent.e_title}". Changes: ${changesStr}.`,
+        `Updated event "${updatedEvent.e_name}". Changes: ${changesStr}.`,
       );
     }
 
@@ -105,7 +105,7 @@ export class EventService {
     if (user.id) {
       await this.activityService.logAction(
         user.id,
-        `Deleted event "${event.e_title}" from project "${event.project?.p_name}".`,
+        `Deleted event "${event.e_name}" from project "${event.project?.p_name}".`,
       );
     }
   }

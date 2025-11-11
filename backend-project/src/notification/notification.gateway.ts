@@ -1,8 +1,5 @@
 // src/notifications/notifications.gateway.ts
-import {
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Notification as NotificationEntity } from './notification.entity';
 

@@ -17,7 +17,7 @@ export class Event {
   id: number;
 
   @Column()
-  e_title: string;
+  e_name: string;
 
   @Column({ nullable: true })
   e_description: string;

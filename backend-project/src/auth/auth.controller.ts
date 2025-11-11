@@ -7,23 +7,15 @@ import {
   HttpCode,
   HttpStatus,
   Request,
-  UseGuards,
   UnauthorizedException,
   NotFoundException,
   ForbiddenException,
-  Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthGuard } from '@nestjs/passport';
-import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UpdateUserDto } from 'src/user/dto/update-user.dto';
 import { UserService } from 'src/user/user.service';
-import { Role } from 'src/enums/role.enum';
-import { RolesGuard } from './roles.guard';
-import { Roles } from './roles.decorator';
 import { UpdatePasswordDto } from 'src/user/dto/update-password.dto';
-import * as bcrypt from 'bcrypt';
-
+import { Public } from './public.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -31,26 +23,8 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
-  @Get('users')
-  async getAllUsers() {
-    const users = await this.userService.findAll();
-    return users.map(({ password, ...rest }) => rest);
-  }
-
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
-  @Post('user')
-  @HttpCode(HttpStatus.CREATED)
-  async createUser(@Body() createUserDto: CreateUserDto, @Request() req) {
-    const newUser = await this.authService.createUser(
-      createUserDto,
-      req.user.id,
-    );
-    const { password, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
-  }
+  //user login
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() body: { email: string; password: string }) {
@@ -62,7 +36,7 @@ export class AuthController {
     return { user: userWithoutPassword, ...token };
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  //user logout
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@Request() req) {
@@ -72,7 +46,53 @@ export class AuthController {
     return { message: 'Logged out successfully' };
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  //first-time user update password
+  @Patch('update-password')
+  async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
+    await this.userService.updatePassword(
+      req.user.id,
+      body.newPassword,
+      req.user.id,
+      true,
+    );
+    return { message: 'Password updated successfully' };
+  }
+
+  // request OTP
+  @Public()
+  @Post('request-otp')
+  async requestOtp(@Body() body: { email: string }) {
+    const user = await this.userService.findOneByEmail(body.email, true);
+    if (!user) throw new NotFoundException('User not found');
+
+    const otp = await this.authService.generateOtp(user.email);
+    return { message: 'OTP sent to your email', otp };
+  }
+
+  // Reset password (using email + OTP)
+  @Public()
+  @Post('reset-password')
+  async resetPassword(
+    @Body() body: { email: string; otp: string; newPassword: string },
+  ) {
+    const validOtp = await this.authService.verifyOtp(body.email, body.otp);
+    if (!validOtp) throw new ForbiddenException('Invalid or expired OTP');
+
+    await this.userService.updatePasswordByEmail(body.email, body.newPassword);
+    return { message: 'Password updated successfully' };
+  }
+
+  //verify input otp
+  @Public()
+  @Post('verify-otp')
+  async verifyOtp(@Body() body: { email: string; otp: string }) {
+    const isValid = await this.authService.verifyOtp(body.email, body.otp);
+    if (!isValid) throw new NotFoundException('Invalid or expired OTP');
+
+    return { message: 'OTP verified successfully' };
+  }
+
+  //get user own profile
   @Get('profile')
   async getProfile(@Request() req) {
     const user = await this.userService.findOne(req.user.id);
@@ -81,127 +101,28 @@ export class AuthController {
     return userWithoutPassword;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  //update user own profile
   @Patch('profile')
   async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    const userId = req.user.id;
-    delete updateUserDto.email;
-    delete updateUserDto.password;
-
     const updatedUser = await this.userService.update(
-      userId,
+      req.user.id,
       updateUserDto,
       req.user.id,
+      [
+        'email',
+        'password',
+        'role',
+        'id',
+        'active',
+        'password_changed',
+        'otp_code',
+        'otp_expiry',
+        'created_at',
+        'deletedAt',
+      ],
     );
     if (!updatedUser) throw new NotFoundException('User not found');
     const { password, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
-  }
-
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
-  @Patch('user/:id')
-  async updateUser(
-    @Param('id') userId: string,
-    @Body() updateUserDto: UpdateUserDto,
-    @Request() req,
-  ) {
-    delete updateUserDto.password;
-    if (updateUserDto.email) {
-      const existing = await this.userService.findOneByEmail(
-        updateUserDto.email,
-        true,
-      );
-      if (existing && existing.id !== Number(userId)) {
-        throw new ForbiddenException('Email is already in use');
-      }
-    }
-
-    const updatedUser = await this.userService.update(
-      Number(userId),
-      updateUserDto,
-      req.user.id,
-    );
-
-    if (!updatedUser) throw new NotFoundException('User not found');
-    const { password, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @Patch('update-password')
-  async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
-    await this.authService.updateUserPassword(
-      req.user.id,
-      body.newPassword,
-      req.user.id,
-      true,
-    );
-    return { message: 'Password updated successfully' };
-  }
-
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN)
-  @Patch('user/:id/update-password')
-  async adminUpdatePassword(
-    @Request() req,
-    @Param('id') userId: number,
-    @Body() body: { newPassword: string },
-  ) {
-    await this.authService.updateUserPassword(
-      Number(userId),
-      body.newPassword,
-      req.user.id,
-      true,
-    );
-    return { message: 'Password updated successfully by admin' };
-  }
-
-  // request OTP
-  @Post('request-otp')
-  async requestOtp(@Body() body: { email: string }) {
-    const user = await this.userService.findOneByEmail(body.email, true);
-    if (!user) throw new NotFoundException('User not found');
-
-    const otp = await this.authService.generateOtp(user.id);
-    return { message: 'OTP sent to your email', otp };
-  }
-
-  // Reset password (using email + OTP)
-  @Post('reset-password')
-  async resetPassword(
-    @Body() body: { email: string; otp: string; newPassword: string },
-  ) {
-    const user = await this.userService.findOneByEmail(body.email, true);
-    if (!user) throw new NotFoundException('User not found');
-
-    const validOtp = await this.authService.verifyOtp(user.id, body.otp);
-    if (!validOtp) throw new ForbiddenException('Invalid or expired OTP');
-
-    await this.authService.updateUserPassword(
-      user.id,
-      body.newPassword,
-      0,
-      true,
-    );
-    return { message: 'Password updated successfully' };
-  }
-
-  @Post('verify-otp')
-  async verifyOtp(@Body() body: { email: string; otp: string }) {
-    const user = await this.userService.findOneByEmail(body.email, true);
-    if (!user) throw new NotFoundException('User not found');
-
-    const now = new Date();
-    if (
-      !user.otp_code ||
-      !user.otp_expiry ||
-      user.otp_code !== body.otp ||
-      new Date(user.otp_expiry) < now
-    ) {
-      throw new ForbiddenException('Invalid or expired OTP');
-    }
-
-    return { message: 'OTP verified successfully' };
   }
 }

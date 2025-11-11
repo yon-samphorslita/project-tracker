@@ -19,7 +19,11 @@ export class UserService {
     createUserDto: CreateUserDto,
     performedById: number,
   ): Promise<User> {
-    const user = this.userRepository.create({ ...createUserDto });
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const user = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
     await this.userRepository.save(user);
 
     await this.activityService.logAction(
@@ -76,6 +80,7 @@ export class UserService {
     userId: number,
     updateUserDto: UpdateUserDto,
     performedById: number,
+    excludeFields: string[] = [],
   ): Promise<User | null> {
     if (!userId) return null;
 
@@ -83,9 +88,11 @@ export class UserService {
     if (!existingUser) throw new NotFoundException('User not found');
 
     const fieldsToUpdate = { ...updateUserDto };
-    Object.keys(fieldsToUpdate).forEach(
-      (key) => fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key],
-    );
+    Object.keys(fieldsToUpdate).forEach((key) => {
+      if (fieldsToUpdate[key] === undefined || excludeFields.includes(key)) {
+        delete fieldsToUpdate[key];
+      }
+    });
     if (Object.keys(fieldsToUpdate).length === 0) return existingUser;
 
     const changes: string[] = [];
@@ -160,6 +167,27 @@ export class UserService {
             'active',
           ],
     });
+  }
+
+  async updatePasswordByEmail(
+    email: string,
+    newPassword: string,
+  ): Promise<User> {
+    const user = await this.findOneByEmail(email, true);
+    if (!user) throw new NotFoundException('User not found');
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.password_changed = true;
+
+    await this.userRepository.save(user);
+
+    await this.activityService.logAction(
+      user.id,
+      `Reset password via email for user "${user.first_name} ${user.last_name}"`,
+    );
+
+    return user;
   }
 
   async getUserTeams(userId: number) {

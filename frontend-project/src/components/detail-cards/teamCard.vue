@@ -21,8 +21,8 @@
 
     <div class="flex justify-end flex-grow items-end gap-8 p-4">
       <!-- Edit button -->
-      <button 
-        class="text-blue-500 hover:text-blue-700 transition" 
+      <button
+        class="text-blue-500 hover:text-blue-700 transition"
         v-if="user.role === 'admin' || user.role === 'project_manager'"
         @click.stop="editTeam(team.id)"
       >
@@ -35,8 +35,8 @@
       </button>
 
       <!-- Delete icon -->
-      <button 
-        class="text-red-500 hover:text-red-700 transition" 
+      <button
+        class="text-red-500 hover:text-red-700 transition"
         v-if="user.role === 'admin' || user.role === 'project_manager'"
         @click.stop="deleteTeam(team.id)"
       >
@@ -87,7 +87,6 @@
         />
       </div>
     </div>
-
   </div>
 </template>
 
@@ -98,7 +97,7 @@ import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import router from '@/router'
 import axios from 'axios'
-import defaultProfile from '@/assets/profile_default.jpg' 
+import defaultProfile from '@/assets/profile_default.jpg'
 
 const authStore = useAuthStore()
 const teamStore = useTeamStore()
@@ -108,7 +107,7 @@ const props = defineProps<{
     id: number
     name: string
     description: string
-    pms?: { id: number; fullName: string; img_url?: string }[] 
+    pms?: { id: number; fullName: string; img_url?: string }[]
   }
 }>()
 const user = computed(() => authStore.user)

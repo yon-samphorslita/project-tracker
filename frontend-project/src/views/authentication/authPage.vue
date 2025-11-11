@@ -37,7 +37,7 @@
             }}</span>
             <a
               @click.prevent="goToForgotPassword"
-              class="text-blue-500 text-sm mt-1 hover:underline cursor-pointer"
+              class="text-[var(--btn-red-bg)] text-sm mt-1 hover:underline cursor-pointer"
             >
               Forgot Password?
             </a>

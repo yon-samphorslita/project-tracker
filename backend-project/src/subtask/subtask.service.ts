@@ -48,14 +48,14 @@ export class SubtaskService {
 
   async findAll(): Promise<Subtask[]> {
     return this.subtaskRepository.find({
-      relations: ['task', 'task.user'],
+      relations: ['task', 'task.user', 'task.user.team'],
     });
   }
 
   async findOne(id: number): Promise<Subtask | null> {
     return this.subtaskRepository.findOne({
       where: { id },
-      relations: ['task', 'task.user'],
+      relations: ['task', 'task.user', 'task.user.team'],
     });
   }
 

@@ -1,6 +1,6 @@
 <template>
   <UserLayout>
-    <div class="container mx-auto min-h-[600px]">
+    <div v-if="authStore.user.role === 'admin'" class="container mx-auto min-h-[600px]">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center mb-8 gap-4">
         <Back
@@ -141,13 +141,14 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
 import UserLayout from '@/views/pageLayout.vue'
 import Status from '@/components/status.vue'
 import Back from '@/assets/icons/back.svg'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-
+const authStore = useAuthStore()
 const userData = ref(null)
 const isReady = ref(false)
 const activeTab = ref('Teams')

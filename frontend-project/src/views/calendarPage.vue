@@ -152,7 +152,6 @@ const eventFields = computed(() => [
   { model: 'title', label: 'Title', type: 'text', required: true },
   { model: 'startDate', label: 'Start Date & Time', type: 'datetime-local', required: true },
   { model: 'endDate', label: 'End Date & Time', type: 'datetime-local', required: true },
-  { model: 'location', label: 'Location', type: 'text' },
   {
     model: 'project',
     label: 'Project',
@@ -160,6 +159,7 @@ const eventFields = computed(() => [
     options: projectStore.projects,
     required: true,
   },
+  { model: 'location', label: 'Location', type: 'text' },
   { model: 'description', label: 'Description', type: 'textarea' },
 ])
 

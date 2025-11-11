@@ -52,7 +52,7 @@
               :style="{ backgroundColor: getColor(item) }"
             ></div>
             <div>
-              <div class="font-semibold">{{ item.e_title || item.t_name || item.title }}</div>
+              <div class="font-semibold">{{ item.e_name || item.t_name || item.title }}</div>
               <div>
                 {{ item.e_description || item.t_description || item.location || item.description }}
               </div>
@@ -130,7 +130,7 @@ const items = computed(() => {
       return e.end_date ? toLocal(e.end_date) : null
     },
     get title() {
-      return e.e_title
+      return e.e_name
     },
     get description() {
       return e.e_description || e.location

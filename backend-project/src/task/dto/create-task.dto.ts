@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsEnum,
   IsDateString,
+  IsInt,
 } from 'class-validator';
 import { Status } from '../../enums/status.enum';
 import { Priority } from '../../enums/priority.enum';
@@ -33,6 +34,11 @@ export class CreateTaskDto {
   @IsDateString()
   due_date?: Date;
 
-  projectId: number;
-  userId: number;
+  @IsNotEmpty()
+  @IsInt()
+  projectId?: number;
+
+  @IsOptional()
+  @IsInt()
+  userId?: number;
 }

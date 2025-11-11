@@ -28,7 +28,8 @@
         <div
           v-for="(item, i) in day.items.slice(0, 2)"
           :key="i"
-          class="truncate text-xs p-1 my-1 border rounded bg-main-bg shadow-sm flex items-center"
+          class="truncate cursor-pointer text-xs p-1 my-1 border rounded bg-main-bg shadow-sm flex items-center"
+          @click="openEventPopup(item, $event)"
         >
           <!-- Color bar -->
           <span
@@ -42,16 +43,25 @@
         </div>
 
         <!-- +N More indicator -->
-        <div v-if="day.items.length > 3" class="text-xs text-sub-text italic mt-1 ml-1">
-          +{{ day.items.length - 3 }} more
+        <div v-if="day.items.length > 2" class="text-xs text-sub-text italic mt-1 ml-1">
+          +{{ day.items.length - 2 }} more
         </div>
       </div>
     </div>
   </div>
+  <teleport to="body">
+    <EventPopup
+      :visible="showEventPopup"
+      :event="selectedEvent"
+      :item-top="popupItemTop"
+      :item-left="popupItemLeft"
+      @close="showEventPopup = false"
+    />
+  </teleport>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   startOfMonth,
   endOfMonth,
@@ -66,6 +76,13 @@ import {
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
 import { useAuthStore } from '@/stores/auth'
+import EventPopup from '@/components/detail-cards/eventPopup.vue'
+
+const showEventPopup = ref(false)
+const selectedEvent = ref(null)
+const popupItemTop = ref(0)
+const popupItemLeft = ref(0)
+
 // Stores
 const taskStore = useTaskStore()
 const eventStore = useEventStore()
@@ -83,6 +100,25 @@ const props = defineProps({
 onMounted(async () => {
   await Promise.all([eventStore.fetchEvents(authStore.user.role), taskStore.fetchTasks()])
 })
+function openEventPopup(item, e) {
+  selectedEvent.value = { ...item }
+
+  // Position popup near clicked element
+  const rect = e.currentTarget.getBoundingClientRect()
+  const popupWidth = 320,
+    popupHeight = 400
+  let left = rect.left + rect.width / 2
+  let top = rect.top + rect.height / 2
+
+  if (left + popupWidth / 2 > window.innerWidth) left = window.innerWidth - popupWidth / 2 - 10
+  if (left - popupWidth / 2 < 0) left = popupWidth / 2 + 10
+  if (top + popupHeight / 2 > window.innerHeight) top = window.innerHeight - popupHeight / 2 - 10
+  if (top - popupHeight / 2 < 0) top = popupHeight / 2 + 10
+
+  popupItemLeft.value = left
+  popupItemTop.value = top
+  showEventPopup.value = true
+}
 
 // Generate calendar days
 const days = computed(() => {
@@ -112,7 +148,7 @@ const days = computed(() => {
       date,
       isCurrentMonth: isSameMonth(date, new Date(props.year, props.month)),
       items: [
-        ...dayEvents.map((e) => ({ ...e, type: 'event', title: e.e_title, time: e.start_time })),
+        ...dayEvents.map((e) => ({ ...e, type: 'event', title: e.e_name, time: e.start_time })),
         ...dayTasks.map((t) => ({ ...t, type: 'task', title: t.t_title, time: t.start_time })),
       ],
     }

@@ -15,20 +15,19 @@ import { TaskService } from './task.service';
 import { Task } from './task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { TaskGuard } from './task.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/enums/role.enum';
+import { Status } from 'src/enums/status.enum';
 
-@UseGuards(AuthGuard('jwt'))
 @Controller('tasks')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   // Get all tasks
   @Get()
+  // @Roles(Role.ADMIN)
   findAll(@Request() req): Promise<Task[]> {
-    if (!req.user?.id)
-      throw new ForbiddenException('Invalid user authentication');
-
     if (req.user.role === 'admin') {
       return this.taskService.findAll();
     }
@@ -50,6 +49,7 @@ export class TaskController {
   }
 
   // Get all tasks by project
+  // @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   @Get('project/:projectId')
   findByProject(
     @Param('projectId') projectId: string,
@@ -64,12 +64,14 @@ export class TaskController {
 
   // Create a task
   @Post()
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   create(@Body() createTaskDto: CreateTaskDto, @Request() req): Promise<Task> {
     return this.taskService.create(createTaskDto, req.user);
   }
 
   // Update a task
   @Patch(':id')
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   @UseGuards(TaskGuard)
   update(
     @Param('id') id: string,
@@ -84,11 +86,23 @@ export class TaskController {
 
   // Delete a task
   @Delete(':id')
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   @UseGuards(TaskGuard)
   delete(@Param('id') id: string, @Request() req): Promise<void> {
     const taskId = +id;
     if (isNaN(taskId)) throw new NotFoundException('Invalid task ID');
 
     return this.taskService.delete(taskId, req.user);
+  }
+
+  @Patch(':id/status')
+  @Roles(Role.MEMBER)
+  @UseGuards(TaskGuard)
+  updateStatus(
+    @Param('id') id: string,
+    @Body('t_status') t_status: Status,
+    @Request() req,
+  ): Promise<Task> {
+    return this.taskService.updateTaskStatus(+id, t_status, req.user);
   }
 }

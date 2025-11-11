@@ -27,6 +27,11 @@ export class UpdateTeamDto {
   @IsOptional()
   removeMembers?: number[];
 
+  @IsArray()
+  @IsOptional()
   addSecondaryMembers?: number[];
+
+  @IsArray()
+  @IsOptional()
   removeSecondaryMembers?: number[];
 }

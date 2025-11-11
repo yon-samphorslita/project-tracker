@@ -2,7 +2,7 @@
   <div
     class="w-1/3 h-auto flex-shrink-0 overflow-y-auto top-[170px] rounded-md shadow-lg bg-blue-bg p-4"
   >
-    <div class="sticky top-0 flex justify-between items-center my-5 bg-blue-bg z-10">
+    <div class="sticky top-0 flex justify-between items-center my-5 bg-blue-bg z-0">
       <!-- kanban header  -->
       <div class="flex gap-2 items-center">
         <div class="w-2 h-8 rounded-r-md" :style="{ background: statusColor }"></div>

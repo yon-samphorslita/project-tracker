@@ -15,15 +15,16 @@ import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
 import { Subtask } from './subtask.entity';
 import { SubtaskGuard } from './subtask.guard';
-import { AuthGuard } from '@nestjs/passport';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/enums/role.enum';
 
-@UseGuards(AuthGuard('jwt'))
 @Controller('subtasks')
 export class SubtaskController {
   constructor(private readonly subtaskService: SubtaskService) {}
 
   // Create a new subtask
   @Post()
+  @Roles(Role.MEMBER)
   create(
     @Body() createSubtaskDto: CreateSubtaskDto,
     @Req() req,
@@ -58,6 +59,7 @@ export class SubtaskController {
 
   // Update a specific subtask by ID
   @Patch(':id')
+  @Roles(Role.ADMIN, Role.MEMBER)
   @UseGuards(SubtaskGuard)
   update(
     @Param('id') id: string,
@@ -70,6 +72,7 @@ export class SubtaskController {
 
   // Delete a specific subtask by ID
   @Delete(':id')
+  @Roles(Role.ADMIN, Role.MEMBER)
   @UseGuards(SubtaskGuard)
   remove(@Param('id') id: string, @Req() req): Promise<Subtask> {
     const userId = req.user.id;

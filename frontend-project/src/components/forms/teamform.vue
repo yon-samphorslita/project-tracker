@@ -77,6 +77,9 @@ async function submitForm() {
     const payload = await teamStore.createTeam({
       name: team.name,
       description: team.description,
+      members: [],
+      secondaryMembers: [],
+      pms: [],
     })
 
     emits('created', payload) // emit created event to parent

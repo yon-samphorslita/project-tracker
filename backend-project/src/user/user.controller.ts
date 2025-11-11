@@ -8,49 +8,67 @@ import {
   Delete,
   ParseIntPipe,
   Request,
+  Patch,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/enums/role.enum';
+@Roles(Role.ADMIN)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto, @Request() req): Promise<User> {
-    const performedById = req.user.id;
-    return this.userService.createUser(createUserDto, performedById);
+  async create(@Body() createUserDto: CreateUserDto, @Request() req) {
+    return this.userService.createUser(createUserDto, req.user.id);
   }
 
   @Get()
-  findAll(): Promise<User[]> {
+  async findAll() {
     return this.userService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<User | null> {
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
   }
 
   @Get(':id/teams')
-  getUserTeams(@Param('id') id: number) {
+  async getUserTeams(@Param('id') id: number) {
     return this.userService.getUserTeams(id);
   }
 
-  @Put(':id')
-  update(
+  @Patch(':id')
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-    @Request() req, // add request to get the admin performing the action
-  ): Promise<User | null> {
-    const performedById = req.user.id; // the user performing the update
-    return this.userService.update(id, updateUserDto, performedById);
+    @Request() req,
+  ) {
+    const updatedUser = await this.userService.update(
+      id,
+      updateUserDto,
+      req.user.id,
+      ['password'],
+    );
+    if (!updatedUser) throw new NotFoundException('User not found');
+    const { password, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
   }
 
   @Delete(':id')
-  delete(@Param('id', ParseIntPipe) id: number, @Request() req): Promise<void> {
-    const performedById = req.user.id;
-    return this.userService.delete(id, performedById);
+  async delete(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.userService.delete(id, req.user.id);
+  }
+
+  @Patch(':id/update-password')
+  async updatePassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { newPassword: string },
+    @Request() req,
+  ) {
+    return this.userService.updatePassword(id, body.newPassword, req.user.id);
   }
 }

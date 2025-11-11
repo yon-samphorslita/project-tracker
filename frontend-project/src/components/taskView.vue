@@ -4,7 +4,7 @@
     <div class="flex justify-between gap-2 items-center">
       <TypeList v-model:activeOption="activeOption" />
       <div class="flex gap-2 items-center">
-        <Search @update="searchQuery = $event" />
+        <Search v-model:query="searchQuery" />
         <Filter
           class="min-w-fit"
           title="Filter Tasks"
@@ -45,7 +45,7 @@
           @statusUpdated="handleStatusUpdate"
         >
           <template
-            v-if="userRole === 'admin' || userRole === 'project_manager'"
+            v-if="props.userRole === 'admin' || props.userRole === 'project_manager'"
             #actions="{ row }"
           >
             <div class="flex gap-2">
@@ -89,6 +89,7 @@ const props = defineProps({
   TeamMembers: Array,
   tableColumns: Array,
   taskFields: Array,
+  userRole: String,
 })
 const taskStore = useTaskStore()
 const emit = defineEmits(['onTaskCreated', 'onTaskUpdated', 'onTaskDeleted', 'onStatusUpdated'])

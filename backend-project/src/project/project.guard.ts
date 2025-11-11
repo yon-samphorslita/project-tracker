@@ -6,6 +6,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
+import { Role } from 'src/enums/role.enum';
 
 @Injectable()
 export class ProjectGuard implements CanActivate {
@@ -20,16 +21,21 @@ export class ProjectGuard implements CanActivate {
       throw new NotFoundException('Invalid user or project ID');
     }
 
-    // Admin can access all projects
-    const isAdmin = user.role === 'admin';
-    const project = await this.projectService.findOne(
-      projectId,
-      user.id,
-      isAdmin,
-    );
+    const project = await this.projectService.findOne(projectId);
 
-    if (!project) {
-      if (isAdmin) throw new NotFoundException('Project not found');
+    if (!project) throw new NotFoundException('Project not found');
+
+    // Role-based access
+    const canAccess =
+      user.role === Role.ADMIN ||
+      (user.role === Role.PROJECT_MANAGER &&
+        project.team?.pms?.some((pm) => pm.id === user.id)) ||
+      (user.role === Role.MEMBER &&
+        (project.team?.members?.some((m) => m.id === user.id) ||
+          project.team?.mainMembers?.some((mm) => mm.id === user.id))) ||
+      project.user?.id === user.id; // owner
+
+    if (!canAccess) {
       throw new ForbiddenException(
         'You are not authorized to access this project',
       );

@@ -88,6 +88,23 @@ export const useTaskStore = defineStore(
       }
     }
 
+    const updateTaskStatus = async (id, t_status) => {
+      error.value = null
+      try {
+        const res = await axios.patch(
+          `${API_BASE_URL}/tasks/${id}/status`,
+          { t_status },
+          { headers: getAuthHeaders() },
+        )
+        const index = tasks.value.findIndex((t) => t.id === id)
+        if (index !== -1) tasks.value[index].t_status = res.data.t_status
+        return res.data
+      } catch (err) {
+        error.value = err.response?.data?.message || 'Failed to update task status'
+        return null
+      }
+    }
+
     return {
       tasks,
       loading,
@@ -98,6 +115,7 @@ export const useTaskStore = defineStore(
       createTask,
       updateTask,
       deleteTask,
+      updateTaskStatus,
     }
   },
   { persist: true },

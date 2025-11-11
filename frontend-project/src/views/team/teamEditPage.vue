@@ -45,7 +45,9 @@
           :options="memberCandidates"
           :multiple="true"
           track-by="id"
-          :custom-label="(user) => `${user.fullName}${user.team ? ' (' + user.team.name + ')' : ''}`"
+          :custom-label="
+            (user) => `${user.fullName}${user.team ? ' (' + user.team.name + ')' : ''}`
+          "
           placeholder="Select team members"
           :close-on-select="false"
           :option-disabled="(option) => option.hasMainTeam && !option.isOnThisTeam"
@@ -58,10 +60,12 @@
         >
         <Multiselect
           v-model="team.secondaryMemberIds"
-          :options="memberCandidates.filter(m => !team.memberIds.some(mm => mm.id === m.id))"
+          :options="memberCandidates.filter((m) => !team.memberIds.some((mm) => mm.id === m.id))"
           :multiple="true"
           track-by="id"
-          :custom-label="(user) => `${user.fullName}${user.team ? ' (' + user.team.name + ')' : ''}`"
+          :custom-label="
+            (user) => `${user.fullName}${user.team ? ' (' + user.team.name + ')' : ''}`
+          "
           placeholder="Select secondary members"
           :close-on-select="false"
         />
@@ -107,7 +111,12 @@ const existingSecondaryMembers = ref([])
 // Fetch candidates for PMs and members
 async function fetchCandidates() {
   try {
-    const res = await axios.get('http://localhost:3000/users')
+    const token = localStorage.getItem('token')
+    const res = await axios.get('http://localhost:3000/users', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
 
     pmCandidates.value = res.data
       .filter((u) => u.role === 'project_manager')
@@ -122,8 +131,10 @@ async function fetchCandidates() {
       }))
 
     console.log('Main members:', team.value.memberIds)
-    console.log('Show membercandidate: ',memberCandidates.value.map(u => u.id))
-
+    console.log(
+      'Show membercandidate: ',
+      memberCandidates.value.map((u) => u.id),
+    )
   } catch (err) {
     console.error('Error fetching candidates:', err)
   }
@@ -132,12 +143,13 @@ async function fetchCandidates() {
 function onSelectMainMember(selected) {
   // `selected` is the user object the user just clicked
   if (selected.hasMainTeam && !selected.isOnThisTeam) {
-    alert(`${selected.fullName} is already assigned as a main member in another team. Please choose a different member.`)
+    alert(
+      `${selected.fullName} is already assigned as a main member in another team. Please choose a different member.`,
+    )
     // Remove it from selection immediately
     team.value.memberIds = team.value.memberIds.filter((m) => m.id !== selected.id)
   }
 }
-
 
 async function saveChanges() {
   try {
@@ -182,9 +194,9 @@ onMounted(async () => {
 
   existingPms.value = data.pms?.map((p) => p.id) || []
   existingMembers.value = data.mainMembers?.map((m) => m.id) || []
-  existingSecondaryMembers.value = data.members
-    ?.filter((m) => !data.mainMembers.some((mm) => mm.id === m.id))
-    .map((m) => m.id) || []
+  existingSecondaryMembers.value =
+    data.members?.filter((m) => !data.mainMembers.some((mm) => mm.id === m.id)).map((m) => m.id) ||
+    []
 
   await fetchCandidates()
 
@@ -203,12 +215,11 @@ watch(
   (newMain) => {
     const mainIds = newMain.map((m) => (typeof m === 'object' ? m.id : m))
     team.value.secondaryMemberIds = team.value.secondaryMemberIds.filter(
-      (s) => !mainIds.includes(typeof s === 'object' ? s.id : s)
+      (s) => !mainIds.includes(typeof s === 'object' ? s.id : s),
     )
   },
-  { deep: true }
+  { deep: true },
 )
-
 </script>
 
 <style scoped></style>

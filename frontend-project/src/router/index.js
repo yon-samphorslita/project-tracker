@@ -111,15 +111,19 @@ router.beforeEach(async (to, from, next) => {
 
   const isLoggedIn = authStore.isAuthenticated
 
-  // Protected routes require login
+  // Redirect unauthenticated users from protected routes
   if (to.meta.requiresAuth && !isLoggedIn) {
     return next('/login')
   }
 
-  // Prevent logged-in users from visiting login page
+  // Redirect logged-in users away from login page
   if (to.path === '/login' && isLoggedIn) {
-    const role = authStore.user?.role
-    return next('/dashboard') // fallback
+    return next('/dashboard')
+  }
+
+  // Admin-only route check
+  if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') {
+    return next('/dashboard')
   }
 
   next()
