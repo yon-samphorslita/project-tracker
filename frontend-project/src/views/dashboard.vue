@@ -15,21 +15,21 @@
             </div>
 
             <div v-else class="w-full">
-              <!-- <div class="text-xl font-semibold mb-3">My Focus Tasks</div>
+              <div class="text-xl font-semibold mb-3">My Focus Tasks</div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Focustask
                   v-for="task in focusTasks"
                   :key="task.id"
                   :focus-task="task"
                 />
-              </div> -->
+              </div>
 
-              <div class="text-xl font-semibold">Task Overview</div>
+              <!-- <div class="text-xl font-semibold">Task Overview</div>
               <div class="flex gap-4 w-full">
                 <OverviewCard title="Total Tasks" :value="totalTasks" class="w-[230px]" />
                 <OverviewCard title="Overdue Tasks" :value="overdueTasks" class="w-[230px]" />
                 <OverviewCard title="Completed Tasks" :value="completedTasks" class="w-[230px]"/>
-              </div>
+              </div> -->
             </div>
             
           </div>
@@ -133,8 +133,8 @@ import OverviewCard from '@/components/detail-cards/overviewCard.vue'
 import PieChart from '@/components/charts/pieChart.vue'
 import Calendar from '@/components/calendars/calendar.vue'
 import FlipDigit from '@/components/flipDigit.vue'
-import ProjectOverview from '@/components/projectOverview.vue'
-import GanttChart from '@/components/gantt.vue'
+import ProjectOverview from '@/components/detail-cards/projectOverview.vue'
+import GanttChart from '@/components/charts/gantt.vue'
 import Focustask from '@/components/myfocustask.vue'
 
 import { useProjectStore } from '@/stores/project'

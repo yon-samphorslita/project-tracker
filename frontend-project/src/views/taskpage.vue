@@ -124,10 +124,8 @@ const filteredTasks = computed(() => {
 
   // Filter by selected project
   if (selectedProject.value !== 'all') {
-    // const selected = projectOptions.value.find(p => p.value === selectedProject.value)
-    list = list.filter((t) => t.project?.id === selectedProject.value)
+    list = list.filter((t) => String(t.project?.id) === selectedProject.value)
   }
-
   // Filter by search query (task name or project name)
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
