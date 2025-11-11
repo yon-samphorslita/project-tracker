@@ -13,6 +13,7 @@ import { NotificationModule } from './notification/notification.module';
 import { TeamModule } from './team/team.module';
 import { ActivityModule } from './activity/activity.module';
 import { UploadController } from './upload/upload.controller';
+import { JwtRoleGuard } from './auth/jwt-role.guard';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -37,6 +38,7 @@ import { UploadController } from './upload/upload.controller';
     ActivityModule,
   ],
   controllers: [AppController, UploadController],
-  providers: [AppService],
+  providers: [AppService, JwtRoleGuard],
+  exports: [JwtRoleGuard],
 })
 export class AppModule {}

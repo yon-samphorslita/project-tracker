@@ -1,14 +1,12 @@
 <template>
   <UserLayout>
-    <div class="container">
+    <div class="container pb-[200px]">
       <!-- Permission check -->
       <div v-if="userRole !== 'admin'" class="text-sub-text text-center py-4">
         You do not have permission to view this page.
       </div>
 
       <div v-else class="flex flex-col gap-4">
-        <!-- <h1 class="text-2xl font-bold">User Management</h1> -->
-
         <!-- Overview & PieChart -->
         <div class="flex w-full justify-between gap-4">
           <div class="grid grid-cols-2 gap-4 flex-1">
@@ -22,21 +20,93 @@
 
         <!-- Actions -->
         <div class="flex justify-between items-center w-full">
-          <Button
-            label="+ New User"
-            btn-color="var(--blue-bg)"
-            btntext="var(--black-text)"
-            @click="openForm"
-          />
+          <Button label="+ New User" @click="openForm" />
 
           <Form
+            v-if="!isEditing && !isUpdatingPassword"
             v-model:modelValue="showForm"
-            formTitle="User"
+            formTitle="Create User"
             :fields="userFields"
             :initialData="editUserData"
-            endpoint="auth/user"
+            endpoint="users"
             @submitted="handleSubmit"
           />
+
+          <EditForm
+            v-if="isEditing && !isUpdatingPassword"
+            v-model:modelValue="showForm"
+            title="Edit User"
+            :fields="activeUserFields"
+            :initialData="editUserData"
+            endpoint="users"
+            @submitted="handleSubmit"
+          />
+
+          <!-- Password Update Modal -->
+          <div
+            v-if="isUpdatingPassword"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <div class="bg-white rounded-lg p-6 w-full max-w-md">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Update Password</h3>
+                <button @click="closePasswordModal" class="text-gray-400 hover:text-gray-600">
+                  &times;
+                </button>
+              </div>
+
+              <form @submit.prevent="handlePasswordUpdate">
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      New Password
+                    </label>
+                    <input
+                      v-model="passwordData.newPassword"
+                      type="password"
+                      placeholder="Enter new password"
+                      required
+                      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Confirm Password
+                    </label>
+                    <input
+                      v-model="passwordData.confirmPassword"
+                      type="password"
+                      placeholder="Confirm new password"
+                      required
+                      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div v-if="passwordMismatch" class="text-red-500 text-sm">
+                    Passwords do not match
+                  </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    @click="closePasswordModal"
+                    class="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    :disabled="!passwordData.newPassword || !passwordData.confirmPassword"
+                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    Update Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
 
           <div class="flex gap-4 items-center">
             <Search v-model:query="searchQuery" />
@@ -52,11 +122,12 @@
         <!-- Users Table -->
         <Table v-if="isReady" :data="filteredUsers" :columns="tableColumns">
           <template #actions="{ row }">
-            <div class="flex gap-2">
+            <div class="flex justify-around">
               <router-link :to="`/user/${row.id}`">
                 <View class="icon-theme w-6 h-6" />
               </router-link>
               <Edit class="icon-theme w-6 h-6" @click="editUser(row)" />
+              <Key class="icon-theme w-6 h-6" @click="updateUserPassword(row)" />
               <Delete class="icon-theme w-6 h-6" @click="deleteUser(row)" />
             </div>
           </template>
@@ -71,11 +142,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import UserLayout from '@/views/pageLayout.vue'
 import Table from '@/components/charts/table.vue'
 import Button from '@/components/common-used/button.vue'
 import Form from '@/components/forms/form.vue'
+import EditForm from '@/components/forms/editForm.vue'
 import Search from '@/components/common-used/search.vue'
 import Filter from '@/components/common-used/filter.vue'
 import OverviewCard from '@/components/detail-cards/overviewCard.vue'
@@ -83,6 +155,7 @@ import PieChart from '@/components/charts/pieChart.vue'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
 import View from '@/assets/icons/view.svg'
+import Key from '@/assets/icons/key.svg' // Add key icon for password update
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -95,13 +168,26 @@ const showForm = ref(false)
 const editUserData = ref(null)
 const searchQuery = ref('')
 const sortOption = ref('role-all')
-const showViewModal = ref(false)
-const viewUserData = ref(null)
+const isEditing = ref(false)
+
+// Password Update State
+const isUpdatingPassword = ref(false)
+const selectedUserForPassword = ref(null)
+const passwordData = ref({
+  newPassword: '',
+  confirmPassword: '',
+})
 
 // Computed
 const userRole = computed(() => authStore.user?.role || 'user')
+const passwordMismatch = computed(
+  () =>
+    passwordData.value.newPassword &&
+    passwordData.value.confirmPassword &&
+    passwordData.value.newPassword !== passwordData.value.confirmPassword,
+)
 
-const users = computed(() => authStore.users || [])
+const users = computed(() => userStore.users || [])
 const roleLabels = {
   admin: 'Admin',
   member: 'Team Member',
@@ -217,6 +303,8 @@ function applySort(option) {
 }
 
 function openForm() {
+  isEditing.value = false
+  isUpdatingPassword.value = false
   editUserData.value = null
   showForm.value = true
 }
@@ -224,16 +312,72 @@ function openForm() {
 function editUser(row) {
   const user = users.value.find((u) => u.id === row.id)
   if (user) {
+    isEditing.value = true
+    isUpdatingPassword.value = false
     editUserData.value = { ...user, id: user.id }
     showForm.value = true
   }
 }
 
+// Password Update Methods
+function updateUserPassword(row) {
+  selectedUserForPassword.value = row.id
+  isUpdatingPassword.value = true
+  isEditing.value = false
+  showForm.value = false
+
+  // Reset password data
+  passwordData.value = {
+    newPassword: '',
+    confirmPassword: '',
+  }
+}
+
+function closePasswordModal() {
+  isUpdatingPassword.value = false
+  selectedUserForPassword.value = null
+  passwordData.value = {
+    newPassword: '',
+    confirmPassword: '',
+  }
+}
+
+async function handlePasswordUpdate() {
+  if (passwordMismatch.value) {
+    alert('Passwords do not match!')
+    return
+  }
+
+  if (!passwordData.value.newPassword) {
+    alert('Please enter a new password')
+    return
+  }
+
+  try {
+    await userStore.updateUserPassword(
+      selectedUserForPassword.value,
+      passwordData.value.newPassword,
+    )
+    alert('Password updated successfully!')
+    closePasswordModal()
+  } catch (err) {
+    console.error('Failed to update password:', err)
+    alert('Failed to update password. Please try again.')
+  }
+}
+
+const activeUserFields = computed(() => {
+  if (isEditing.value) {
+    return userFields.filter((field) => field.model !== 'password')
+  }
+  return userFields
+})
+
 async function deleteUser(row) {
   if (!confirm(`Are you sure you want to delete "${row.name}"?`)) return
   try {
     await userStore.deleteUser(row.id)
-    await authStore.fetchAllUsers()
+    await userStore.fetchUsers()
   } catch (err) {
     console.error('Failed to delete user:', err)
   }
@@ -241,22 +385,27 @@ async function deleteUser(row) {
 
 async function handleSubmit(formUser) {
   try {
-    if (editUserData.value?.id) {
-      await authStore.updateUser({ id: editUserData.value.id, ...formUser })
+    if (isEditing.value && editUserData.value?.id) {
+      await userStore.updateUser(editUserData.value.id, formUser)
+    } else {
+      await userStore.createUser(formUser)
     }
-    await authStore.fetchAllUsers()
+    await userStore.fetchUsers()
   } catch (err) {
     console.error('Error saving user:', err)
   } finally {
     showForm.value = false
     editUserData.value = null
+    isEditing.value = false
   }
 }
 
 // Fetch data on mount
 onMounted(async () => {
-  if (!authStore.user) await authStore.fetchProfile()
-  if (userRole.value === 'admin') await authStore.fetchAllUsers()
+  await authStore.fetchProfile()
+  if (authStore.user?.role === 'admin') {
+    await userStore.fetchUsers()
+  }
   isReady.value = true
 })
 </script>

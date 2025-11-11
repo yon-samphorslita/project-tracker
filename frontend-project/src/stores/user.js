@@ -8,7 +8,6 @@ export const useUserStore = defineStore(
   'user',
   () => {
     const users = ref([])
-    const currentUser = ref(null)
 
     const getAuthHeaders = () => {
       const token = localStorage.getItem('token')
@@ -16,6 +15,7 @@ export const useUserStore = defineStore(
       return { Authorization: `Bearer ${token}` }
     }
 
+    // Fetch all users (admin only)
     const fetchUsers = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/users`, { headers: getAuthHeaders() })
@@ -25,15 +25,7 @@ export const useUserStore = defineStore(
       }
     }
 
-    const fetchCurrentUser = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/auth/profile`, { headers: getAuthHeaders() })
-        currentUser.value = res.data
-      } catch (err) {
-        console.error('Error fetching current user:', err)
-      }
-    }
-
+    // Fetch user by ID (admin only)
     const fetchUserById = async (id) => {
       try {
         const res = await axios.get(`${API_BASE_URL}/users/${id}`, { headers: getAuthHeaders() })
@@ -44,6 +36,7 @@ export const useUserStore = defineStore(
       }
     }
 
+    // Create a new user (admin only)
     const createUser = async (userDto) => {
       try {
         const res = await axios.post(`${API_BASE_URL}/users`, userDto, {
@@ -57,9 +50,10 @@ export const useUserStore = defineStore(
       }
     }
 
+    // Update user info (admin only)
     const updateUser = async (id, updateDto) => {
       try {
-        const res = await axios.put(`${API_BASE_URL}/users/${id}`, updateDto, {
+        const res = await axios.patch(`${API_BASE_URL}/users/${id}`, updateDto, {
           headers: getAuthHeaders(),
         })
         const index = users.value.findIndex((u) => u.id === id)
@@ -71,6 +65,22 @@ export const useUserStore = defineStore(
       }
     }
 
+    // Update user password (admin or self)
+    const updateUserPassword = async (id, newPassword) => {
+      try {
+        const res = await axios.patch(
+          `${API_BASE_URL}/users/${id}/update-password`,
+          { newPassword },
+          { headers: getAuthHeaders() },
+        )
+        return res.data
+      } catch (err) {
+        console.error(`Error updating password for user ${id}:`, err)
+        return null
+      }
+    }
+
+    // Delete user (admin only)
     const deleteUser = async (id) => {
       try {
         await axios.delete(`${API_BASE_URL}/users/${id}`, { headers: getAuthHeaders() })
@@ -80,15 +90,28 @@ export const useUserStore = defineStore(
       }
     }
 
+    // Get user teams
+    const fetchUserTeams = async (id) => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/users/${id}/teams`, {
+          headers: getAuthHeaders(),
+        })
+        return res.data
+      } catch (err) {
+        console.error(`Error fetching teams for user ${id}:`, err)
+        return []
+      }
+    }
+
     return {
       users,
-      currentUser,
       fetchUsers,
-      fetchCurrentUser,
       fetchUserById,
       createUser,
       updateUser,
+      updateUserPassword,
       deleteUser,
+      fetchUserTeams,
     }
   },
   { persist: true },

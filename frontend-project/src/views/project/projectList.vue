@@ -60,13 +60,16 @@
 
       <!-- Non-Admin Project Cards -->
       <div v-else class="flex flex-col gap-4">
-        <div class="flex justify-between items-center w-full gap-4">
+        <div class="flex justify-between items-center">
+          <div class="flex gap-4 items-center w-full">
+            <Search v-model:query="searchQuery" />
+            <Filter title="Sort by" :options="sortOptions" @select="applySort" class="min-w-fit" />
+          </div>
           <Button
             v-if="userRole === 'admin' || userRole === 'project_manager'"
             label="+ New Project"
-            btn-color="var(--blue-bg)"
-            btntext="var(--black-text)"
             @click="showForm = true"
+            class="w-[156px]"
           />
           <Form
             v-model:modelValue="showForm"
@@ -75,10 +78,6 @@
             endpoint="projects"
             @submitted="onProjectCreated"
           />
-          <div class="flex gap-4 items-center w-full justify-between">
-            <Search @update="searchQuery = $event" />
-            <Filter title="Sort by" :options="sortOptions" @select="applySort" class="min-w-fit" />
-          </div>
         </div>
 
         <div class="h-[600px] overflow-y-auto flex flex-col gap-4">
@@ -172,6 +171,8 @@ const projectFields = [
     placeholder: 'Enter description',
     model: 'description',
   },
+  { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
+  { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
   {
     type: 'select',
     label: 'Assignee',
@@ -188,8 +189,6 @@ const projectFields = [
     ],
     model: 'priority',
   },
-  { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
-  { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
 ]
 
 // Helpers

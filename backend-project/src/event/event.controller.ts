@@ -13,13 +13,10 @@ import { EventService } from './event.service';
 import { Event } from './event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { EventGuard } from './event.guard';
 import { Role } from 'src/enums/role.enum';
-import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 
-@UseGuards(AuthGuard('jwt'))
 @Controller('events')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
@@ -28,7 +25,6 @@ export class EventController {
   findAll(@Request() req): Promise<Event[]> {
     return this.eventService.findAll(req.user);
   }
-  @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @Get('summary')
   async getAdminSummary() {

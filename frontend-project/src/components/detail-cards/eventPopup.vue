@@ -26,11 +26,11 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-3 border-b pb-2 mr-4">
           <h3 class="font-semibold text-lg">{{ popupTitle }}</h3>
-          <div v-if="!isEditing" class="flex items-center gap-2">
-            <button @click="startEditing" title="Edit">
+          <div v-if="!isEditing && canEditOrDelete" class="flex items-center gap-2">
+            <button v-if="canEditOrDelete" @click="startEditing" title="Edit">
               <Edit class="icon-theme w-6 h-6" />
             </button>
-            <button @click="handleDelete" title="Delete">
+            <button v-if="canDelete" @click="handleDelete" title="Delete">
               <Delete class="icon-theme" />
             </button>
           </div>
@@ -86,7 +86,7 @@
             <div v-for="error in validationErrors" :key="error" class="mb-1">{{ error }}</div>
           </div>
 
-          <div class="flex justify-end mt-4 gap-3 border-t pt-3">
+          <div v-if="canEditOrDelete" class="flex justify-end mt-4 gap-3 border-t pt-3">
             <button
               @click="handleSave"
               :disabled="saving"
@@ -113,6 +113,7 @@ import { format, parseISO } from 'date-fns'
 import { useProjectStore } from '@/stores/project'
 import { useEventStore } from '@/stores/event'
 import { useTaskStore } from '@/stores/task'
+import { useAuthStore } from '@/stores/auth'
 import Close from '@/assets/icons/cross.svg'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
@@ -124,6 +125,8 @@ const projectStore = useProjectStore()
 const eventStore = useEventStore()
 const taskStore = useTaskStore()
 
+const authStore = useAuthStore()
+const userRole = computed(() => authStore.user?.role || '')
 const isEditing = ref(false)
 const eventData = ref(null)
 const editableData = ref({})
@@ -131,7 +134,7 @@ const saving = ref(false)
 
 // Fields
 const eventFields = [
-  { type: 'text', label: 'Event Title', model: 'e_title', placeholder: 'Enter event title' },
+  { type: 'text', label: 'Event Title', model: 'e_name', placeholder: 'Enter event title' },
   { type: 'datetime-local', label: 'Start Date & Time', model: 'start_date' },
   { type: 'datetime-local', label: 'End Date & Time', model: 'end_date' },
   { type: 'text', label: 'Location', model: 'location', placeholder: 'Enter location' },
@@ -167,7 +170,7 @@ const validationErrors = computed(() => {
   if (!eventData.value) return errors
 
   if (eventData.value.type === 'event') {
-    if (!editableData.value.e_title?.trim()) errors.push('Title is required')
+    if (!editableData.value.e_name?.trim()) errors.push('Title is required')
     if (!editableData.value.start_date) errors.push('Start date is required')
     if (!editableData.value.end_date) errors.push('End date is required')
     if (
@@ -197,8 +200,8 @@ watch(
     if (val) {
       eventData.value = {
         ...val,
-        type: val.type || (val.t_name ? 'task' : 'event'),
-        title: val.e_title || val.t_name || val.title || 'Untitled Event',
+        type: val.t_name ? 'task' : 'event',
+        title: val.e_name || val.t_name || val.title || 'Untitled Event',
         description: val.e_description || val.t_description || val.description || '',
         start: val.start_date || val.start || val.start_date,
         end: val.end_date || val.end || val.due_date,
@@ -209,6 +212,12 @@ watch(
     }
   },
   { immediate: true },
+)
+watch(
+  () => eventData.value,
+  (val) => {
+    console.log('Event type:', val?.type, 'Role:', userRole.value)
+  },
 )
 
 watch(
@@ -223,8 +232,8 @@ function resetEditableData() {
   currentFields.value.forEach((field) => {
     if (eventData.value.type === 'event') {
       data[field.model] =
-        field.model === 'e_title'
-          ? eventData.value.e_title
+        field.model === 'e_name'
+          ? eventData.value.e_name
           : field.model === 'e_description'
             ? eventData.value.e_description
             : field.model === 'start_date'
@@ -271,6 +280,21 @@ function formatDateForInput(date) {
     return ''
   }
 }
+// True if user can modify this event/task
+const canEditOrDelete = computed(() => {
+  if (!eventData.value) return false
+
+  // Members: can only modify events
+  if (userRole.value === 'member') {
+    return eventData.value.type === 'event'
+  }
+
+  // Admins and PMs: can modify everything
+  return ['admin', 'project_manager'].includes(userRole.value)
+})
+
+// True if user can delete this item
+const canDelete = computed(() => canEditOrDelete.value)
 
 // Editing
 function startEditing() {
@@ -314,7 +338,7 @@ async function handleSave() {
     let updatedItem
     if (eventData.value.type === 'event') {
       updatedItem = await eventStore.updateEvent(eventData.value.id, {
-        e_title: editableData.value.e_title?.trim(),
+        e_name: editableData.value.e_name?.trim(),
         e_description: editableData.value.e_description?.trim(),
         start_date: editableData.value.start_date
           ? new Date(editableData.value.start_date).toISOString()
@@ -327,7 +351,7 @@ async function handleSave() {
       eventData.value = {
         ...updatedItem,
         type: 'event',
-        title: updatedItem.e_title,
+        title: updatedItem.e_name,
         description: updatedItem.e_description,
       }
     } else if (eventData.value.type === 'task') {

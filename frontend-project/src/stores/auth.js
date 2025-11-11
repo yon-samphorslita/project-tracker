@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useUserStore } from './user'
 import { useNotificationStore } from './notification'
 
-const API_BASE_URL = 'http://localhost:3000'
+const API_BASE_URL = 'http://localhost:3000/auth'
 
 export const useAuthStore = defineStore(
   'auth',
@@ -34,28 +34,33 @@ export const useAuthStore = defineStore(
       localStorage.removeItem('token')
     }
 
+    // Login
     const login = async (credentials) => {
-      const { user: u, accessToken } = (await api.post('/auth/login', credentials)).data
+      const res = await api.post('/login', credentials)
+      const { user: u, accessToken } = res.data
       setAuthData(u, accessToken)
+      useUserStore().currentUser = u
       return u
     }
 
+    // Logout
     const logout = async (router) => {
       try {
-        if (token.value) await api.post('/auth/logout')
+        if (token.value) await api.post('/logout')
       } catch {
         console.warn('Backend logout failed')
       } finally {
-        useNotificationStore().disconnect()
+        useNotificationStore().disconnect?.()
         clearAuthData()
         if (router) router.push('/login')
       }
     }
 
+    // Fetch current user's profile
     const fetchProfile = async () => {
       if (!token.value) return null
       try {
-        const data = (await api.get('/auth/profile')).data
+        const data = (await api.get('/profile')).data
         user.value = data
         useUserStore().currentUser = data
         return data
@@ -65,44 +70,35 @@ export const useAuthStore = defineStore(
       }
     }
 
-    const fetchAllUsers = async () => {
-      if (!token.value) return []
-      users.value = (await api.get('/auth/users')).data
-      return users.value
-    }
-
+    // Update own profile
     const updateProfile = async (updateUserDto) => {
       if (!token.value) return null
-      const data = (await api.patch('/auth/profile', updateUserDto)).data
+      const data = (await api.patch('/profile', updateUserDto)).data
       user.value = data
       useUserStore().currentUser = data
       return data
     }
 
-    const updateUser = async ({ id, ...updateUserDto }) => {
-      if (!token.value) return null
-      if (!id) throw new Error('User ID required')
-      return (await api.patch(`/auth/user/${id}`, updateUserDto)).data
-    }
-
+    // Update first time password
     const updatePassword = async (oldPassword, newPassword) => {
       if (!token.value) return null
-      return (await api.patch('/auth/update-password', { oldPassword, newPassword })).data
+      return (await api.patch('/update-password', { oldPassword, newPassword })).data
     }
 
-    const createUser = async (userDto) => {
-      if (!token.value) throw new Error('Not authenticated')
-      const payload = Object.fromEntries(Object.entries(userDto).filter(([_, v]) => v != null))
-      return (await api.post('/auth/user', payload)).data
+    // Request OTP for password reset
+    const requestOtp = async (email) => {
+      return (await api.post('/request-otp', { email })).data
     }
 
-    const requestOtp = async (email) => (await api.post('/auth/request-otp', { email })).data
+    // Reset password using OTP
+    const resetPassword = async ({ email, otp, newPassword }) => {
+      return (await api.post('/reset-password', { email, otp, newPassword })).data
+    }
 
-    const resetPassword = async ({ email, otp, newPassword }) =>
-      (await api.post('/auth/reset-password', { email, otp, newPassword })).data
-
-    const verifyOtp = async ({ email, otp }) =>
-      (await axios.post(`${API_BASE_URL}/auth/verify-otp`, { email, otp })).data
+    // Verify OTP
+    const verifyOtp = async ({ email, otp }) => {
+      return (await api.post('/verify-otp', { email, otp })).data
+    }
 
     return {
       user,
@@ -112,11 +108,8 @@ export const useAuthStore = defineStore(
       login,
       logout,
       fetchProfile,
-      fetchAllUsers,
       updateProfile,
-      updateUser,
       updatePassword,
-      createUser,
       requestOtp,
       resetPassword,
       verifyOtp,

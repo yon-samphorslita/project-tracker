@@ -210,6 +210,9 @@ async function handleImageUpload(e) {
     const response = await fetch('http://localhost:3000/upload', {
       method: 'POST',
       body: formData,
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+      },
     })
     const data = await response.json()
     const uploadedUrl = `http://localhost:3000/upload/images/${data.filename}`

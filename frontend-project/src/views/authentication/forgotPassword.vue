@@ -20,12 +20,7 @@
             required
             class="rounded-[20px] border border-gray-300 p-[10px]"
           />
-          <Button
-            @click="requestOtp"
-            btn-color="var(--blue-bg)"
-            btntext="var(--main-text)"
-            label="Send OTP"
-          />
+          <Button :disabled="otpSent" @click="requestOtp" label="Send OTP" />
         </div>
 
         <!-- Step 2a: Enter OTP -->
@@ -44,12 +39,7 @@
               ref="setOtpRef"
             />
           </div>
-          <Button
-            @click="verifyOtp"
-            btn-color="var(--blue-bg)"
-            btntext="var(--main-text)"
-            label="Verify OTP"
-          />
+          <Button @click="verifyOtp" label="Verify OTP" />
         </div>
 
         <!-- Step 2b: Reset Password -->
@@ -72,111 +62,91 @@
             class="rounded-[20px] border border-gray-300 p-[10px]"
           />
 
-          <Button
-            @click="resetPassword"
-            btn-color="var(--blue-bg)"
-            btntext="var(--main-text)"
-            label="Reset Password"
-          />
+          <Button @click="resetPassword" label="Reset Password" />
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import Button from '@/components/common-used/button.vue'
 
-export default {
-  setup() {
-    const router = useRouter()
-    const auth = useAuthStore()
+const router = useRouter()
+const auth = useAuthStore()
 
-    const step = ref(1)
-    const email = ref('')
-    const otpVerified = ref(false)
-    const otpDigits = reactive(Array(6).fill(''))
-    const otpRefs = []
-    const newPassword = ref('')
-    const confirmPassword = ref('')
+const step = ref(1)
+const email = ref('')
+const otpVerified = ref(false)
+const otpDigits = reactive(Array(6).fill(''))
+const otpRefs = []
+const newPassword = ref('')
+const confirmPassword = ref('')
+const otpSent = ref(false)
 
-    const setOtpRef = (el) => {
-      if (el) otpRefs.push(el)
-    }
+const requestOtp = async () => {
+  if (otpSent.value) return // prevent multiple requests
+  otpSent.value = true
+  try {
+    await auth.requestOtp(email.value)
+    alert('OTP sent to your email.')
+    step.value = 2
+    nextTick(() => otpRefs[0]?.focus())
+  } catch (err) {
+    console.error(err)
+    alert(err.response?.data?.message || 'Failed to request OTP')
+    otpSent.value = false // re-enable if request fails
+  }
+}
 
-    const requestOtp = async () => {
-      try {
-        await auth.requestOtp(email.value)
-        alert('OTP sent to your email.')
-        step.value = 2
-        nextTick(() => otpRefs[0]?.focus())
-      } catch (err) {
-        console.error(err)
-        alert(err.response?.data?.message || 'Failed to request OTP')
-      }
-    }
+const setOtpRef = (el) => {
+  if (el) otpRefs.push(el)
+}
 
-    const onOtpInput = (index, e) => {
-      otpDigits[index] = e.target.value.replace(/\D/g, '')
-      if (otpDigits[index] && index < 5) otpRefs[index + 1]?.focus()
-      if (otpDigits.every((d) => d !== '')) verifyOtp()
-    }
+const onOtpInput = (index, e) => {
+  otpDigits[index] = e.target.value.replace(/\D/g, '')
+  if (otpDigits[index] && index < 5) otpRefs[index + 1]?.focus()
+  if (otpDigits.every((d) => d !== '')) verifyOtp()
+}
 
-    const onPasteOtp = (e) => {
-      const paste = e.clipboardData.getData('text') || ''
-      if (/^\d{6}$/.test(paste)) {
-        paste.split('').forEach((d, i) => (otpDigits[i] = d))
-        nextTick(() => verifyOtp())
-      }
-    }
+const onPasteOtp = (e) => {
+  const paste = e.clipboardData.getData('text') || ''
+  if (/^\d{6}$/.test(paste)) {
+    paste.split('').forEach((d, i) => (otpDigits[i] = d))
+    nextTick(() => verifyOtp())
+  }
+}
 
-    const verifyOtp = async () => {
-      try {
-        await auth.verifyOtp({ email: email.value, otp: otpDigits.join('') })
-        otpVerified.value = true
-        nextTick(() => document.querySelector('input[type="password"]')?.focus())
-      } catch (err) {
-        console.error(err)
-        alert(err.response?.data?.message || 'Invalid OTP')
-      }
-    }
+const verifyOtp = async () => {
+  try {
+    await auth.verifyOtp({ email: email.value, otp: otpDigits.join('') })
+    otpVerified.value = true
+    nextTick(() => document.querySelector('input[type="password"]')?.focus())
+  } catch (err) {
+    console.error(err)
+    alert(err.response?.data?.message || 'Invalid OTP')
+  }
+}
 
-    const resetPassword = async () => {
-      if (newPassword.value !== confirmPassword.value) {
-        alert('Passwords do not match.')
-        return
-      }
-      try {
-        await auth.resetPassword({
-          email: email.value,
-          otp: otpDigits.join(''),
-          newPassword: newPassword.value,
-        })
-        alert('Password reset successful! Redirecting to login...')
-        router.push('/login')
-      } catch (err) {
-        console.error(err)
-        alert(err.response?.data?.message || 'Failed to reset password')
-      }
-    }
-
-    return {
-      step,
-      email,
-      otpVerified,
-      otpDigits,
-      setOtpRef,
-      newPassword,
-      confirmPassword,
-      requestOtp,
-      onOtpInput,
-      onPasteOtp,
-      verifyOtp,
-      resetPassword,
-    }
-  },
+const resetPassword = async () => {
+  if (newPassword.value !== confirmPassword.value) {
+    alert('Passwords do not match.')
+    return
+  }
+  try {
+    await auth.resetPassword({
+      email: email.value,
+      otp: otpDigits.join(''),
+      newPassword: newPassword.value,
+    })
+    alert('Password reset successful!')
+    router.push('/login')
+  } catch (err) {
+    console.error(err)
+    alert(err.response?.data?.message || 'Failed to reset password')
+  }
 }
 </script>

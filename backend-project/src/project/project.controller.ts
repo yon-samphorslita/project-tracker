@@ -8,41 +8,32 @@ import {
   Delete,
   UseGuards,
   Request,
-  NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { Project } from './project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { ProjectGuard } from './project.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/enums/role.enum';
 
-@UseGuards(AuthGuard('jwt'))
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
   findAll(@Request() req): Promise<Project[]> {
-    if (!req.user?.id)
-      throw new ForbiddenException('Invalid user authentication');
-
-    const isAdmin = req.user.role === 'admin';
-    return this.projectService.findAll(req.user.id, isAdmin);
+    return this.projectService.findAll(req.user);
   }
 
   @Get(':id')
   @UseGuards(ProjectGuard)
   findOne(@Param('id') id: string, @Request() req): Promise<Project> {
-    const projectId = +id;
-    if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
-
-    const isAdmin = req.user.role === 'admin';
-    return this.projectService.findOne(projectId, req.user.id, isAdmin);
+    return this.projectService.findOne(+id);
   }
 
   @Post()
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   create(
     @Body() createProjectDto: CreateProjectDto,
     @Request() req,
@@ -52,23 +43,19 @@ export class ProjectsController {
 
   @Patch(':id')
   @UseGuards(ProjectGuard)
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   update(
     @Param('id') id: string,
     @Body() updateProjectDto: UpdateProjectDto,
     @Request() req,
   ): Promise<Project> {
-    const projectId = +id;
-    if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
-
-    return this.projectService.update(projectId, updateProjectDto, req.user);
+    return this.projectService.update(+id, updateProjectDto, req.user);
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   @UseGuards(ProjectGuard)
   delete(@Param('id') id: string, @Request() req): Promise<void> {
-    const projectId = +id;
-    if (isNaN(projectId)) throw new NotFoundException('Invalid project ID');
-
-    return this.projectService.delete(projectId, req.user);
+    return this.projectService.delete(+id, req.user);
   }
 }

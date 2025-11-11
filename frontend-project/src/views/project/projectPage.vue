@@ -28,8 +28,6 @@
         <Button
           v-if="userRole === 'admin' || userRole === 'project_manager'"
           label="+ New Task"
-          btn-color="var(--blue-bg)"
-          btntext="var(--black-text)"
           @click="showTaskForm = true"
         />
         <Form
@@ -67,6 +65,7 @@
         :TeamMembers="TeamMembers"
         :tableColumns="tableColumns"
         :taskFields="taskFields"
+        :userRole="userRole"
         @onTaskCreated="onTaskCreated"
         @onTaskUpdated="onTaskUpdated"
         @onTaskDeleted="deleteTask"
@@ -153,15 +152,29 @@ const projectFields = computed(() => [
 ])
 
 const taskFields = computed(() => [
-  { type: 'text', label: 'Task Name', model: 'title', placeholder: 'Enter task name' },
+  {
+    type: 'text',
+    label: 'Task Name',
+    model: 'title',
+    placeholder: 'Enter task name',
+    required: true,
+  },
   {
     type: 'textarea',
     label: 'Description',
     model: 'description',
     placeholder: 'Enter description',
   },
-  { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
-  { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
+  { type: 'datetime-local', label: 'Start Date', model: 'startDate', required: true },
+  { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
+  {
+    type: 'select',
+    label: 'Assignee',
+    options: TeamMembers.value,
+    model: 'user',
+    valueKey: 'id',
+    labelKey: 'name',
+  },
   {
     type: 'select',
     label: 'Priority',
@@ -171,14 +184,6 @@ const taskFields = computed(() => [
       { id: 'low', name: 'Low' },
     ],
     model: 'priority',
-  },
-  {
-    type: 'select',
-    label: 'Assignee',
-    options: TeamMembers.value,
-    model: 'user',
-    valueKey: 'id',
-    labelKey: 'name',
   },
 ])
 
@@ -244,9 +249,7 @@ async function fetchProjectTasks(projectId) {
   await taskStore.fetchTasksByProject(projectId)
 
   const visibleTasks = taskStore.tasks.filter((t) => {
-    if (userRole.value === 'admin') return true
-    if (userRole.value === 'project_manager')
-      return TeamMembers.value.some((m) => m.id === t.user?.id)
+    if (userRole.value === 'admin' || userRole.value === 'project_manager') return true
     return t.user?.id === authStore.user?.id
   })
 
@@ -258,6 +261,10 @@ async function fetchProjectTasks(projectId) {
         : subtasksData
           ? Object.values(subtasksData)
           : []
+      const canEditTask =
+        userRole.value === 'admin' ||
+        (userRole.value === 'project_manager' &&
+          TeamMembers.value.some((m) => m.id === task.user?.id))
       return {
         id: task.id,
         title: task.t_name,
@@ -268,6 +275,8 @@ async function fetchProjectTasks(projectId) {
         due_date: task.due_date,
         icon: task.user?.img_url || null,
         user: task.user || authStore.user,
+        canEdit: canEditTask, // PM/admin task CRUD
+
         subtasks: subtasks.map((st) => ({
           name: st.name,
           start: new Date(st.start_date || task.start_date),
@@ -275,6 +284,9 @@ async function fetchProjectTasks(projectId) {
           status: st.status,
           color: st.status === 'completed' ? '#8BD3B7' : '#FFD966',
           icon: st.user_avatar || null,
+          canEdit:
+            userRole.value === 'admin' || // Admin can CRUD anything
+            (userRole.value === 'member' && st.user_id === authStore.user?.id), // Member can CRUD own subtasks
         })),
       }
     }),

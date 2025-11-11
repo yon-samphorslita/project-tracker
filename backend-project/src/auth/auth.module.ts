@@ -18,15 +18,20 @@ import { EmailService } from 'src/mail/email.service';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'), // get secret from env
-        signOptions: {
-          expiresIn: parseInt(
-            configService.get('JWT_EXPIRES_IN') || '3600',
-            10,
-          ),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) throw new Error('JWT_SECRET not set');
+
+        const expiresIn = parseInt(
+          configService.get('JWT_EXPIRES_IN') || '3600',
+          10,
+        );
+
+        return {
+          secret,
+          signOptions: { expiresIn }, // number of seconds
+        };
+      },
       global: true,
     }),
   ],

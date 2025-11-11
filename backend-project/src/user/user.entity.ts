@@ -51,11 +51,11 @@ export class User {
   @Column({ nullable: true })
   img_url: string;
 
-  @Column({ nullable: true })
-  otp_code: string;
+  @Column({ type: 'varchar', nullable: true })
+  otp_code: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  otp_expiry: Date;
+  otp_expiry: Date | null;
 
   @CreateDateColumn()
   created_at: Date;

@@ -86,7 +86,7 @@
               :style="{ backgroundColor: getColor(item) }"
             ></span>
             <div>
-              <div class="font-semibold">{{ item.e_title || item.t_name }}</div>
+              <div class="font-semibold">{{ item.e_name || item.t_name }}</div>
               <div class="text-sub-text text-[10px]">{{ formatTimeRange(item) }}</div>
             </div>
           </div>

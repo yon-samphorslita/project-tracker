@@ -92,8 +92,8 @@
               @change="handleStatusChange(item)"
               class="px-3 py-1 border border-gray-300 rounded-lg bg-main-bg text-gray-text hover:border-gray-400 focus:ring focus:ring-blue-100 transition-all duration-200 shadow-sm"
             >
-              <option value="not started">Start</option>
-              <option value="in progress">Finish</option>
+              <option value="in progress">Start</option>
+              <option value="completed">Finish</option>
             </select>
           </div>
         </div>
@@ -247,17 +247,13 @@ function formatDate(dateStr: string) {
   return dueDate.toLocaleDateString('en-GB', options)
 }
 
-const handleStatusChange = (item) => {
-  if (item.t_status === 'not started') {
-    startTask(item.id)
-  } else if (item.t_status === 'in progress') {
-    finishTask(item.id)
-  }
+async function handleStatusChange(item) {
+  await taskStore.updateTaskStatus(item.id, item.t_status)
 }
 
 async function startTask(taskId: number) {
   // emit('update-status', taskId, 'in progress')
-  const updated = await taskStore.updateTask(taskId, { t_status: 'in progress' })
+  const updated = await taskStore.updateTaskStatus(taskId, 'in progress')
   if (updated) {
     // Update local task object for reactivity
     const task = localTasks.value.find((t) => t.id === taskId)
@@ -267,7 +263,7 @@ async function startTask(taskId: number) {
 
 async function finishTask(taskId: number) {
   // emit('update-status', taskId, 'completed')
-  const updated = await taskStore.updateTask(taskId, { t_status: 'completed' })
+  const updated = await taskStore.updateTaskStatus(taskId, 'completed')
   if (updated) {
     const task = localTasks.value.find((t) => t.id === taskId)
     if (task) task.t_status = 'completed'

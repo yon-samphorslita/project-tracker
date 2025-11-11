@@ -14,6 +14,7 @@ import { User } from '../user/user.entity';
 import { Status } from '../enums/status.enum';
 import { ActivityService } from 'src/activity/activity.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { Role } from 'src/enums/role.enum';
 
 @Injectable()
 export class ProjectService {
@@ -31,6 +32,9 @@ export class ProjectService {
   ): Promise<Project> {
     const project = this.projectRepository.create({
       ...createProjectDto,
+      team: createProjectDto.team_id
+        ? { id: createProjectDto.team_id }
+        : undefined,
       user,
       created_at: new Date(),
     });
@@ -57,7 +61,7 @@ export class ProjectService {
   }
 
   // Find all projects
-  async findAll(userId?: number, isAdmin = false): Promise<Project[]> {
+  async findAll(user: User): Promise<Project[]> {
     const relations = [
       'team',
       'team.members',
@@ -68,96 +72,44 @@ export class ProjectService {
       'tasks.user',
     ];
 
-    if (isAdmin || !userId) {
-      return this.projectRepository.find({ relations });
-    }
+    // if (user.role === Role.ADMIN) {
+    //   return this.projectRepository.find({ relations });
+    // }
 
-    const user = await this.projectRepository.manager.findOne(User, {
-      where: { id: userId },
-      relations: ['team', 'pmTeams'],
-    });
+    // const query = this.projectRepository
+    //   .createQueryBuilder('project')
+    //   .leftJoinAndSelect('project.team', 'team')
+    //   .leftJoinAndSelect('team.members', 'member')
+    //   .leftJoinAndSelect('team.mainMembers', 'mainMember')
+    //   .leftJoinAndSelect('team.pms', 'pms')
+    //   .leftJoinAndSelect('project.user', 'user')
+    //   .leftJoinAndSelect('project.tasks', 'tasks')
+    //   .leftJoinAndSelect('tasks.user', 'taskUser')
+    //   .where('project.userId = :userId', { userId: user.id })
+    //   .orWhere('member.id = :userId', { userId: user.id }) // secondary member
+    //   .orWhere('mainMember.id = :userId', { userId: user.id }) // main member
+    //   .orWhere('pms.id = :userId', { userId: user.id }); // PM
 
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    // Explicitly type teamIds
-    const teamIds: number[] = [];
-
-    if (user.team) teamIds.push(user.team.id);
-    if (user.pmTeams?.length) {
-      teamIds.push(...user.pmTeams.map((team) => team.id));
-    }
-
-    const query = this.projectRepository
-      .createQueryBuilder('project')
-      .leftJoinAndSelect('project.team', 'team')
-      .leftJoinAndSelect('team.members', 'member')
-      .leftJoinAndSelect('team.mainMembers', 'mainMember')
-      .leftJoinAndSelect('team.pms', 'pms')
-      .leftJoinAndSelect('project.user', 'user')
-      .leftJoinAndSelect('project.tasks', 'tasks')
-      .leftJoinAndSelect('tasks.user', 'taskUser')
-      .where('project.userId = :userId', { userId });
-
-    if (teamIds.length > 0) {
-      query.orWhere('team.id IN (:...teamIds)', { teamIds });
-    }
-
-    return query.getMany();
+    return this.projectRepository.find({ relations });
   }
 
   // Find a single project by ID
-  async findOne(
-    id: number,
-    userId?: number,
-    isAdmin = false,
-  ): Promise<Project> {
-    const projectQB = this.projectRepository
-      .createQueryBuilder('project')
-      .leftJoinAndSelect('project.team', 'team')
-      .leftJoinAndSelect('team.members', 'member')
-      .leftJoinAndSelect('team.mainMembers', 'mainMembers')
-      .leftJoinAndSelect('team.pms', 'pms')
-      .leftJoinAndSelect('project.user', 'user')
-      .leftJoinAndSelect('project.tasks', 'tasks')
-      .leftJoinAndSelect('tasks.subtasks', 'subtasks')
-      .where('project.id = :id', { id });
-
-    if (!isAdmin) {
-      const user = await this.projectRepository.manager.findOne(User, {
-        where: { id: userId },
-        relations: ['team', 'pmTeams'],
-      });
-
-      if (!user) {
-        throw new NotFoundException(`User with ID ${userId} not found`);
-      }
-
-      const teamIds: number[] = [];
-      if (user.team) teamIds.push(user.team.id);
-      if (user.pmTeams?.length) {
-        teamIds.push(...user.pmTeams.map((team) => team.id));
-      }
-
-      if (teamIds.length > 0) {
-        projectQB.andWhere(
-          'project.userId = :userId OR team.id IN (:...teamIds)',
-          { userId, teamIds },
-        );
-      } else {
-        projectQB.andWhere('project.userId = :userId', { userId });
-      }
-    }
-
-    const project = await projectQB.getOne();
+  async findOne(id: number): Promise<Project> {
+    const project = await this.projectRepository.findOne({
+      where: { id },
+      relations: [
+        'team',
+        'team.members',
+        'team.pms',
+        'user',
+        'tasks',
+        'tasks.subtasks',
+      ],
+    });
 
     if (!project) {
-      throw new NotFoundException(
-        `Project with ID ${id} not found or access denied`,
-      );
+      throw new NotFoundException(`Project with ID ${id} not found`);
     }
-
     return project;
   }
 
@@ -174,8 +126,6 @@ export class ProjectService {
 
     if (!project)
       throw new NotFoundException(`Project with ID ${id} not found`);
-    if (project.user?.id !== user.id && user.role !== 'admin')
-      throw new ForbiddenException('Only owner can modify the project');
 
     // Prevent marking completed if tasks/subtasks are incomplete
     if (dto.status === Status.COMPLETED) {
@@ -255,12 +205,8 @@ export class ProjectService {
     if (!project)
       throw new NotFoundException(`Project with ID ${id} not found`);
 
-    // Safely check owner
-    if (project.user && project.user.id !== user.id && user.role !== 'admin') {
-      throw new ForbiddenException('Only owner can delete the project');
-    }
-
     await this.projectRepository.remove(project);
+
     await this.activityService.logAction(
       user.id,
       `Deleted project: ${project.p_name}`,

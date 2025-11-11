@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { defineStore } from 'pinia'
 import { io } from 'socket.io-client'
+import { useAuthStore } from './auth'
 
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
@@ -12,6 +13,15 @@ export const useNotificationStore = defineStore('notification', {
   }),
 
   actions: {
+    getAxiosInstance() {
+      const authStore = useAuthStore()
+      return axios.create({
+        headers: {
+          Authorization: `Bearer ${authStore.token}`,
+        },
+      })
+    },
+
     async connect(userId) {
       this.userId = userId
       if (!this.notificationsEnabled) {
@@ -54,8 +64,8 @@ export const useNotificationStore = defineStore('notification', {
     },
     async fetchNotifications() {
       if (!this.userId) return
-
-      const res = await axios.get(`http://localhost:3000/notifications/user/${this.userId}`)
+      const axiosInstance = this.getAxiosInstance()
+      const res = await axiosInstance.get(`http://localhost:3000/notifications/user/${this.userId}`)
 
       this.notifications = res.data.sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
@@ -64,8 +74,10 @@ export const useNotificationStore = defineStore('notification', {
 
     async fetchUnreadNotifications() {
       if (!this.userId) return
-
-      const res = await axios.get(`http://localhost:3000/notifications/user/${this.userId}/unread`)
+      const axiosInstance = this.getAxiosInstance()
+      const res = await axiosInstance.get(
+        `http://localhost:3000/notifications/user/${this.userId}/unread`,
+      )
 
       this.notifications = res.data.sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
@@ -74,8 +86,10 @@ export const useNotificationStore = defineStore('notification', {
 
     async fetchReadNotifications() {
       if (!this.userId) return
-
-      const res = await axios.get(`http://localhost:3000/notifications/user/${this.userId}/read`)
+      const axiosInstance = this.getAxiosInstance()
+      const res = await axiosInstance.get(
+        `http://localhost:3000/notifications/user/${this.userId}/read`,
+      )
 
       this.notifications = res.data.sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
