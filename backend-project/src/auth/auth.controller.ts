@@ -54,6 +54,8 @@ export class AuthController {
       body.newPassword,
       req.user.id,
       true,
+      body.oldPassword,
+      false
     );
     return { message: 'Password updated successfully' };
   }

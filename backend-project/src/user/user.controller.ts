@@ -63,12 +63,16 @@ export class UserController {
     return this.userService.delete(id, req.user.id);
   }
 
-  @Patch(':id/update-password')
-  async updatePassword(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: { newPassword: string },
-    @Request() req,
-  ) {
-    return this.userService.updatePassword(id, body.newPassword, req.user.id);
-  }
+@Patch(':id/reset-password')
+async resetPassword(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  await this.userService.updatePassword(
+    id,
+    '',
+    req.user.id,
+    false,
+    undefined,
+    true, 
+  );
+  return { message: 'Password reset to default successfully' };
+}
 }

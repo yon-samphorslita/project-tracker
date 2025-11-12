@@ -43,7 +43,7 @@
           />
 
           <!-- Password Update Modal -->
-          <div
+          <!-- <div
             v-if="isUpdatingPassword"
             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           >
@@ -106,7 +106,7 @@
                 </div>
               </form>
             </div>
-          </div>
+          </div> -->
 
           <div class="flex gap-4 items-center">
             <Search v-model:query="searchQuery" />
@@ -234,7 +234,6 @@ const userFields = [
   { type: 'text', label: 'First Name', placeholder: 'Enter first name', model: 'first_name' },
   { type: 'text', label: 'Last Name', placeholder: 'Enter last name', model: 'last_name' },
   { type: 'email', label: 'Email', placeholder: 'Enter email', model: 'email' },
-  { type: 'password', label: 'Password', placeholder: 'Enter password', model: 'password' },
   {
     type: 'select',
     label: 'Role',
@@ -320,16 +319,20 @@ function editUser(row) {
 }
 
 // Password Update Methods
-function updateUserPassword(row) {
-  selectedUserForPassword.value = row.id
-  isUpdatingPassword.value = true
-  isEditing.value = false
-  showForm.value = false
+async function updateUserPassword(row) {
+  const confirmed = confirm(
+    `Are you sure you want to reset the password for "${row.name}" to the default password?`,
+  )
+  if (!confirmed) return
 
-  // Reset password data
-  passwordData.value = {
-    newPassword: '',
-    confirmPassword: '',
+  try {
+    // Call backend endpoint for reset
+    await userStore.resetUserPassword(row.id)
+    alert(`Password for "${row.name}" has been reset to the default successfully.`)
+    await userStore.fetchUsers()
+  } catch (err) {
+    console.error('Failed to reset password:', err)
+    alert('Failed to reset password. Please try again.')
   }
 }
 

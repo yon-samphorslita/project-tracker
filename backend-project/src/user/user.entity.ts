@@ -29,10 +29,10 @@ export class User {
   @Column()
   last_name: string;
 
-  @Column({ nullable: true })
+  @Column()
   email: string;
 
-  @Column({ nullable: true })
+  @Column({ default: '123456'})
   password: string;
 
   @Column({ default: false })
@@ -45,7 +45,7 @@ export class User {
   })
   role: Role;
 
-  @Column({ default: true, nullable: true })
+  @Column({ default: true })
   active: boolean;
 
   @Column({ nullable: true })

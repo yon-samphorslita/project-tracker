@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -9,6 +9,8 @@ import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class UserService {
+  private readonly DEFAULT_PASSWORD = '123456';
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -19,10 +21,11 @@ export class UserService {
     createUserDto: CreateUserDto,
     performedById: number,
   ): Promise<User> {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const hashedPassword = await bcrypt.hash(this.DEFAULT_PASSWORD, 10);
     const user = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
+      password_changed: false
     });
     await this.userRepository.save(user);
 
@@ -197,25 +200,36 @@ export class UserService {
     });
   }
 
-  async updatePassword(
-    userId: number,
-    newPassword: string,
-    performedById: number,
-    markChanged = true,
-  ): Promise<User> {
-    const user = await this.findOne(userId, true);
-    if (!user) throw new NotFoundException('User not found');
+async updatePassword(
+  userId: number,
+  newPassword: string,
+  performedById: number,
+  markChanged = true,
+  oldPassword?: string,
+  isResetByAdmin = false,
+): Promise<User> {
+  const user = await this.findOne(userId, true);
+  if (!user) throw new NotFoundException('User not found');
 
-    user.password = await bcrypt.hash(newPassword, 10);
-    if (markChanged) user.password_changed = true;
-
-    const savedUser = await this.userRepository.save(user);
-
-    await this.activityService.logAction(
-      performedById,
-      `Changed password for user "${savedUser.first_name} ${savedUser.last_name}"`,
-    );
-
-    return savedUser;
+  if (!isResetByAdmin && oldPassword) {
+    const passwordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!passwordValid) throw new UnauthorizedException('Old password is incorrect');
   }
+  const passwordToSet = isResetByAdmin ? this.DEFAULT_PASSWORD : newPassword;
+
+  user.password = await bcrypt.hash(passwordToSet, 10);
+  user.password_changed = isResetByAdmin ? false : true;
+
+  const savedUser = await this.userRepository.save(user);
+
+  await this.activityService.logAction(
+    performedById,
+    isResetByAdmin
+      ? `Admin reset password for user "${savedUser.first_name} ${savedUser.last_name}" to default`
+      : `Changed password for user "${savedUser.first_name} ${savedUser.last_name}"`,
+  );
+
+  return savedUser;
+}
+
 }

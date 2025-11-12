@@ -48,7 +48,7 @@ export class Project {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne((type) => User, (user) => user.projects, { nullable: true })
+  @ManyToOne((type) => User, (user) => user.projects, { nullable: true, onDelete: 'SET NULL' })
   user: User;
 
   @OneToMany((type) => Task, (task) => task.project)

@@ -48,17 +48,17 @@ export class Task {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne((type) => Project, (project) => project.tasks)
+  @ManyToOne((type) => Project, (project) => project.tasks, { onDelete: 'CASCADE'})
   project: Project;
 
-  @ManyToOne((type) => User, (user) => user.tasks, { nullable: true })
+  @ManyToOne((type) => User, (user) => user.tasks, { nullable: true, onDelete: 'CASCADE' })
   user: User;
 
   @OneToMany(() => Subtask, (subtask) => subtask.task)
   subtasks: Subtask[];
 
-  @OneToMany(() => Event, (event) => event.task)
-  events: Event[];
+  // @OneToMany(() => Event, (event) => event.task)
+  // events: Event[];
 
   @BeforeInsert()
   @BeforeUpdate()

@@ -110,9 +110,9 @@ async function handleLogin() {
     await auth.fetchProfile()
 
     if (!user.password_changed) {
-      router.push('/change-password')
+      await router.push('/change-password')
     } else {
-      router.push('/dashboard')
+      await router.push('/dashboard')
     }
   } catch (err) {
     console.error(err)

@@ -34,13 +34,13 @@ export class Event {
   @Column({ nullable: true })
   location: string;
 
-  @ManyToOne(() => Project, (project) => project.events, { nullable: true })
+  @ManyToOne(() => Project, (project) => project.events, { nullable: true, onDelete: 'CASCADE' })
   project?: Project;
 
-  @ManyToOne(() => Task, (task) => task.events, { nullable: true })
-  task?: Task;
+  // @ManyToOne(() => Task, (task) => task.events, { nullable: true })
+  // task?: Task;
 
-  @ManyToOne(() => User, (user) => user.events, { nullable: true })
+  @ManyToOne(() => User, (user) => user.events, { nullable: true, onDelete: 'CASCADE' })
   user?: User;
 
   @CreateDateColumn()

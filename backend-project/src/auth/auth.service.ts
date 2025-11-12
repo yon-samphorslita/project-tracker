@@ -72,16 +72,9 @@ export class AuthService {
 
   async verifyOtp(email: string, otp: string): Promise<boolean> {
     const user = await this.userService.findOneByEmail(email, true);
-    if (!user) return false;
+    if (!user || !user.otp_code || !user.otp_expiry) return false;
 
     const now = new Date();
-    if (
-      user.otp_code === otp &&
-      user.otp_expiry &&
-      new Date(user.otp_expiry) > now
-    ) {
-      return true;
-    }
-    return false;
+    return user.otp_code === otp && now < new Date(user.otp_expiry);
   }
 }

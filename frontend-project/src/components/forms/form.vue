@@ -238,7 +238,6 @@ function mapPayload() {
         first_name: formData.first_name?.trim() || '',
         last_name: formData.last_name?.trim() || '',
         email: formData.email?.trim() || '',
-        password: formData.password || undefined,
         role: formData.role || 'member',
         active: formData.active !== undefined ? formData.active : true,
         img_url: formData.img_url || null,

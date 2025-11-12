@@ -6,7 +6,6 @@ import { join } from 'path';
 import * as express from 'express';
 import { JwtRoleGuard } from './auth/jwt-role.guard';
 import { ValidationPipe } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -35,8 +34,7 @@ async function bootstrap() {
 
   //apply global jwt and role guard
   const reflector = app.get(Reflector);
-  const jwtService = app.get(JwtService);
-  app.useGlobalGuards(new JwtRoleGuard(reflector, jwtService));
+  app.useGlobalGuards(new JwtRoleGuard(reflector));
 
   await app.listen(process.env.PORT ?? 3000);
 }
