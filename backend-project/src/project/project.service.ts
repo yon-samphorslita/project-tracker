@@ -72,24 +72,6 @@ export class ProjectService {
       'tasks.user',
     ];
 
-    // if (user.role === Role.ADMIN) {
-    //   return this.projectRepository.find({ relations });
-    // }
-
-    // const query = this.projectRepository
-    //   .createQueryBuilder('project')
-    //   .leftJoinAndSelect('project.team', 'team')
-    //   .leftJoinAndSelect('team.members', 'member')
-    //   .leftJoinAndSelect('team.mainMembers', 'mainMember')
-    //   .leftJoinAndSelect('team.pms', 'pms')
-    //   .leftJoinAndSelect('project.user', 'user')
-    //   .leftJoinAndSelect('project.tasks', 'tasks')
-    //   .leftJoinAndSelect('tasks.user', 'taskUser')
-    //   .where('project.userId = :userId', { userId: user.id })
-    //   .orWhere('member.id = :userId', { userId: user.id }) // secondary member
-    //   .orWhere('mainMember.id = :userId', { userId: user.id }) // main member
-    //   .orWhere('pms.id = :userId', { userId: user.id }); // PM
-
     return this.projectRepository.find({ relations });
   }
 

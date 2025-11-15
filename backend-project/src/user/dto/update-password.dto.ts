@@ -1,4 +1,3 @@
-// update-password.dto.ts
 import { IsNotEmpty, MinLength } from 'class-validator';
 
 export class UpdatePasswordDto {

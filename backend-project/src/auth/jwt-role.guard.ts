@@ -24,8 +24,10 @@ export class JwtRoleGuard extends AuthGuard('jwt') implements CanActivate {
     ]);
     if (isPublic) return true;
 
-    // Run the JwtStrategy
-    const canActivate = (await super.canActivate(context)) as boolean;
+    // Verify the JwtStrategy to verify token
+    const canActivate = (
+      await super.canActivate(context)
+    ) as boolean;
     if (!canActivate) return false;
 
     // Check roles

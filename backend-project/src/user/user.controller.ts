@@ -14,6 +14,7 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/enums/role.enum';
 @Roles(Role.ADMIN)
@@ -44,35 +45,21 @@ export class UserController {
   @Patch(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() body: UpdateUserDto | ResetPasswordDto,
     @Request() req,
   ) {
-    const updatedUser = await this.userService.update(
-      id,
-      updateUserDto,
-      req.user.id,
-      ['password'],
-    );
-    if (!updatedUser) throw new NotFoundException('User not found');
-    const { password, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
+    if ('resetPassword' in body && body.resetPassword === true) {
+      return this.userService.resetPassword(
+        id,
+        req.user.id,
+      );
+    }
+
+    return this.userService.update(id, body as UpdateUserDto, req.user.id);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.userService.delete(id, req.user.id);
   }
-
-@Patch(':id/reset-password')
-async resetPassword(@Param('id', ParseIntPipe) id: number, @Request() req) {
-  await this.userService.updatePassword(
-    id,
-    '',
-    req.user.id,
-    false,
-    undefined,
-    true, 
-  );
-  return { message: 'Password reset to default successfully' };
-}
 }

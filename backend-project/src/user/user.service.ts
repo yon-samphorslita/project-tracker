@@ -21,7 +21,9 @@ export class UserService {
     createUserDto: CreateUserDto,
     performedById: number,
   ): Promise<User> {
-    const hashedPassword = await bcrypt.hash(this.DEFAULT_PASSWORD, 10);
+    const hashedPassword = await bcrypt.hash(
+      this.DEFAULT_PASSWORD, 10
+    );
     const user = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
@@ -79,54 +81,47 @@ export class UserService {
     });
   }
 
-  async update(
-    userId: number,
-    updateUserDto: UpdateUserDto,
-    performedById: number,
-    excludeFields: string[] = [],
-  ): Promise<User | null> {
-    if (!userId) return null;
+async update(
+  userId: number,
+  updateUserDto: UpdateUserDto,
+  performedById: number,
+): Promise<User | null> {
+  if (!userId) return null;
 
-    const existingUser = await this.findOne(userId);
-    if (!existingUser) throw new NotFoundException('User not found');
+  const existingUser = await this.findOne(userId);
+  if (!existingUser) throw new NotFoundException('User not found');
 
-    const fieldsToUpdate = { ...updateUserDto };
-    Object.keys(fieldsToUpdate).forEach((key) => {
-      if (fieldsToUpdate[key] === undefined || excludeFields.includes(key)) {
-        delete fieldsToUpdate[key];
-      }
-    });
-    if (Object.keys(fieldsToUpdate).length === 0) return existingUser;
+  // Remove undefined values
+  const fieldsToUpdate = { ...updateUserDto };
+  Object.keys(fieldsToUpdate).forEach((key) => {
+    if (fieldsToUpdate[key] === undefined) delete fieldsToUpdate[key];
+  });
 
-    const changes: string[] = [];
-    for (const [key, newValue] of Object.entries(fieldsToUpdate)) {
-      const oldValue = (existingUser as any)[key];
-      const formatValue = (val: any) =>
-        val === null || val === undefined
-          ? 'empty'
-          : typeof val === 'boolean'
-            ? val
-              ? 'enabled'
-              : 'disabled'
-            : `"${val}"`;
-      if (oldValue !== newValue)
-        changes.push(
-          `${key} changed from ${formatValue(oldValue)} to ${formatValue(newValue)}`,
-        );
+  if (Object.keys(fieldsToUpdate).length === 0) return existingUser;
+
+  // Track changes
+  const changes: string[] = [];
+  for (const [key, newValue] of Object.entries(fieldsToUpdate)) {
+    const oldValue = (existingUser as any)[key];
+    if (oldValue !== newValue) {
+      changes.push(`${key} changed from "${oldValue}" to "${newValue}"`);
     }
-
-    await this.userRepository.update(userId, fieldsToUpdate);
-    const updatedUser = await this.findOne(userId);
-
-    if (changes.length > 0 && updatedUser) {
-      await this.activityService.logAction(
-        performedById,
-        `Updated user "${updatedUser.first_name} ${updatedUser.last_name}": ${changes.join(', ')}`,
-      );
-    }
-
-    return updatedUser;
   }
+
+  await this.userRepository.update(userId, fieldsToUpdate);
+  const updatedUser = await this.findOne(userId);
+
+if (updatedUser && changes.length > 0) {
+  await this.activityService.logAction(
+    performedById,
+    `Updated user "${updatedUser.first_name} ${updatedUser.last_name}": ${changes.join(', ')}`,
+  );
+}
+
+
+  return updatedUser;
+}
+
 
   async delete(id: number, performedById: number): Promise<void> {
     const user = await this.findOne(id);
@@ -140,59 +135,6 @@ export class UserService {
     );
   }
 
-  async findOneByEmail(
-    email: string,
-    includePassword = false,
-  ): Promise<User | null> {
-    return this.userRepository.findOne({
-      where: { email },
-      select: includePassword
-        ? [
-            'id',
-            'email',
-            'role',
-            'password',
-            'first_name',
-            'last_name',
-            'img_url',
-            'active',
-            'password_changed',
-            'otp_code',
-            'otp_expiry',
-          ]
-        : [
-            'id',
-            'email',
-            'role',
-            'first_name',
-            'last_name',
-            'img_url',
-            'active',
-          ],
-    });
-  }
-
-  async updatePasswordByEmail(
-    email: string,
-    newPassword: string,
-  ): Promise<User> {
-    const user = await this.findOneByEmail(email, true);
-    if (!user) throw new NotFoundException('User not found');
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    user.password_changed = true;
-
-    await this.userRepository.save(user);
-
-    await this.activityService.logAction(
-      user.id,
-      `Reset password via email for user "${user.first_name} ${user.last_name}"`,
-    );
-
-    return user;
-  }
-
   async getUserTeams(userId: number) {
     return this.userRepository.findOne({
       where: { id: userId },
@@ -200,33 +142,23 @@ export class UserService {
     });
   }
 
-async updatePassword(
+async resetPassword(
   userId: number,
-  newPassword: string,
   performedById: number,
-  markChanged = true,
-  oldPassword?: string,
-  isResetByAdmin = false,
 ): Promise<User> {
   const user = await this.findOne(userId, true);
   if (!user) throw new NotFoundException('User not found');
 
-  if (!isResetByAdmin && oldPassword) {
-    const passwordValid = await bcrypt.compare(oldPassword, user.password);
-    if (!passwordValid) throw new UnauthorizedException('Old password is incorrect');
-  }
-  const passwordToSet = isResetByAdmin ? this.DEFAULT_PASSWORD : newPassword;
+  const hashedDefault = await bcrypt.hash(this.DEFAULT_PASSWORD, 10);
 
-  user.password = await bcrypt.hash(passwordToSet, 10);
-  user.password_changed = isResetByAdmin ? false : true;
+  user.password = hashedDefault;
+  user.password_changed = false;
 
   const savedUser = await this.userRepository.save(user);
 
   await this.activityService.logAction(
     performedById,
-    isResetByAdmin
-      ? `Admin reset password for user "${savedUser.first_name} ${savedUser.last_name}" to default`
-      : `Changed password for user "${savedUser.first_name} ${savedUser.last_name}"`,
+    `Admin reset password for user "${savedUser.first_name} ${savedUser.last_name}"`,
   );
 
   return savedUser;

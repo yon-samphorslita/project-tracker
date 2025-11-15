@@ -47,24 +47,21 @@ export class AuthController {
   }
 
   //first-time user update password
-  @Patch('update-password')
-  async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
-    await this.userService.updatePassword(
-      req.user.id,
-      body.newPassword,
-      req.user.id,
-      true,
-      body.oldPassword,
-      false
-    );
-    return { message: 'Password updated successfully' };
-  }
+@Patch('update-password')
+async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
+  await this.authService.updatePassword(
+    req.user.id,
+    body.oldPassword,
+    body.newPassword,
+  );
+  return { message: 'Password updated successfully' };
+}
 
   // request OTP
   @Public()
   @Post('request-otp')
   async requestOtp(@Body() body: { email: string }) {
-    const user = await this.userService.findOneByEmail(body.email, true);
+    const user = await this.authService.findOneByEmail(body.email);
     if (!user) throw new NotFoundException('User not found');
 
     const otp = await this.authService.generateOtp(user.email);
@@ -77,10 +74,15 @@ export class AuthController {
   async resetPassword(
     @Body() body: { email: string; otp: string; newPassword: string },
   ) {
-    const validOtp = await this.authService.verifyOtp(body.email, body.otp);
-    if (!validOtp) throw new ForbiddenException('Invalid or expired OTP');
+    const validOtp = await this.authService.verifyOtp(
+      body.email, 
+      body.otp
+    );
+    if (!validOtp) throw new ForbiddenException(
+      'Invalid or expired OTP'
+    );
 
-    await this.userService.updatePasswordByEmail(body.email, body.newPassword);
+    await this.authService.updatePasswordByEmail(body.email, body.newPassword);
     return { message: 'Password updated successfully' };
   }
 
@@ -106,11 +108,7 @@ export class AuthController {
   //update user own profile
   @Patch('profile')
   async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    const updatedUser = await this.userService.update(
-      req.user.id,
-      updateUserDto,
-      req.user.id,
-      [
+    const excluded = [
         'email',
         'password',
         'role',
@@ -121,7 +119,13 @@ export class AuthController {
         'otp_expiry',
         'created_at',
         'deletedAt',
-      ],
+      ]
+      excluded.forEach((field) => delete updateUserDto[field])
+
+    const updatedUser = await this.userService.update(
+      req.user.id,
+      updateUserDto,
+      req.user.id,
     );
     if (!updatedUser) throw new NotFoundException('User not found');
     const { password, ...userWithoutPassword } = updatedUser;

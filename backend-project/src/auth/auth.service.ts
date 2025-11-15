@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
+import { ActivityService } from 'src/activity/activity.service';
 import { User } from 'src/user/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -20,13 +21,13 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
-    const user = await this.userService.findOneByEmail(email, true);
+    const user = await this.findOneByEmail(email);
 
     if (!user) return null;
 
@@ -36,15 +37,25 @@ export class AuthService {
       );
     }
 
-    const passwordValid = await bcrypt.compare(password, user.password);
+    const passwordValid = await bcrypt.compare(
+      password, 
+      user.password
+    );
     if (!passwordValid) return null;
 
     return user;
   }
 
   async login(user: User) {
-    const payload = { sub: user.id, email: user.email, role: user.role };
-    return { accessToken: await this.jwtService.signAsync(payload) };
+    const payload = { 
+      sub: user.id, 
+      email: user.email, 
+      role: user.role 
+    };
+    return { 
+      accessToken: 
+      await this.jwtService.signAsync(payload) 
+    };
   }
 
   async logout(token: string) {
@@ -71,10 +82,79 @@ export class AuthService {
   }
 
   async verifyOtp(email: string, otp: string): Promise<boolean> {
-    const user = await this.userService.findOneByEmail(email, true);
+    const user = await this.findOneByEmail(email);
     if (!user || !user.otp_code || !user.otp_expiry) return false;
 
     const now = new Date();
     return user.otp_code === otp && now < new Date(user.otp_expiry);
+  }
+
+  async updatePassword(
+  userId: number,
+  oldPassword: string,
+  newPassword: string,
+): Promise<User> {
+  const user = await this.userRepository.findOne({
+    where: { id: userId }
+  });
+  if (!user) throw new NotFoundException('User not found');
+
+  const passwordValid = await bcrypt.compare(oldPassword, user.password);
+  if (!passwordValid) throw new UnauthorizedException('Old password is incorrect');
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  user.password_changed = true;
+
+  const savedUser = await this.userRepository.save(user);
+
+  await this.activityService.logAction(
+    userId,
+    `User "${user.first_name} ${user.last_name}" updated their own password`,
+  );
+
+  return savedUser;
+}
+
+  async findOneByEmail(
+    email: string,
+  ): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { email },
+      select: 
+        [
+            'id',
+            'email',
+            'role',
+            'first_name',
+            'last_name',
+            'img_url',
+            'active',
+            'password',
+            'password_changed',
+            'otp_code',
+            'otp_expiry',
+          ]
+    });
+  }
+
+  async updatePasswordByEmail(
+    email: string,
+    newPassword: string,
+  ): Promise<User> {
+    const user = await this.findOneByEmail(email);
+    if (!user) throw new NotFoundException('User not found');
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.password_changed = true;
+
+    await this.userRepository.save(user);
+
+    await this.activityService.logAction(
+      user.id,
+      `Reset password via email for user "${user.first_name} ${user.last_name}"`,
+    );
+
+    return user;
   }
 }

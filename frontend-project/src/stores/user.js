@@ -69,8 +69,8 @@ export const useUserStore = defineStore(
     const resetUserPassword = async (id) => {
       try {
         const res = await axios.patch(
-          `${API_BASE_URL}/users/${id}/reset-password`,
-          {},
+          `${API_BASE_URL}/users/${id}`,
+          { resetPassword: true }, // must match controller check
           { headers: getAuthHeaders() },
         )
         return res.data
