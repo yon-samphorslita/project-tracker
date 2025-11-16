@@ -2,11 +2,11 @@
   <transition name="fade">
     <div v-if="showForm" class="fixed inset-0 z-50 flex justify-end">
       <!-- Dark Overlay -->
-      <div class="absolute inset-0 bg-black/50" @click="closeForm"></div>
+      <div class="absolute inset-0 bg-[rgba(153,153,153,0.2)]" @click="closeForm"></div>
 
       <!-- Side Panel Form -->
       <div
-        class="relative bg-main-bg w-96 max-w-full h-full shadow-xl p-6 overflow-auto transition-transform duration-300 transform"
+        class="relative bg-main-bg w-[500px] max-w-full h-full shadow-xl p-6 overflow-auto transition-transform duration-300 transform"
         :class="showForm ? 'translate-x-0' : 'translate-x-full'"
       >
         <!-- Header -->

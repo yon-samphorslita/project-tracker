@@ -165,19 +165,8 @@ const sortOptions = [
 // Form Fields
 const projectFields = [
   { type: 'text', label: 'Project Title', placeholder: 'Enter project title', model: 'title', required: true },
-  {
-    type: 'textarea',
-    label: 'Description',
-    placeholder: 'Enter description',
-    model: 'description',
-  },
-  {
-    type: 'select',
-    label: 'Team',
-    options: teamStore.teams.map((t) => ({ id: t.id, name: t.name })),
-    model: 'teamId',
-    required: true
-  },
+    { type: 'datetime-local', label: 'Start Date', model: 'startDate', required: true },
+  { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
   {
     type: 'select',
     label: 'Priority',
@@ -188,8 +177,19 @@ const projectFields = [
     ],
     model: 'priority',
   },
-  { type: 'datetime-local', label: 'Start Date', model: 'startDate', required: true },
-  { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
+    {
+    type: 'select',
+    label: 'Assign Team',
+    options: teamStore.teams.map((t) => ({ id: t.id, name: t.name })),
+    model: 'teamId',
+    required: true
+  },
+   {
+    type: 'textarea',
+    label: 'Description',
+    placeholder: 'Enter description',
+    model: 'description',
+  },
 ]
 
 // Helpers

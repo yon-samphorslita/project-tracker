@@ -17,7 +17,7 @@
               v-model="form.oldPassword"
               type="password"
               placeholder="Old Password"
-              class="rounded-[20px] border border-gray-300 p-[10px]"
+              class="rounded-xl border border-gray-300 p-[10px]"
             />
             <span v-if="errors.oldPassword" class="text-red-500 text-sm mt-1">{{
               errors.oldPassword
@@ -30,7 +30,7 @@
               v-model="form.newPassword"
               type="password"
               placeholder="New Password"
-              class="rounded-[20px] border border-gray-300 p-[10px]"
+              class="rounded-xl border border-gray-300 p-[10px]"
             />
             <span v-if="errors.newPassword" class="text-red-500 text-sm mt-1">{{
               errors.newPassword
@@ -43,7 +43,7 @@
               v-model="form.confirmPassword"
               type="password"
               placeholder="Confirm New Password"
-              class="rounded-[20px] border border-gray-300 p-[10px]"
+              class="rounded-xl border border-gray-300 p-[10px]"
             />
             <span v-if="errors.confirmPassword" class="text-red-500 text-sm mt-1">{{
               errors.confirmPassword

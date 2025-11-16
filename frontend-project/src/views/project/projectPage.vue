@@ -160,23 +160,9 @@ const taskFields = computed(() => [
     placeholder: 'Enter task name',
     required: true,
   },
-  {
-    type: 'textarea',
-    label: 'Description',
-    model: 'description',
-    placeholder: 'Enter description',
-  },
   { type: 'datetime-local', label: 'Start Date', model: 'startDate', required: true },
   { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
-  {
-    type: 'select',
-    label: 'Assignee',
-    options: TeamMembers.value,
-    model: 'user',
-    valueKey: 'id',
-    labelKey: 'name',
-  },
-  {
+    {
     type: 'select',
     label: 'Priority',
     options: [
@@ -185,6 +171,20 @@ const taskFields = computed(() => [
       { id: 'low', name: 'Low' },
     ],
     model: 'priority',
+  },
+  {
+    type: 'select',
+    label: 'Assignee',
+    options: TeamMembers.value,
+    model: 'user',
+    valueKey: 'id',
+    labelKey: 'name',
+  },
+    {
+    type: 'textarea',
+    label: 'Description',
+    model: 'description',
+    placeholder: 'Enter description',
   },
 ])
 

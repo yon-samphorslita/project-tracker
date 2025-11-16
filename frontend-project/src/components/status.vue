@@ -1,37 +1,38 @@
 <template>
-<span
-  :class="badgeClass"
-  class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize relative z-10"
->
-  {{ displayValue }}
+  <span
+    :class="badgeClass"
+    class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize cursor-pointer relative z-10"
+    @click="handleClick"
+  >
+    {{ displayValue }}
 
-<select
-  v-if="editable"
-  v-model="currentValue"
-  @change="emitChange"
-  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
->
-  <option v-for="item in options" :key="item" :value="item">
-    {{ item }}
-  </option>
-</select>
-</span>
-
+    <!-- Only show select for non-active editable fields -->
+    <select
+      v-if="editable && mode !== 'active'"
+      v-model="currentValue"
+      @change="emitChange"
+      class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
+    >
+      <option v-for="item in options" :key="item" :value="item">
+        {{ item }}
+      </option>
+    </select>
+  </span>
 </template>
 
 <script setup>
 import { ref, computed, watchEffect } from 'vue'
 
 const props = defineProps({
-  status: { type: String, default: null },  // e.g. "Not Started"
-  priority: { type: String, default: null },
-  active: { type: Boolean, default: null }, // true / false
+  status: { type: String, default: null },       // e.g. "Not Started"
+  priority: { type: String, default: null },     // e.g. "Low"
+  active: { type: Boolean, default: null },      // true / false
   editable: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:status'])
 
-// Auto-detect mode by type
+// Auto-detect mode
 const mode = computed(() => {
   if (typeof props.status === 'string' && props.status !== null) return 'status'
   if (typeof props.priority === 'string' && props.priority !== null) return 'priority'
@@ -39,7 +40,7 @@ const mode = computed(() => {
   return 'unknown'
 })
 
-// Generate options based on auto-detection
+// Options for select
 const options = computed(() => {
   switch (mode.value) {
     case 'status':
@@ -53,6 +54,7 @@ const options = computed(() => {
   }
 })
 
+// Initialize current value
 function getInitialValue() {
   if (mode.value === 'status') return props.status
   if (mode.value === 'priority') return props.priority
@@ -66,12 +68,20 @@ watchEffect(() => {
   currentValue.value = getInitialValue()
 })
 
+// Emit change
 function emitChange() {
-  emit('update:status', currentValue.value)
+  if (mode.value === 'active') {
+    const newActive = currentValue.value === 'Active'
+    emit('update:status', newActive)
+  } else {
+    emit('update:status', currentValue.value)
+  }
 }
 
+// Display value
 const displayValue = computed(() => currentValue.value)
 
+// Badge color classes
 const badgeClass = computed(() => {
   const val = currentValue.value.toLowerCase()
 
@@ -86,4 +96,14 @@ const badgeClass = computed(() => {
 
   return 'bg-gray-200 text-gray-text'
 })
+
+// Handle click for toggling Active/Inactive
+function handleClick() {
+  if (!props.editable) return
+
+  if (mode.value === 'active') {
+    currentValue.value = currentValue.value === 'Active' ? 'Inactive' : 'Active'
+    emitChange()
+  }
+}
 </script>
