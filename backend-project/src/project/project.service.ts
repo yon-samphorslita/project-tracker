@@ -11,6 +11,7 @@ import { Project } from './project.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { User } from '../user/user.entity';
+import { Team } from 'src/team/team.entity';
 import { Status } from '../enums/status.enum';
 import { ActivityService } from 'src/activity/activity.service';
 import { NotificationService } from 'src/notification/notification.service';
@@ -21,6 +22,8 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(Team)
+    private readonly teamRepository: Repository<Team>,
     private readonly activityService: ActivityService,
     private readonly notificationService: NotificationService,
   ) {}
@@ -30,14 +33,25 @@ export class ProjectService {
     createProjectDto: CreateProjectDto,
     user: User,
   ): Promise<Project> {
-    const project = this.projectRepository.create({
-      ...createProjectDto,
-      team: createProjectDto.team_id
-        ? { id: createProjectDto.team_id }
-        : undefined,
-      user,
-      created_at: new Date(),
-    });
+    let team: Team | null = null;
+if (createProjectDto.teamId) {
+  team = await this.teamRepository.findOne({
+    where: { id: createProjectDto.teamId },
+    relations: ['members', 'pms', 'mainMembers'],
+  });
+
+  if (!team) {
+    throw new NotFoundException(`Team with ID ${createProjectDto.teamId} not found`);
+  }
+}
+
+const project = this.projectRepository.create({
+  ...createProjectDto,
+  user,
+  created_at: new Date(),
+  team, // safe, because entity allows Team | null
+});
+
 
     const savedProject = await this.projectRepository.save(project);
 
@@ -62,7 +76,8 @@ export class ProjectService {
 
   // Find all projects
   async findAll(user: User): Promise<Project[]> {
-    const relations = [
+    const projects = await this.projectRepository.find({
+      relations : [
       'team',
       'team.members',
       'team.mainMembers',
@@ -70,9 +85,24 @@ export class ProjectService {
       'user',
       'tasks',
       'tasks.user',
-    ];
+    ]
+    })
 
-    return this.projectRepository.find({ relations });
+    if (user.role === Role.ADMIN) {
+      return projects;
+    }
+
+    if (user.role === Role.PROJECT_MANAGER) {
+      return projects.filter((p) =>
+      p.team?.pms?.some((pm) => pm.id === user.id))
+    }
+
+    return projects.filter(
+      (p) =>
+        p.team?.mainMembers?.some((mm) => mm.id === user.id) ||
+      p.team?.members?.some((m) => m.id === user.id) ||
+      p.tasks?.some((t) => t.user?.id === user.id)
+    )
   }
 
   // Find a single project by ID
@@ -103,11 +133,22 @@ export class ProjectService {
   ): Promise<Project> {
     const project = await this.projectRepository.findOne({
       where: { id },
-      relations: ['user', 'tasks', 'tasks.subtasks'],
+      relations: ['user', 'tasks', 'tasks.subtasks', 'team'],
     });
 
     if (!project)
       throw new NotFoundException(`Project with ID ${id} not found`);
+
+    // Update team if teamId is provided
+    if (dto.teamId) {
+      const team = await this.teamRepository.findOne({
+        where: { id: dto.teamId },
+        relations: ['members', 'pms', 'mainMembers'],
+      });
+      if (!team)
+        throw new NotFoundException(`Team with ID ${dto.teamId} not found`);
+      project.team = team;
+    }
 
     // Prevent marking completed if tasks/subtasks are incomplete
     if (dto.status === Status.COMPLETED) {
@@ -127,18 +168,19 @@ export class ProjectService {
     // Track changes for logging
     const changes = this.getChanges(project, dto);
 
-    // Only save and log if there are actual changes
-    if (changes.length === 0) return project;
+    if (changes.length > 0) {
+      Object.assign(project, dto);
+      const savedProject = await this.projectRepository.save(project);
 
-    Object.assign(project, dto);
-    const savedProject = await this.projectRepository.save(project);
+      await this.activityService.logAction(
+        user.id,
+        `Project "${savedProject.p_name}" updated on:\n${changes.join('; \n')}`,
+      );
 
-    await this.activityService.logAction(
-      user.id,
-      `Project "${savedProject.p_name}" updated on:\n${changes.join('; \n')}`,
-    );
+      return savedProject;
+    }
 
-    return savedProject;
+    return project;
   }
 
   // Refresh project status based on tasks/subtasks

@@ -7,9 +7,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Status } from '../enums/status.enum';
-import { Project } from 'src/project/project.entity';
-import { Task } from 'src/task/task.entity';
-import { User } from 'src/user/user.entity';
+import { Project } from '../project/project.entity';
+import { User } from '../user/user.entity';
 
 @Entity('events')
 export class Event {

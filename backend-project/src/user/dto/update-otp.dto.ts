@@ -1,5 +1,4 @@
-import { CreateUserDto } from './create-user.dto';
-import { PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
 import { IsOptional, IsString, IsDate } from 'class-validator';
 
 export class UpdateOtpDto {
@@ -9,5 +8,6 @@ export class UpdateOtpDto {
 
   @IsOptional()
   @IsDate()
+  @Type(() => Date)
   otp_expiry?: Date;
 }

@@ -112,7 +112,7 @@ const existingSecondaryMembers = ref([])
 async function fetchCandidates() {
   try {
     const token = localStorage.getItem('token')
-    const res = await axios.get('http://localhost:3000/users', {
+    const res = await axios.get('http://localhost:3000/users/members', {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -1,35 +1,56 @@
 import { DataSource } from 'typeorm';
 import { User } from '../user/user.entity';
 import { Role } from '../enums/role.enum';
-import * as bcrypt from 'bcrypt';
 
-export const createInitialAdmin = async (dataSource: DataSource) => {
-  if (!dataSource) return;
+export const seedUsers = async (dataSource: DataSource) => {
+  const userRepository = dataSource.getRepository(User);
 
-  try {
-    const userRepository = dataSource.getRepository(User);
-
-    // Check if admin already exists
-    const existingAdmin = await userRepository.findOne({
-      where: { role: Role.ADMIN },
-    });
-
-    if (existingAdmin) return;
-
-    // Create new admin if none exists
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    const newAdmin = userRepository.create({
+  const users = [
+    {
       first_name: 'System',
       last_name: 'Admin',
       email: 'admin@email.com',
-      password: hashedPassword,
-      password_changed: true,
       role: Role.ADMIN,
-      active: true,
-    });
+    },
+    {
+      first_name: 'Nancy',
+      last_name: 'Drew',
+      email: 'manager1@gmail.com',
+      role: Role.PROJECT_MANAGER,
+    },
+    {
+      first_name: 'Jenny',
+      last_name: 'Smith',
+      email: 'manager2@gmail.com',
+      role: Role.PROJECT_MANAGER,
+    },
+    {
+      first_name: 'Mary',
+      last_name: 'Sue',
+      email: 'member1@gmail.com',
+      role: Role.MEMBER,
+    },
+    {
+      first_name: 'Blonde',
+      last_name: 'Karen',
+      email: 'member2@gmail.com',
+      role: Role.MEMBER,
+    },
+    {
+      first_name: 'William',
+      last_name: 'Chen',
+      email: 'member3@gmail.com',
+      role: Role.MEMBER,
+    },
 
-    await userRepository.save(newAdmin);
-  } catch (err) {
-    console.error('Failed to create admin:', err);
+  ];
+
+  for (const u of users) {
+    const existing = await userRepository.findOne({ where: { email: u.email } });
+    if (existing) continue;
+
+    const user = userRepository.create({ ...u });
+    await userRepository.save(user);
+    console.log(`User ${u.email} created`);
   }
 };

@@ -14,8 +14,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // This object is attached to req.user automatically
-    console.log('JWT payload:', payload);
     return { id: payload.sub, email: payload.email, role: payload.role };
   }
 }

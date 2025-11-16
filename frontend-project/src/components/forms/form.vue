@@ -204,7 +204,7 @@ function mapPayload() {
       return {
         p_name: formData.title,
         p_description: formData.description,
-        team_id: formData.team_id || null,
+        teamId: formData.teamId || null,
         status: formData.status || 'not started',
         priority: formData.priority || 'medium',
         start_date: formData.startDate ? new Date(formData.startDate) : null,

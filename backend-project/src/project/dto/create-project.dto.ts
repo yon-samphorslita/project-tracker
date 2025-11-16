@@ -19,7 +19,7 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsNumber()
-  team_id?: number;
+  teamId?: number;
 
   @IsOptional()
   @IsEnum(Status)

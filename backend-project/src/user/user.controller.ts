@@ -17,22 +17,37 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/enums/role.enum';
-@Roles(Role.ADMIN)
+
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @Roles(Role.ADMIN)
   async create(@Body() createUserDto: CreateUserDto, @Request() req) {
     return this.userService.createUser(createUserDto, req.user.id);
   }
 
   @Get()
+  @Roles(Role.ADMIN)
   async findAll() {
     return this.userService.findAll();
   }
-
+  @Get('members')
+@Roles(Role.ADMIN, Role.PROJECT_MANAGER) // or all authenticated roles
+async getCandidates() {
+  const users = await this.userService.findAll();
+  // Optionally filter by roles
+  return users.map(u => ({
+    id: u.id,
+    first_name: u.first_name,
+    last_name: u.last_name,
+    role: u.role,
+    team: u.team,
+  }));
+}
   @Get(':id')
+  @Roles(Role.ADMIN)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
   }
@@ -43,6 +58,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @Roles(Role.ADMIN)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateUserDto | ResetPasswordDto,
@@ -59,7 +75,9 @@ export class UserController {
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN)
   async delete(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.userService.delete(id, req.user.id);
   }
+
 }

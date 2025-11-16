@@ -1,47 +1,66 @@
 <template>
-  <span
-    :class="badgeClass"
-    class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize relative z-0"
-  >
-    {{ displayValue }}
+<span
+  :class="badgeClass"
+  class="inline-block px-2 py-1 rounded-md font-medium text-sm text-center capitalize relative z-10"
+>
+  {{ displayValue }}
 
-    <!-- Always show dropdown when editable -->
-    <template v-if="editable && status">
-      <select
-        v-model="currentValue"
-        @change="emitChange"
-        class="bg-transparent absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-      >
-        <option value="Not Started">Not Started</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
-      </select>
-    </template>
+<select
+  v-if="editable"
+  v-model="currentValue"
+  @change="emitChange"
+  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
+>
+  <option v-for="item in options" :key="item" :value="item">
+    {{ item }}
+  </option>
+</select>
+</span>
 
-    <!-- Display only if not editable -->
-    <template v-else> </template>
-  </span>
 </template>
 
 <script setup>
 import { ref, computed, watchEffect } from 'vue'
 
 const props = defineProps({
-  status: { type: String, default: '' },
-  priority: { type: String, default: '' },
-  active: { type: Boolean, default: false },
+  status: { type: String, default: null },  // e.g. "Not Started"
+  priority: { type: String, default: null },
+  active: { type: Boolean, default: null }, // true / false
   editable: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:status'])
 
-const currentValue = ref(getInitialValue())
+// Auto-detect mode by type
+const mode = computed(() => {
+  if (typeof props.status === 'string' && props.status !== null) return 'status'
+  if (typeof props.priority === 'string' && props.priority !== null) return 'priority'
+  if (typeof props.active === 'boolean') return 'active'
+  return 'unknown'
+})
+
+// Generate options based on auto-detection
+const options = computed(() => {
+  switch (mode.value) {
+    case 'status':
+      return ['Not Started', 'In Progress', 'Completed']
+    case 'priority':
+      return ['Low', 'Medium', 'High']
+    case 'active':
+      return ['Active', 'Inactive']
+    default:
+      return []
+  }
+})
 
 function getInitialValue() {
-  if (props.status) return props.status
-  if (props.priority) return props.priority
-  return props.active ? 'Active' : 'Inactive'
+  if (mode.value === 'status') return props.status
+  if (mode.value === 'priority') return props.priority
+  if (mode.value === 'active') return props.active ? 'Active' : 'Inactive'
+  return ''
 }
+
+const currentValue = ref(getInitialValue())
 
 watchEffect(() => {
   currentValue.value = getInitialValue()
@@ -54,21 +73,17 @@ function emitChange() {
 const displayValue = computed(() => currentValue.value)
 
 const badgeClass = computed(() => {
-  const val = currentValue.value?.toLowerCase()
-  switch (val) {
-    case 'completed':
-    case 'low':
-    case 'active':
-      return 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
-    case 'in progress':
-    case 'medium':
-      return 'bg-[rgba(250,192,54,0.15)] text-[#fac036]'
-    case 'not started':
-    case 'high':
-    case 'inactive':
-      return 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'
-    default:
-      return 'bg-gray-200 text-gray-text'
-  }
+  const val = currentValue.value.toLowerCase()
+
+  if (['completed', 'active', 'low'].includes(val))
+    return 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
+
+  if (['in progress', 'medium'].includes(val))
+    return 'bg-[rgba(250,192,54,0.15)] text-[#fac036]'
+
+  if (['not started', 'inactive', 'high'].includes(val))
+    return 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'
+
+  return 'bg-gray-200 text-gray-text'
 })
 </script>

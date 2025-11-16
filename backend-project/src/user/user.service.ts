@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -9,7 +9,7 @@ import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class UserService {
-  private readonly DEFAULT_PASSWORD = '123456';
+  // private readonly DEFAULT_PASSWORD = 'PMS@123';
 
   constructor(
     @InjectRepository(User)
@@ -21,13 +21,19 @@ export class UserService {
     createUserDto: CreateUserDto,
     performedById: number,
   ): Promise<User> {
-    const hashedPassword = await bcrypt.hash(
-      this.DEFAULT_PASSWORD, 10
-    );
+      const existingUser = await this.userRepository.findOne({
+    where: { email: createUserDto.email.trim().toLowerCase() },
+  });
+  if (existingUser) {
+    throw new ConflictException('Email already exists');
+  }
+    // const hashedPassword = await bcrypt.hash(
+    //   this.DEFAULT_PASSWORD, 10
+    // );
     const user = this.userRepository.create({
       ...createUserDto,
-      password: hashedPassword,
-      password_changed: false
+      // password: hashedPassword,
+      // password_changed: false
     });
     await this.userRepository.save(user);
 
@@ -46,15 +52,15 @@ export class UserService {
   async findOne(id: number, includePassword = false): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
-      relations: [
-        'team',
-        'pmTeams',
-        'secondaryTeams',
-        'projects',
-        'tasks',
-        'activities',
-        'notifications',
-      ],
+      // relations: [
+      //   'team',
+      //   'pmTeams',
+      //   'secondaryTeams',
+      //   'projects',
+      //   'tasks',
+      //   'activities',
+      //   'notifications',
+      // ],
       select: includePassword
         ? [
             'id',
@@ -148,10 +154,6 @@ async resetPassword(
 ): Promise<User> {
   const user = await this.findOne(userId, true);
   if (!user) throw new NotFoundException('User not found');
-
-  const hashedDefault = await bcrypt.hash(this.DEFAULT_PASSWORD, 10);
-
-  user.password = hashedDefault;
   user.password_changed = false;
 
   const savedUser = await this.userRepository.save(user);

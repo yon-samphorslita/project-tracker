@@ -9,6 +9,8 @@ import {
   DeleteDateColumn,
   ManyToMany,
   JoinTable,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
@@ -17,9 +19,12 @@ import { Notification } from '../notification/notification.entity';
 import { Team } from 'src/team/team.entity';
 import { ActivityLog } from 'src/activity/activity.entity';
 import { Event } from 'src/event/event.entity';
+import * as bcrypt from 'bcrypt';
 @Entity('users')
 @Unique(['email'])
 export class User {
+  private static readonly DEFAULT_PASSWORD = 'PMS@123'
+
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -32,7 +37,7 @@ export class User {
   @Column()
   email: string;
 
-  @Column({ default: '123456'})
+  @Column({ default: User.DEFAULT_PASSWORD })
   password: string;
 
   @Column({ default: false })
@@ -88,4 +93,23 @@ export class User {
 
   @OneToMany(() => ActivityLog, (activity) => activity.user)
   activities: ActivityLog[];
+
+  @BeforeInsert()
+  async create() {
+    if(!this.password) {
+      this.password = User.DEFAULT_PASSWORD;
+      this.password_changed = false;
+    }
+
+    if(!this.password.startsWith('$2b$')) {
+      this.password = await bcrypt.hash(this.password, 10)
+    }
+  }
+
+    @BeforeUpdate()
+  async reset() {
+    if(!this.password.startsWith('$2b$')) {
+      this.password = await bcrypt.hash(this.password, 10)
+    }
+  }
 }

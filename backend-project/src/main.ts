@@ -1,11 +1,12 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { createInitialAdmin } from './seeds/user.seed';
+import { seedUsers } from './seeds/user.seed';
 import { DataSource } from 'typeorm';
 import { join } from 'path';
 import * as express from 'express';
 import { JwtRoleGuard } from './auth/jwt-role.guard';
 import { ValidationPipe } from '@nestjs/common';
+import { AuthService } from './auth/auth.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,7 +16,7 @@ async function bootstrap() {
 
   //seed initial admin user
   const dataSource = app.get(DataSource);
-  await createInitialAdmin(dataSource);
+  await seedUsers(dataSource);
 
   //serve static images
   app.use(
@@ -34,7 +35,8 @@ async function bootstrap() {
 
   //apply global jwt and role guard
   const reflector = app.get(Reflector);
-  app.useGlobalGuards(new JwtRoleGuard(reflector));
+  const authService = app.get(AuthService)
+  app.useGlobalGuards(new JwtRoleGuard(reflector, authService));
 
   await app.listen(process.env.PORT ?? 3000);
 }

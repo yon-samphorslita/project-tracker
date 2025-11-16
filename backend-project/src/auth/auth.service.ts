@@ -63,6 +63,10 @@ export class AuthService {
     return true;
   }
 
+  isTokenBlacklisted(token: string): boolean {
+    return this.blacklistedTokens.has(token)
+  }
+
   async generateOtp(email: string): Promise<string> {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) throw new NotFoundException('User not found');
@@ -70,10 +74,11 @@ export class AuthService {
     const otp = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    await this.userRepository.update(user.id, {
+    const updateOtpDto: UpdateOtpDto = {
       otp_code: otp,
-      otp_expiry: expiry,
-    });
+      otp_expiry: expiry
+    }
+    await this.userRepository.update(user.id, updateOtpDto);
 
     await this.emailService.sendOtp(email, otp);
     console.log(`Generated OTP for ${email}: ${otp}`);
@@ -102,7 +107,7 @@ export class AuthService {
   const passwordValid = await bcrypt.compare(oldPassword, user.password);
   if (!passwordValid) throw new UnauthorizedException('Old password is incorrect');
 
-  user.password = await bcrypt.hash(newPassword, 10);
+  user.password = newPassword;
   user.password_changed = true;
 
   const savedUser = await this.userRepository.save(user);
@@ -144,8 +149,7 @@ export class AuthService {
     const user = await this.findOneByEmail(email);
     if (!user) throw new NotFoundException('User not found');
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
+    user.password = newPassword;
     user.password_changed = true;
 
     await this.userRepository.save(user);

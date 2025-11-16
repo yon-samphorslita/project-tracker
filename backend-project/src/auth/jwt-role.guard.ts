@@ -3,16 +3,18 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '../enums/role.enum';
 import { ROLES_KEY } from './roles.decorator';
 import { IS_PUBLIC_KEY } from './public.decorator';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class JwtRoleGuard extends AuthGuard('jwt') implements CanActivate {
-  constructor(private reflector: Reflector) {
+  constructor(private reflector: Reflector, private authService: AuthService) {
     super();
   }
 
@@ -30,6 +32,12 @@ export class JwtRoleGuard extends AuthGuard('jwt') implements CanActivate {
     ) as boolean;
     if (!canActivate) return false;
 
+    const request = context.switchToHttp().getRequest();
+    const token = request.headers['authorization']?.split(' ')[1]
+
+    if (this.authService.isTokenBlacklisted(token)) {
+      throw new UnauthorizedException('Token has been revoked')
+    }
     // Check roles
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),

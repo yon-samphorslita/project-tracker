@@ -121,6 +121,14 @@
 
         <!-- Users Table -->
         <Table v-if="isReady" :data="filteredUsers" :columns="tableColumns">
+          <template #status="{ row }">
+  <Status
+  class="cursor-pointer"
+    :active="row.active"
+    editable
+    @update:status="(newStatus) => updateUserStatus(row, newStatus)"
+  />
+</template>
           <template #actions="{ row }">
             <div class="flex justify-around">
               <router-link :to="`/user/${row.id}`">
@@ -155,7 +163,8 @@ import PieChart from '@/components/charts/pieChart.vue'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
 import View from '@/assets/icons/view.svg'
-import Key from '@/assets/icons/key.svg' // Add key icon for password update
+import Key from '@/assets/icons/key.svg' 
+import Status from '@/components/status.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -225,15 +234,15 @@ const tableColumns = [
   { key: 'name', label: 'Name' },
   { key: 'email', label: 'Email' },
   { key: 'role', label: 'Role' },
-  { key: 'active', label: 'Status' },
+  { key: 'active', label: 'Status', slot: 'status' },
   { key: 'actions', label: 'Actions', slot: 'actions' },
 ]
 
 // User form fields
 const userFields = [
-  { type: 'text', label: 'First Name', placeholder: 'Enter first name', model: 'first_name' },
-  { type: 'text', label: 'Last Name', placeholder: 'Enter last name', model: 'last_name' },
-  { type: 'email', label: 'Email', placeholder: 'Enter email', model: 'email' },
+  { type: 'text', label: 'First Name', placeholder: 'Enter first name', model: 'first_name', required: true },
+  { type: 'text', label: 'Last Name', placeholder: 'Enter last name', model: 'last_name', required: true },
+  { type: 'email', label: 'Email', placeholder: 'Enter email', model: 'email', required: true },
   {
     type: 'select',
     label: 'Role',
@@ -244,16 +253,26 @@ const userFields = [
       { id: 'project_manager', name: 'Project Manager' },
     ],
   },
-  {
-    type: 'select',
-    label: 'Status',
-    model: 'active',
-    options: [
-      { id: true, name: 'Active' },
-      { id: false, name: 'Inactive' },
-    ],
-  },
+  // {
+  //   type: 'select',
+  //   label: 'Status',
+  //   model: 'active',
+  //   options: [
+  //     { id: true, name: 'Active' },
+  //     { id: false, name: 'Inactive' },
+  //   ],
+  // },
 ]
+async function updateUserStatus(row, newStatus) {
+  try {
+    const newActive = newStatus.toLowerCase() === 'active'
+
+    await userStore.updateUser(row.id, { active: newActive })
+    await userStore.fetchUsers()
+  } catch (err) {
+    console.error('Failed to update user status:', err)
+  }
+}
 
 // Sort / Filter options
 const sortOptions = [
