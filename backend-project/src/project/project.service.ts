@@ -113,6 +113,18 @@ export class ProjectService {
     return project;
   }
 
+  async findProjectsForPM(pmId: number): Promise<Project[]> {
+    return this.projectRepository.find({
+      where: {
+        team: {
+          pms: { id: pmId },
+        },
+      },
+      relations: ['team', 'team.pms'], // adjust relations as needed
+    });
+  }
+
+
   // Update a project
   async update(
     id: number,

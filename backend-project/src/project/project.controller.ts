@@ -32,6 +32,12 @@ export class ProjectsController {
     return this.projectService.findOne(+id);
   }
 
+  @Get('pm/:pmId')
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
+  findProjectsForPM(@Param('pmId') pmId: string): Promise<Project[]> {
+    return this.projectService.findProjectsForPM(+pmId);
+  }
+
   @Post()
   @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   create(

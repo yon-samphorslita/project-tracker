@@ -146,6 +146,19 @@ export class TaskService {
     return task;
   }
 
+  async findTasksForPM(pmId: number): Promise<Task[]> {
+    return this.taskRepository.find({
+      where: {
+        project: {
+          team: {
+            pms: { id: pmId },
+          },
+        },
+      },
+      relations: ['project', 'project.team', 'user'],
+    });
+  }
+
   async findByProject(projectId: number, userId?: number): Promise<Task[]> {
     const project = await this.projectRepo.findOne({
       where: { id: projectId },

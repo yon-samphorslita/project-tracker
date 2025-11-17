@@ -76,7 +76,7 @@
       </div>
 
       <!-- If PMs are more than 2, show only profile pics horizontally scrollable -->
-      <div v-else class="flex gap-2 overflow-x-auto py-1">
+      <!-- <div v-else class="flex gap-2 overflow-x-auto py-1">
         <img
           v-for="pm in team.pms"
           :key="pm.id"
@@ -85,6 +85,29 @@
           class="w-8 h-8 rounded-full object-cover border border-blue-100 cursor-pointer"
           :title="pm.fullName"
         />
+        <span class="text-blue-800 font-medium text-sm">
+          +{{ team.pms.length - 2 }} more
+        </span>
+      </div> -->
+     
+      <div v-else class="flex gap-2 overflow-x-auto py-1">
+        <div
+          v-for="pm in team.pms.slice(0, 2)"
+          :key="pm.id"
+          class="flex items-center gap-3 bg-blue-50 px-3 py-1 rounded-full border border-blue-100"
+        >
+          <img
+            :src="pm.img_url || defaultProfile"
+            alt="profile"
+            class="w-8 h-8 rounded-full object-cover"
+          />
+          <span class="text-blue-800 font-medium text-sm truncate max-w-[100px]">
+            {{ pm.fullName }}
+          </span>
+        </div>
+        <span class="text-blue-800 font-medium text-sm items-center flex ">
+          +{{ team.pms.length - 2 }} 
+        </span>
       </div>
     </div>
   </div>

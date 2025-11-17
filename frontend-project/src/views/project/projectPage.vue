@@ -252,7 +252,7 @@ async function fetchProjectTasks(projectId) {
     if (userRole.value === 'admin' || userRole.value === 'project_manager') return true
     return t.user?.id === authStore.user?.id
   })
-
+  console.log('Visible Tasks:', visibleTasks)
   tasksWithSubtasks.value = await Promise.all(
     visibleTasks.map(async (task) => {
       const subtasksData = await subtaskStore.fetchByTask(task.id)

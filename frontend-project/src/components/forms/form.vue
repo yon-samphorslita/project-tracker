@@ -231,8 +231,11 @@ function mapPayload() {
         projectId: formData.project || props.initialData?.project_id || null,
         userId: authStore.user?.id,
       }
-    case 'subtask':
-      return { name: formData.title }
+    case 'subtasks':
+      return { 
+        name: formData.title ,
+        taskId: props.initialData.taskId,
+      }
     case 'users':
       return {
         first_name: formData.first_name?.trim() || '',

@@ -8,6 +8,7 @@ export const useTaskStore = defineStore(
   'task',
   () => {
     const tasks = ref([])
+    // const current = ref(null)
     const loading = ref(false)
     const error = ref(null)
 
@@ -105,8 +106,22 @@ export const useTaskStore = defineStore(
       }
     }
 
+    const fetchTasksForPM = async () => {
+      loading.value = true
+      error.value = null
+      try {
+        const res = await axios.get(`${API_BASE_URL}/tasks/pm`, { headers: getAuthHeaders() })
+        tasks.value = Array.isArray(res.data) ? res.data : res.data?.data || []
+      } catch (err) {
+        error.value = err.response?.data?.message || 'Request failed'
+      } finally {
+        loading.value = false
+      }
+    }
+
     return {
       tasks,
+      // current,
       loading,
       error,
       fetchTasks,
@@ -116,6 +131,7 @@ export const useTaskStore = defineStore(
       updateTask,
       deleteTask,
       updateTaskStatus,
+      fetchTasksForPM
     }
   },
   { persist: true },
