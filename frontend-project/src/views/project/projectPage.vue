@@ -124,7 +124,7 @@ const goBack = () => {
 
 // Form Fields
 const projectFields = computed(() => [
-  { type: 'text', label: 'Project Title', model: 'title', placeholder: 'Enter project title' },
+  { type: 'text', label: 'Project Title', model: 'title', placeholder: 'Enter project title', required: true },
   {
     type: 'textarea',
     label: 'Description',
@@ -135,7 +135,8 @@ const projectFields = computed(() => [
     type: 'select',
     label: 'Team',
     options: teamStore.teams.map((t) => ({ id: t.id, name: t.name })),
-    model: 'team_id',
+    model: 'teamId',
+    required: true
   },
   {
     type: 'select',
@@ -147,8 +148,8 @@ const projectFields = computed(() => [
     ],
     model: 'priority',
   },
-  { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
-  { type: 'datetime-local', label: 'Due Date', model: 'dueDate' },
+  { type: 'datetime-local', label: 'Start Date', model: 'startDate', required: true },
+  { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
 ])
 
 const taskFields = computed(() => [
@@ -159,23 +160,9 @@ const taskFields = computed(() => [
     placeholder: 'Enter task name',
     required: true,
   },
-  {
-    type: 'textarea',
-    label: 'Description',
-    model: 'description',
-    placeholder: 'Enter description',
-  },
   { type: 'datetime-local', label: 'Start Date', model: 'startDate', required: true },
   { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
-  {
-    type: 'select',
-    label: 'Assignee',
-    options: TeamMembers.value,
-    model: 'user',
-    valueKey: 'id',
-    labelKey: 'name',
-  },
-  {
+    {
     type: 'select',
     label: 'Priority',
     options: [
@@ -184,6 +171,20 @@ const taskFields = computed(() => [
       { id: 'low', name: 'Low' },
     ],
     model: 'priority',
+  },
+  {
+    type: 'select',
+    label: 'Assignee',
+    options: TeamMembers.value,
+    model: 'user',
+    valueKey: 'id',
+    labelKey: 'name',
+  },
+    {
+    type: 'textarea',
+    label: 'Description',
+    model: 'description',
+    placeholder: 'Enter description',
   },
 ])
 
@@ -345,7 +346,7 @@ async function openEditProjectForm(proj) {
     dueDate: proj.due_date,
     status: proj.status,
     priority: proj.priority,
-    team_id: proj.team?.id || null,
+    teamId: proj.team?.id || null,
   }
   showEditProjectForm.value = true
 }

@@ -41,73 +41,6 @@
             endpoint="users"
             @submitted="handleSubmit"
           />
-
-          <!-- Password Update Modal -->
-          <div
-            v-if="isUpdatingPassword"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          >
-            <div class="bg-white rounded-lg p-6 w-full max-w-md">
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Update Password</h3>
-                <button @click="closePasswordModal" class="text-gray-400 hover:text-gray-600">
-                  &times;
-                </button>
-              </div>
-
-              <form @submit.prevent="handlePasswordUpdate">
-                <div class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      New Password
-                    </label>
-                    <input
-                      v-model="passwordData.newPassword"
-                      type="password"
-                      placeholder="Enter new password"
-                      required
-                      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      Confirm Password
-                    </label>
-                    <input
-                      v-model="passwordData.confirmPassword"
-                      type="password"
-                      placeholder="Confirm new password"
-                      required
-                      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div v-if="passwordMismatch" class="text-red-500 text-sm">
-                    Passwords do not match
-                  </div>
-                </div>
-
-                <div class="flex justify-end gap-3 mt-6">
-                  <button
-                    type="button"
-                    @click="closePasswordModal"
-                    class="px-4 py-2 text-gray-600 hover:text-gray-800"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    :disabled="!passwordData.newPassword || !passwordData.confirmPassword"
-                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Update Password
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
           <div class="flex gap-4 items-center">
             <Search v-model:query="searchQuery" />
             <Filter
@@ -121,6 +54,14 @@
 
         <!-- Users Table -->
         <Table v-if="isReady" :data="filteredUsers" :columns="tableColumns">
+          <template #status="{ row }">
+  <Status
+  class="cursor-pointer"
+    :active="row.active"
+    :editable="true"
+    @update:status="(newActive) => updateUserStatus(row, newActive)"
+  />
+</template>
           <template #actions="{ row }">
             <div class="flex justify-around">
               <router-link :to="`/user/${row.id}`">
@@ -155,7 +96,8 @@ import PieChart from '@/components/charts/pieChart.vue'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
 import View from '@/assets/icons/view.svg'
-import Key from '@/assets/icons/key.svg' // Add key icon for password update
+import Key from '@/assets/icons/key.svg' 
+import Status from '@/components/status.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -225,16 +167,15 @@ const tableColumns = [
   { key: 'name', label: 'Name' },
   { key: 'email', label: 'Email' },
   { key: 'role', label: 'Role' },
-  { key: 'active', label: 'Status' },
+  { key: 'active', label: 'Status', slot: 'status' },
   { key: 'actions', label: 'Actions', slot: 'actions' },
 ]
 
 // User form fields
 const userFields = [
-  { type: 'text', label: 'First Name', placeholder: 'Enter first name', model: 'first_name' },
-  { type: 'text', label: 'Last Name', placeholder: 'Enter last name', model: 'last_name' },
-  { type: 'email', label: 'Email', placeholder: 'Enter email', model: 'email' },
-  { type: 'password', label: 'Password', placeholder: 'Enter password', model: 'password' },
+  { type: 'text', label: 'First Name', placeholder: 'Enter first name', model: 'first_name', required: true },
+  { type: 'text', label: 'Last Name', placeholder: 'Enter last name', model: 'last_name', required: true },
+  { type: 'email', label: 'Email', placeholder: 'Enter email', model: 'email', required: true },
   {
     type: 'select',
     label: 'Role',
@@ -245,16 +186,15 @@ const userFields = [
       { id: 'project_manager', name: 'Project Manager' },
     ],
   },
-  {
-    type: 'select',
-    label: 'Status',
-    model: 'active',
-    options: [
-      { id: true, name: 'Active' },
-      { id: false, name: 'Inactive' },
-    ],
-  },
 ]
+async function updateUserStatus(row, newActive) {
+  try {
+    await userStore.updateUser(row.id, { active: newActive })
+    await userStore.fetchUsers()
+  } catch (err) {
+    console.error('Failed to update user status:', err)
+  }
+}
 
 // Sort / Filter options
 const sortOptions = [
@@ -320,16 +260,20 @@ function editUser(row) {
 }
 
 // Password Update Methods
-function updateUserPassword(row) {
-  selectedUserForPassword.value = row.id
-  isUpdatingPassword.value = true
-  isEditing.value = false
-  showForm.value = false
+async function updateUserPassword(row) {
+  const confirmed = confirm(
+    `Are you sure you want to reset the password for "${row.name}" to the default password?`,
+  )
+  if (!confirmed) return
 
-  // Reset password data
-  passwordData.value = {
-    newPassword: '',
-    confirmPassword: '',
+  try {
+    // Call backend endpoint for reset
+    await userStore.resetUserPassword(row.id)
+    alert(`Password for "${row.name}" has been reset to the default successfully.`)
+    await userStore.fetchUsers()
+  } catch (err) {
+    console.error('Failed to reset password:', err)
+    alert('Failed to reset password. Please try again.')
   }
 }
 

@@ -1,6 +1,6 @@
 <template>
   <div v-if="auth.user" class="w-full min-h-screen flex flex-col">
-    <div class="flex flex-col ml-[250px]">
+    <div class="flex flex-col ml-[250px] mb-[200px]">
       <Header />
       <Sidebar />
       <main class="flex-grow pt-32 pb-10 px-20 min-h-[600px]">

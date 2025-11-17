@@ -13,7 +13,7 @@ export class ActivityLog {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.activities, { eager: true })
+  @ManyToOne(() => User, (user) => user.activities, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
 

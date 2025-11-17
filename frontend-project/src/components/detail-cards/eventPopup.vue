@@ -200,8 +200,8 @@ watch(
     if (val) {
       eventData.value = {
         ...val,
-        type: val.t_name ? 'task' : 'event',
-        title: val.e_name || val.t_name || val.title || 'Untitled Event',
+        type: val.t_name ? 'task' :  'event',
+        title: val.e_name || val.t_name || 'Untitled Event',
         description: val.e_description || val.t_description || val.description || '',
         start: val.start_date || val.start || val.start_date,
         end: val.end_date || val.end || val.due_date,

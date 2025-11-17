@@ -18,7 +18,7 @@
             type="email"
             placeholder="Enter your email"
             required
-            class="rounded-[20px] border border-gray-300 p-[10px]"
+            class="rounded-xl border border-gray-300 p-[10px]"
           />
           <Button :disabled="otpSent" @click="requestOtp" label="Send OTP" />
         </div>
@@ -32,7 +32,7 @@
               :key="index"
               type="text"
               maxlength="1"
-              class="w-12 h-12 text-center border rounded-lg text-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
+              class="w-12 h-12 text-center border rounded-xl text-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
               v-model="otpDigits[index]"
               @input="onOtpInput(index, $event)"
               @paste.prevent="onPasteOtp($event)"
@@ -50,7 +50,7 @@
             type="password"
             placeholder="New Password"
             required
-            class="rounded-[20px] border border-gray-300 p-[10px]"
+            class="rounded-xl border border-gray-300 p-[10px]"
           />
 
           <label>Confirm New Password</label>
@@ -59,7 +59,7 @@
             type="password"
             placeholder="Confirm New Password"
             required
-            class="rounded-[20px] border border-gray-300 p-[10px]"
+            class="rounded-xl border border-gray-300 p-[10px]"
           />
 
           <Button @click="resetPassword" label="Reset Password" />

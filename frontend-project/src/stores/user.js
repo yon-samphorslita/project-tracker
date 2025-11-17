@@ -65,17 +65,17 @@ export const useUserStore = defineStore(
       }
     }
 
-    // Update user password (admin or self)
-    const updateUserPassword = async (id, newPassword) => {
+    // Reset user password
+    const resetUserPassword = async (id) => {
       try {
         const res = await axios.patch(
-          `${API_BASE_URL}/users/${id}/update-password`,
-          { newPassword },
+          `${API_BASE_URL}/users/${id}`,
+          { resetPassword: true }, // must match controller check
           { headers: getAuthHeaders() },
         )
         return res.data
       } catch (err) {
-        console.error(`Error updating password for user ${id}:`, err)
+        console.error(`Error resetting password for user ${id}:`, err)
         return null
       }
     }
@@ -109,7 +109,7 @@ export const useUserStore = defineStore(
       fetchUserById,
       createUser,
       updateUser,
-      updateUserPassword,
+      resetUserPassword,
       deleteUser,
       fetchUserTeams,
     }

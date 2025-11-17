@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -9,6 +9,8 @@ import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class UserService {
+  // private readonly DEFAULT_PASSWORD = 'PMS@123';
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -19,10 +21,19 @@ export class UserService {
     createUserDto: CreateUserDto,
     performedById: number,
   ): Promise<User> {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      const existingUser = await this.userRepository.findOne({
+    where: { email: createUserDto.email.trim().toLowerCase() },
+  });
+  if (existingUser) {
+    throw new ConflictException('Email already exists');
+  }
+    // const hashedPassword = await bcrypt.hash(
+    //   this.DEFAULT_PASSWORD, 10
+    // );
     const user = this.userRepository.create({
       ...createUserDto,
-      password: hashedPassword,
+      // password: hashedPassword,
+      // password_changed: false
     });
     await this.userRepository.save(user);
 
@@ -41,15 +52,15 @@ export class UserService {
   async findOne(id: number, includePassword = false): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
-      relations: [
-        'team',
-        'pmTeams',
-        'secondaryTeams',
-        'projects',
-        'tasks',
-        'activities',
-        'notifications',
-      ],
+      // relations: [
+      //   'team',
+      //   'pmTeams',
+      //   'secondaryTeams',
+      //   'projects',
+      //   'tasks',
+      //   'activities',
+      //   'notifications',
+      // ],
       select: includePassword
         ? [
             'id',
@@ -76,54 +87,47 @@ export class UserService {
     });
   }
 
-  async update(
-    userId: number,
-    updateUserDto: UpdateUserDto,
-    performedById: number,
-    excludeFields: string[] = [],
-  ): Promise<User | null> {
-    if (!userId) return null;
+async update(
+  userId: number,
+  updateUserDto: UpdateUserDto,
+  performedById: number,
+): Promise<User | null> {
+  if (!userId) return null;
 
-    const existingUser = await this.findOne(userId);
-    if (!existingUser) throw new NotFoundException('User not found');
+  const existingUser = await this.findOne(userId);
+  if (!existingUser) throw new NotFoundException('User not found');
 
-    const fieldsToUpdate = { ...updateUserDto };
-    Object.keys(fieldsToUpdate).forEach((key) => {
-      if (fieldsToUpdate[key] === undefined || excludeFields.includes(key)) {
-        delete fieldsToUpdate[key];
-      }
-    });
-    if (Object.keys(fieldsToUpdate).length === 0) return existingUser;
+  // Remove undefined values
+  const fieldsToUpdate = { ...updateUserDto };
+  Object.keys(fieldsToUpdate).forEach((key) => {
+    if (fieldsToUpdate[key] === undefined) delete fieldsToUpdate[key];
+  });
 
-    const changes: string[] = [];
-    for (const [key, newValue] of Object.entries(fieldsToUpdate)) {
-      const oldValue = (existingUser as any)[key];
-      const formatValue = (val: any) =>
-        val === null || val === undefined
-          ? 'empty'
-          : typeof val === 'boolean'
-            ? val
-              ? 'enabled'
-              : 'disabled'
-            : `"${val}"`;
-      if (oldValue !== newValue)
-        changes.push(
-          `${key} changed from ${formatValue(oldValue)} to ${formatValue(newValue)}`,
-        );
+  if (Object.keys(fieldsToUpdate).length === 0) return existingUser;
+
+  // Track changes
+  const changes: string[] = [];
+  for (const [key, newValue] of Object.entries(fieldsToUpdate)) {
+    const oldValue = (existingUser as any)[key];
+    if (oldValue !== newValue) {
+      changes.push(`${key} changed from "${oldValue}" to "${newValue}"`);
     }
-
-    await this.userRepository.update(userId, fieldsToUpdate);
-    const updatedUser = await this.findOne(userId);
-
-    if (changes.length > 0 && updatedUser) {
-      await this.activityService.logAction(
-        performedById,
-        `Updated user "${updatedUser.first_name} ${updatedUser.last_name}": ${changes.join(', ')}`,
-      );
-    }
-
-    return updatedUser;
   }
+
+  await this.userRepository.update(userId, fieldsToUpdate);
+  const updatedUser = await this.findOne(userId);
+
+if (updatedUser && changes.length > 0) {
+  await this.activityService.logAction(
+    performedById,
+    `Updated user "${updatedUser.first_name} ${updatedUser.last_name}": ${changes.join(', ')}`,
+  );
+}
+
+
+  return updatedUser;
+}
+
 
   async delete(id: number, performedById: number): Promise<void> {
     const user = await this.findOne(id);
@@ -137,59 +141,6 @@ export class UserService {
     );
   }
 
-  async findOneByEmail(
-    email: string,
-    includePassword = false,
-  ): Promise<User | null> {
-    return this.userRepository.findOne({
-      where: { email },
-      select: includePassword
-        ? [
-            'id',
-            'email',
-            'role',
-            'password',
-            'first_name',
-            'last_name',
-            'img_url',
-            'active',
-            'password_changed',
-            'otp_code',
-            'otp_expiry',
-          ]
-        : [
-            'id',
-            'email',
-            'role',
-            'first_name',
-            'last_name',
-            'img_url',
-            'active',
-          ],
-    });
-  }
-
-  async updatePasswordByEmail(
-    email: string,
-    newPassword: string,
-  ): Promise<User> {
-    const user = await this.findOneByEmail(email, true);
-    if (!user) throw new NotFoundException('User not found');
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    user.password_changed = true;
-
-    await this.userRepository.save(user);
-
-    await this.activityService.logAction(
-      user.id,
-      `Reset password via email for user "${user.first_name} ${user.last_name}"`,
-    );
-
-    return user;
-  }
-
   async getUserTeams(userId: number) {
     return this.userRepository.findOne({
       where: { id: userId },
@@ -197,25 +148,22 @@ export class UserService {
     });
   }
 
-  async updatePassword(
-    userId: number,
-    newPassword: string,
-    performedById: number,
-    markChanged = true,
-  ): Promise<User> {
-    const user = await this.findOne(userId, true);
-    if (!user) throw new NotFoundException('User not found');
+async resetPassword(
+  userId: number,
+  performedById: number,
+): Promise<User> {
+  const user = await this.findOne(userId, true);
+  if (!user) throw new NotFoundException('User not found');
+  user.password_changed = false;
 
-    user.password = await bcrypt.hash(newPassword, 10);
-    if (markChanged) user.password_changed = true;
+  const savedUser = await this.userRepository.save(user);
 
-    const savedUser = await this.userRepository.save(user);
+  await this.activityService.logAction(
+    performedById,
+    `Admin reset password for user "${savedUser.first_name} ${savedUser.last_name}"`,
+  );
 
-    await this.activityService.logAction(
-      performedById,
-      `Changed password for user "${savedUser.first_name} ${savedUser.last_name}"`,
-    );
+  return savedUser;
+}
 
-    return savedUser;
-  }
 }

@@ -18,11 +18,6 @@ export class CreateUserDto {
   @IsString()
   last_name?: string;
 
-  @IsNotEmpty({ message: 'Password is required' })
-  @IsString()
-  @MinLength(6, { message: 'Password must be at least 6 characters' })
-  password: string;
-
   @IsNotEmpty({ message: 'Email is required' })
   @IsEmail({}, { message: 'Email must be valid' })
   email: string;

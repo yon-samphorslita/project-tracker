@@ -18,7 +18,7 @@
               v-model="loginForm.email"
               type="email"
               placeholder="Email"
-              class="rounded-[20px] border border-gray-300 p-[10px] focus:outline-none focus:border-blue-500"
+              class="rounded-xl border border-gray-300 p-[10px] focus:outline-none focus:border-blue-500"
             />
             <span v-if="errors.email" class="text-red-500 text-sm mt-1">{{ errors.email }}</span>
           </div>
@@ -30,7 +30,7 @@
               v-model="loginForm.password"
               type="password"
               placeholder="Password"
-              class="rounded-[20px] border border-gray-300 p-[10px] focus:outline-none focus:border-blue-500"
+              class="rounded-xl border border-gray-300 p-[10px] focus:outline-none focus:border-blue-500"
             />
             <span v-if="errors.password" class="text-red-500 text-sm mt-1">{{
               errors.password
@@ -110,9 +110,9 @@ async function handleLogin() {
     await auth.fetchProfile()
 
     if (!user.password_changed) {
-      router.push('/change-password')
+      await router.push('/change-password')
     } else {
-      router.push('/dashboard')
+      await router.push('/dashboard')
     }
   } catch (err) {
     console.error(err)

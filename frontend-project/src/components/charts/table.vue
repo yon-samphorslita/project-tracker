@@ -21,8 +21,8 @@
             class="px-4 py-2 text-left border-t border-b border-gray-200"
           >
             <!-- Actions slot -->
-            <template v-if="col.slot === 'actions'">
-              <slot name="actions" :row="row"></slot>
+            <template v-if="$slots[col.slot]">
+              <slot :name="col.slot" :row="row"></slot>
             </template>
 
             <!-- Priority, Status, Active -->

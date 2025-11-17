@@ -13,7 +13,6 @@ import { Priority } from '../enums/priority.enum';
 import { Project } from 'src/project/project.entity';
 import { User } from 'src/user/user.entity';
 import { Subtask } from 'src/subtask/subtask.entity';
-import { Event } from 'src/event/event.entity';
 @Entity('tasks')
 export class Task {
   @PrimaryGeneratedColumn()
@@ -48,17 +47,14 @@ export class Task {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne((type) => Project, (project) => project.tasks ,  { onDelete: 'CASCADE' })
+  @ManyToOne((type) => Project, (project) => project.tasks, { onDelete: 'CASCADE'})
   project: Project;
 
-  @ManyToOne((type) => User, (user) => user.tasks, { nullable: true })
+  @ManyToOne((type) => User, (user) => user.tasks, { nullable: true, onDelete: 'CASCADE' })
   user: User;
 
   @OneToMany(() => Subtask, (subtask) => subtask.task)
   subtasks: Subtask[];
-
-  @OneToMany(() => Event, (event) => event.task)
-  events: Event[];
 
   @BeforeInsert()
   @BeforeUpdate()
