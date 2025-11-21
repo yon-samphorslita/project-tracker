@@ -48,13 +48,19 @@ export class Project {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne((type) => User, (user) => user.projects, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne((type) => User, (user) => user.projects, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   user: User;
 
   @OneToMany((type) => Task, (task) => task.project)
   tasks: Task[];
 
-  @ManyToOne(() => Team, (team) => team.projects, { onDelete: 'SET NULL', nullable: true })
+  @ManyToOne(() => Team, (team) => team.projects, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
   team: Team | null;
 
   @OneToMany(() => Event, (event) => event.project)

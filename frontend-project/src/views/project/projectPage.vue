@@ -14,6 +14,11 @@
             class="icon-theme w-7 h-7"
             @click="openEditProjectForm(project)"
           />
+          <Delete
+            v-if="userRole === 'admin' || userRole === 'project_manager'"
+            class="icon-theme w-7 h-7"
+            @click="deleteProject"
+          />
           <EditForm
             v-model="showEditProjectForm"
             title="Edit Project"
@@ -22,6 +27,7 @@
             endpoint="projects"
             @submitted="onProjectUpdated"
           />
+
           <Status :status="projectStatus" />
         </div>
 
@@ -42,6 +48,7 @@
 
       <!-- Description -->
       <p class="text-gray-600">{{ project.p_description }}</p>
+      <p class="text-[var-(sub-text)]">Due on: {{ formatDate(project.due_date) }}</p>
 
       <!-- Admin Dashboard -->
       <template v-if="userRole === 'admin'">
@@ -84,6 +91,7 @@ import { useRoute, useRouter } from 'vue-router'
 // Components
 import ProjectLayout from '@/views/pageLayout.vue'
 import Edit from '@/assets/icons/edit.svg'
+import Delete from '@/assets/icons/delete.svg'
 import Back from '@/assets/icons/back.svg'
 import Status from '@/components/status.vue'
 import Form from '@/components/forms/form.vue'
@@ -124,7 +132,13 @@ const goBack = () => {
 
 // Form Fields
 const projectFields = computed(() => [
-  { type: 'text', label: 'Project Title', model: 'title', placeholder: 'Enter project title', required: true },
+  {
+    type: 'text',
+    label: 'Project Title',
+    model: 'title',
+    placeholder: 'Enter project title',
+    required: true,
+  },
   {
     type: 'textarea',
     label: 'Description',
@@ -136,7 +150,7 @@ const projectFields = computed(() => [
     label: 'Team',
     options: teamStore.teams.map((t) => ({ id: t.id, name: t.name })),
     model: 'teamId',
-    required: true
+    required: true,
   },
   {
     type: 'select',
@@ -162,7 +176,7 @@ const taskFields = computed(() => [
   },
   { type: 'datetime-local', label: 'Start Date', model: 'startDate', required: true },
   { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
-    {
+  {
     type: 'select',
     label: 'Priority',
     options: [
@@ -180,19 +194,23 @@ const taskFields = computed(() => [
     valueKey: 'id',
     labelKey: 'name',
   },
-    {
+  {
     type: 'textarea',
     label: 'Description',
     model: 'description',
     placeholder: 'Enter description',
   },
 ])
-
+function formatDate(dateStr) {
+  if (!dateStr) return 'TBD'
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 // Table Columns
 const tableColumns = computed(() => {
   const baseColumns = [
     { key: 'title', label: 'Task Name' },
-    { key: 'description', label: 'Description' },
+    // { key: 'description', label: 'Description' },
     { key: 'priority', label: 'Priority' },
     { key: 'status', label: 'Status' },
     { key: 'start_date', label: 'Start Date' },
@@ -230,6 +248,8 @@ const statusData = computed(() => {
     if (s === 'not started') summary['Not Started']++
     else if (s === 'in progress') summary['In Progress']++
     else if (s === 'completed') summary['Completed']++
+    else if (s === 'overdue') summary['Overdue']++
+
   })
   return Object.entries(summary).map(([type, value]) => ({ type, value }))
 })
@@ -243,6 +263,48 @@ async function onProjectUpdated() {
   projectStore.setCurrent(updated)
   projectStatus.value = updated.status
   showEditProjectForm.value = false
+}
+async function deleteProject() {
+  const ok = window.confirm(`Are you sure you want to delete project "${project.value.p_name}"?`)
+
+  if (!ok) return
+
+  try {
+    await projectStore.deleteProject(project.value.id)
+    router.push({ name: 'Projects' })
+  } catch (err) {
+    console.error('Failed to delete project:', err)
+    alert('Failed to delete project.')
+  }
+}
+async function applyProjectStartDateFromTasks(projectId) {
+  const proj = projectStore.projects.find(p => p.id === Number(projectId));
+  if (!proj) return;
+
+  // If project already has a start date, no need to auto-fill
+  if (proj.start_date) return;
+
+  // Extract task start dates
+  const startDates = taskStore.tasks
+    .map(t => t.start_date)
+    .filter(d => !!d)
+    .map(d => new Date(d));
+
+  if (!startDates.length) return;
+
+  // Find earliest
+  const earliest = new Date(Math.min(...startDates.map(d => d.getTime())));
+
+  const formatted = earliest.toISOString(); // keep full timestamp for backend
+
+  // Save to backend
+  await projectStore.updateProject(proj.id, {
+    start_date: formatted,
+  });
+
+  // Refresh the project locally
+  const updated = await projectStore.fetchProjectById(proj.id);
+  projectStore.setCurrent(updated);
 }
 
 async function fetchProjectTasks(projectId) {
@@ -292,6 +354,7 @@ async function fetchProjectTasks(projectId) {
       }
     }),
   )
+  await applyProjectStartDateFromTasks(projectId)
 }
 
 async function fetchProjectTeamMembers(teamId) {

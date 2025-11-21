@@ -3,12 +3,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserService } from 'src/user/user.service';
 import { ActivityService } from 'src/activity/activity.service';
 import { User } from 'src/user/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { randomInt } from 'crypto';
 import { EmailService } from 'src/mail/email.service';
 import { UpdateOtpDto } from 'src/user/dto/update-otp.dto';
 import { Repository } from 'typeorm';
@@ -37,24 +35,20 @@ export class AuthService {
       );
     }
 
-    const passwordValid = await bcrypt.compare(
-      password, 
-      user.password
-    );
+    const passwordValid = await bcrypt.compare(password, user.password);
     if (!passwordValid) return null;
 
     return user;
   }
 
   async login(user: User) {
-    const payload = { 
-      sub: user.id, 
-      email: user.email, 
-      role: user.role 
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
     };
-    return { 
-      accessToken: 
-      await this.jwtService.signAsync(payload) 
+    return {
+      accessToken: await this.jwtService.signAsync(payload),
     };
   }
 
@@ -64,7 +58,7 @@ export class AuthService {
   }
 
   isTokenBlacklisted(token: string): boolean {
-    return this.blacklistedTokens.has(token)
+    return this.blacklistedTokens.has(token);
   }
 
   async generateOtp(email: string): Promise<string> {
@@ -76,8 +70,8 @@ export class AuthService {
 
     const updateOtpDto: UpdateOtpDto = {
       otp_code: otp,
-      otp_expiry: expiry
-    }
+      otp_expiry: expiry,
+    };
     await this.userRepository.update(user.id, updateOtpDto);
 
     await this.emailService.sendOtp(email, otp);
@@ -91,54 +85,52 @@ export class AuthService {
     if (!user || !user.otp_code || !user.otp_expiry) return false;
 
     const now = new Date();
-    return user.otp_code === otp && now < new Date(user.otp_expiry);
+    return user.otp_code === otp && now < user.otp_expiry;
   }
 
   async updatePassword(
-  userId: number,
-  oldPassword: string,
-  newPassword: string,
-): Promise<User> {
-  const user = await this.userRepository.findOne({
-    where: { id: userId }
-  });
-  if (!user) throw new NotFoundException('User not found');
+    userId: number,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) throw new NotFoundException('User not found');
 
-  const passwordValid = await bcrypt.compare(oldPassword, user.password);
-  if (!passwordValid) throw new UnauthorizedException('Old password is incorrect');
+    const passwordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!passwordValid)
+      throw new UnauthorizedException('Old password is incorrect');
 
-  user.password = newPassword;
-  user.password_changed = true;
+    user.password = newPassword;
+    user.password_changed = true;
 
-  const savedUser = await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
 
-  await this.activityService.logAction(
-    userId,
-    `User "${user.first_name} ${user.last_name}" updated their own password`,
-  );
+    await this.activityService.logAction(
+      userId,
+      `User "${user.first_name} ${user.last_name}" updated their own password`,
+    );
 
-  return savedUser;
-}
+    return savedUser;
+  }
 
-  async findOneByEmail(
-    email: string,
-  ): Promise<User | null> {
+  async findOneByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { email },
-      select: 
-        [
-            'id',
-            'email',
-            'role',
-            'first_name',
-            'last_name',
-            'img_url',
-            'active',
-            'password',
-            'password_changed',
-            'otp_code',
-            'otp_expiry',
-          ]
+      select: [
+        'id',
+        'email',
+        'role',
+        'first_name',
+        'last_name',
+        'img_url',
+        'active',
+        'password',
+        'password_changed',
+        'otp_code',
+        'otp_expiry',
+      ],
     });
   }
 

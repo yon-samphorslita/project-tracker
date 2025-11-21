@@ -1,3 +1,3 @@
 export class ResetPasswordDto {
-    resetPassword!: true
+  resetPassword!: true;
 }

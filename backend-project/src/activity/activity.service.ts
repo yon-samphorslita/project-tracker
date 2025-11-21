@@ -13,8 +13,8 @@ export class ActivityService {
   ) {}
 
   // Log action whenever a user performs an action
-  async logAction(userId: number, action: string) {
-    const log = this.activityRepo.create({ userId, action });
+  async logAction(user: number, action: string) {
+    const log = this.activityRepo.create({ user: { id: user}, action });
     const savedLog = await this.activityRepo.save(log);
 
     const logWithUser = await this.activityRepo.findOne({
@@ -26,7 +26,7 @@ export class ActivityService {
       // Emit to admin clients
       this.gateway.sendLog({
         id: logWithUser.id,
-        userId: logWithUser.userId,
+        userId: logWithUser.user?.id,
         user: { email: logWithUser.user?.email },
         action: logWithUser.action,
         createdAt: logWithUser.createdAt,

@@ -28,10 +28,9 @@ import { ActivityModule } from 'src/activity/activity.module';
           configService.get('JWT_EXPIRES_IN') || '3600',
           10,
         );
-
         return {
           secret,
-          signOptions: { expiresIn }, // number of seconds
+          signOptions: { expiresIn }, 
         };
       },
       global: true,

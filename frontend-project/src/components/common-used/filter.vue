@@ -1,5 +1,5 @@
 <template>
-  <div ref="dropdownRef" class="filter-dropdown relative inline-block">
+  <div ref="dropdownRef" class="filter-dropdown relative inline-block z-[1]">
     <button
       @click="toggle"
       class="flex items-center gap-2 px-3 py-1 rounded-md transition hover:bg-black/15"

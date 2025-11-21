@@ -31,7 +31,7 @@
               <Edit class="icon-theme w-6 h-6" />
             </button>
             <button v-if="canDelete" @click="handleDelete" title="Delete">
-              <Delete class="icon-theme" />
+              <Delete class="icon-theme w-6 h-6" />
             </button>
           </div>
         </div>
@@ -200,7 +200,7 @@ watch(
     if (val) {
       eventData.value = {
         ...val,
-        type: val.t_name ? 'task' :  'event',
+        type: val.t_name ? 'task' : 'event',
         title: val.e_name || val.t_name || 'Untitled Event',
         description: val.e_description || val.t_description || val.description || '',
         start: val.start_date || val.start || val.start_date,

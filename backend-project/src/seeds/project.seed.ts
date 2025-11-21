@@ -10,7 +10,9 @@ export const seedProjects = async (dataSource: DataSource) => {
   const teamRepo = dataSource.getRepository(Team);
 
   // Fetch user as owner
-  const user = await userRepo.findOne({ where: { role: In([Role.ADMIN, Role.PROJECT_MANAGER]) } });
+  const user = await userRepo.findOne({
+    where: { role: In([Role.ADMIN, Role.PROJECT_MANAGER]) },
+  });
   if (!user) throw new Error('User not found. Seed users first.');
 
   // Optionally fetch a team to assign
@@ -25,7 +27,7 @@ export const seedProjects = async (dataSource: DataSource) => {
     const existing = await projectRepo.findOne({ where: { p_name: p.p_name } });
     if (existing) continue;
 
-    const project = projectRepo.create({...p, team: team ?? undefined });
+    const project = projectRepo.create({ ...p, team: team ?? undefined });
     await projectRepo.save(project);
     console.log(`Project ${p.p_name} created`);
   }

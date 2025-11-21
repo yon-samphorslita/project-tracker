@@ -11,7 +11,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { User } from 'src/user/user.entity';
 import { Project } from 'src/project/project.entity';
 import { ActivityService } from 'src/activity/activity.service';
-
+import * as dayjs from 'dayjs';
 @Injectable()
 export class EventService {
   constructor(
@@ -21,18 +21,6 @@ export class EventService {
     private readonly projectRepository: Repository<Project>,
     private readonly activityService: ActivityService,
   ) {}
-
-  // Helper to format date nicely
-  private formatDate(date: Date | string) {
-    const d = new Date(date);
-    return d.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  }
 
   async create(createEventDto: CreateEventDto, user: User): Promise<Event> {
     const project = await this.projectRepository.findOne({
@@ -53,7 +41,7 @@ export class EventService {
 
     await this.activityService.logAction(
       user.id,
-      `Created event "${savedEvent.e_name}" in project "${project.p_name}" starting at ${this.formatDate(savedEvent.start_date)} and ending at ${this.formatDate(savedEvent.end_date)}.`,
+      `Created event "${savedEvent.e_name}" in project "${project.p_name}" starting at ${dayjs(savedEvent.start_date).format('DD MMM, YYYY')} and ending at ${dayjs(savedEvent.end_date).format('DD MMM, YYYY')}.`,
     );
 
     return savedEvent;
@@ -80,18 +68,18 @@ export class EventService {
         changes.push('Description changed');
       if (oldEventData.start_date !== updatedEvent.start_date)
         changes.push(
-          `Start: ${this.formatDate(oldEventData.start_date)} to ${this.formatDate(updatedEvent.start_date)}`,
+          `Start from: ${dayjs(oldEventData.start_date).format('DD MMM, YYYY')} to ${dayjs(updatedEvent.start_date).format('DD MMM, YYYY')}`,
         );
       if (oldEventData.end_date !== updatedEvent.end_date)
         changes.push(
-          `End: ${this.formatDate(oldEventData.end_date)} to ${this.formatDate(updatedEvent.end_date)}`,
+          `End on: ${dayjs(oldEventData.end_date).format('DD MMM, YYYY')} to ${dayjs(updatedEvent.end_date).format('DD MMM, YYYY')}`,
         );
 
       const changesStr =
         changes.length > 0 ? changes.join('; ') : 'No significant changes';
       await this.activityService.logAction(
         user.id,
-        `Updated event "${updatedEvent.e_name}". Changes: ${changesStr}.`,
+        `Updated event "${updatedEvent.e_name}". Updated on: ${changesStr}.`,
       );
     }
 

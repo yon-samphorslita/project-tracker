@@ -39,7 +39,7 @@
             <div
               v-for="day in allDays"
               :key="day.toISOString()"
-              class="w-[113px] flex items-center justify-center border-r border-t border-[var(--main-border)] text-lg"
+              class="w-[137px] flex items-center justify-center border-r border-t border-[var(--main-border)] text-lg"
               :class="{
                 'bg-[var(--gray-bg)]': isWeekend(day) && !isToday(day),
                 'bg-blue-bg opacity-40 font-bold': isToday(day),
@@ -69,7 +69,7 @@
             <div
               v-for="day in allDays"
               :key="day.toISOString()"
-              class="w-[113px] border-r border-[var(--main-border)]"
+              class="w-[137px] border-r border-[var(--main-border)]"
               :class="{
                 'bg-[var(--gray-bg)]': isWeekend(day) && !isToday(day),
                 'bg-blue-bg opacity-40 font-bold': isToday(day),
@@ -83,7 +83,7 @@
               class="absolute h-12 flex items-center mt-1 rounded-full px-2 gap-1.5 overflow-hidden whitespace-nowrap text-ellipsis"
               :style="{
                 top: `${tasksBefore(task, row.tasks) * (taskRowHeight + taskGap)}px`,
-                left: `${getTaskOffset(task.start)}px`,
+                left: `${getTaskOffset(task.start) + columnWidth}px`,
                 width: `${getTaskWidth(task.start, task.end)}px`,
                 backgroundColor: getRandomColor(),
                 opacity: isPast(task.end) ? 0.5 : 1,

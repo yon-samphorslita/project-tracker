@@ -54,7 +54,7 @@
               v-model:modelValue="showForm"
               formTitle="Schedule Event"
               :fields="eventFields"
-              :initialData="editEventData"
+              :initialData="eventData"
               endpoint="events"
               @submitted="handleSubmit"
             />
@@ -128,7 +128,7 @@ const userRole = computed(() => authStore.user?.role || 'user')
 
 // Calendar state
 const showForm = ref(false)
-const editEventData = ref(null)
+const eventData = ref(null)
 const viewType = ref('Month')
 const currentDate = ref(new Date())
 const currentMonthYear = computed(() => format(currentDate.value, 'MMMM yyyy'))
@@ -164,24 +164,12 @@ const eventFields = computed(() => [
 ])
 
 function openForm() {
-  editEventData.value = null
+  eventData.value = null
   showForm.value = true
 }
 
-async function handleSubmit(formData) {
-  try {
-    if (editEventData.value?.id) {
-      await eventStore.updateEvent({ id: editEventData.value.id, ...formData })
-    } else {
-      await eventStore.createEvent(formData)
-    }
-    await eventStore.fetchEvents()
-  } catch (err) {
-    console.error('Error saving event:', err)
-  } finally {
-    showForm.value = false
-    editEventData.value = null
-  }
+async function handleSubmit() {
+  await eventStore.fetchEvents()
 }
 
 // Chart data

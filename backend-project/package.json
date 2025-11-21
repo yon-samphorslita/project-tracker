@@ -20,7 +20,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:refresh": "npm run build && typeorm schema:drop -d ./dist/data-source.js && typeorm migration:run -d ./dist/data-source.js",
     "seed": "ts-node -r tsconfig-paths/register src/seeds/index.ts"
-
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.888.0",

@@ -34,18 +34,18 @@ export class UserController {
     return this.userService.findAll();
   }
   @Get('members')
-@Roles(Role.ADMIN, Role.PROJECT_MANAGER) // or all authenticated roles
-async getCandidates() {
-  const users = await this.userService.findAll();
-  // Optionally filter by roles
-  return users.map(u => ({
-    id: u.id,
-    first_name: u.first_name,
-    last_name: u.last_name,
-    role: u.role,
-    team: u.team,
-  }));
-}
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER) // or all authenticated roles
+  async getCandidates() {
+    const users = await this.userService.findAll();
+    // Optionally filter by roles
+    return users.map((u) => ({
+      id: u.id,
+      first_name: u.first_name,
+      last_name: u.last_name,
+      role: u.role,
+      team: u.team,
+    }));
+  }
   @Get(':id')
   @Roles(Role.ADMIN)
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -65,10 +65,7 @@ async getCandidates() {
     @Request() req,
   ) {
     if ('resetPassword' in body && body.resetPassword === true) {
-      return this.userService.resetPassword(
-        id,
-        req.user.id,
-      );
+      return this.userService.resetPassword(id, req.user.id);
     }
 
     return this.userService.update(id, body as UpdateUserDto, req.user.id);
@@ -79,5 +76,4 @@ async getCandidates() {
   async delete(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.userService.delete(id, req.user.id);
   }
-
 }

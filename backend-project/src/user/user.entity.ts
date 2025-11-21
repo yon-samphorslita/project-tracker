@@ -23,7 +23,7 @@ import * as bcrypt from 'bcrypt';
 @Entity('users')
 @Unique(['email'])
 export class User {
-  private static readonly DEFAULT_PASSWORD = 'PMS@123'
+  private static readonly DEFAULT_PASSWORD = 'PMS@123';
 
   @PrimaryGeneratedColumn()
   id: number;
@@ -96,20 +96,20 @@ export class User {
 
   @BeforeInsert()
   async create() {
-    if(!this.password) {
+    if (!this.password) {
       this.password = User.DEFAULT_PASSWORD;
       this.password_changed = false;
     }
 
-    if(!this.password.startsWith('$2b$')) {
-      this.password = await bcrypt.hash(this.password, 10)
+    if (!this.password.startsWith('$2b$')) {
+      this.password = await bcrypt.hash(this.password, 10);
     }
   }
 
-    @BeforeUpdate()
+  @BeforeUpdate()
   async reset() {
-    if(!this.password.startsWith('$2b$')) {
-      this.password = await bcrypt.hash(this.password, 10)
+    if (!this.password.startsWith('$2b$')) {
+      this.password = await bcrypt.hash(this.password, 10);
     }
   }
 }

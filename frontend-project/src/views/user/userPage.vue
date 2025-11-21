@@ -1,6 +1,6 @@
 <template>
   <UserLayout>
-    <div class="container pb-[200px]">
+    <div class="container">
       <!-- Permission check -->
       <div v-if="userRole !== 'admin'" class="text-sub-text text-center py-4">
         You do not have permission to view this page.
@@ -23,7 +23,7 @@
           <Button label="+ New User" @click="openForm" />
 
           <Form
-            v-if="!isEditing && !isUpdatingPassword"
+            v-if="!isEditing"
             v-model:modelValue="showForm"
             formTitle="Create User"
             :fields="userFields"
@@ -33,10 +33,10 @@
           />
 
           <EditForm
-            v-if="isEditing && !isUpdatingPassword"
+            v-if="isEditing"
             v-model:modelValue="showForm"
             title="Edit User"
-            :fields="activeUserFields"
+            :fields="userFields"
             :initialData="editUserData"
             endpoint="users"
             @submitted="handleSubmit"
@@ -55,20 +55,20 @@
         <!-- Users Table -->
         <Table v-if="isReady" :data="filteredUsers" :columns="tableColumns">
           <template #status="{ row }">
-  <Status
-  class="cursor-pointer"
-    :active="row.active"
-    :editable="true"
-    @update:status="(newActive) => updateUserStatus(row, newActive)"
-  />
-</template>
+            <Status
+              class="cursor-pointer"
+              :active="row.active"
+              :editable="true"
+              @update:status="(newActive) => updateUserStatus(row, newActive)"
+            />
+          </template>
           <template #actions="{ row }">
             <div class="flex justify-around">
               <router-link :to="`/user/${row.id}`">
                 <View class="icon-theme w-6 h-6" />
               </router-link>
               <Edit class="icon-theme w-6 h-6" @click="editUser(row)" />
-              <Key class="icon-theme w-6 h-6" @click="updateUserPassword(row)" />
+              <Key class="icon-theme w-6 h-6" @click="resetUserPassword(row)" />
               <Delete class="icon-theme w-6 h-6" @click="deleteUser(row)" />
             </div>
           </template>
@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import UserLayout from '@/views/pageLayout.vue'
 import Table from '@/components/charts/table.vue'
 import Button from '@/components/common-used/button.vue'
@@ -96,7 +96,7 @@ import PieChart from '@/components/charts/pieChart.vue'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
 import View from '@/assets/icons/view.svg'
-import Key from '@/assets/icons/key.svg' 
+import Key from '@/assets/icons/key.svg'
 import Status from '@/components/status.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
@@ -112,22 +112,8 @@ const searchQuery = ref('')
 const sortOption = ref('role-all')
 const isEditing = ref(false)
 
-// Password Update State
-const isUpdatingPassword = ref(false)
-const selectedUserForPassword = ref(null)
-const passwordData = ref({
-  newPassword: '',
-  confirmPassword: '',
-})
-
 // Computed
 const userRole = computed(() => authStore.user?.role || 'user')
-const passwordMismatch = computed(
-  () =>
-    passwordData.value.newPassword &&
-    passwordData.value.confirmPassword &&
-    passwordData.value.newPassword !== passwordData.value.confirmPassword,
-)
 
 const users = computed(() => userStore.users || [])
 const roleLabels = {
@@ -173,8 +159,20 @@ const tableColumns = [
 
 // User form fields
 const userFields = [
-  { type: 'text', label: 'First Name', placeholder: 'Enter first name', model: 'first_name', required: true },
-  { type: 'text', label: 'Last Name', placeholder: 'Enter last name', model: 'last_name', required: true },
+  {
+    type: 'text',
+    label: 'First Name',
+    placeholder: 'Enter first name',
+    model: 'first_name',
+    required: true,
+  },
+  {
+    type: 'text',
+    label: 'Last Name',
+    placeholder: 'Enter last name',
+    model: 'last_name',
+    required: true,
+  },
   { type: 'email', label: 'Email', placeholder: 'Enter email', model: 'email', required: true },
   {
     type: 'select',
@@ -207,7 +205,17 @@ const sortOptions = [
 
 // Computed filtered users
 const filteredUsers = computed(() => {
-  let result = mappedUsers.value
+  let result = mappedUsers.value.sort((a, b) => {
+    const order = {
+      Admin: 1,
+      'Project Manager': 2,
+      'Team Member': 3,
+    }
+    const A = order[a.role] || 3 // default to member
+    const B = order[b.role] || 3
+
+    return A - B
+  })
 
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
@@ -244,7 +252,6 @@ function applySort(option) {
 
 function openForm() {
   isEditing.value = false
-  isUpdatingPassword.value = false
   editUserData.value = null
   showForm.value = true
 }
@@ -253,14 +260,13 @@ function editUser(row) {
   const user = users.value.find((u) => u.id === row.id)
   if (user) {
     isEditing.value = true
-    isUpdatingPassword.value = false
     editUserData.value = { ...user, id: user.id }
     showForm.value = true
   }
 }
 
-// Password Update Methods
-async function updateUserPassword(row) {
+// Password reset
+async function resetUserPassword(row) {
   const confirmed = confirm(
     `Are you sure you want to reset the password for "${row.name}" to the default password?`,
   )
@@ -276,46 +282,6 @@ async function updateUserPassword(row) {
     alert('Failed to reset password. Please try again.')
   }
 }
-
-function closePasswordModal() {
-  isUpdatingPassword.value = false
-  selectedUserForPassword.value = null
-  passwordData.value = {
-    newPassword: '',
-    confirmPassword: '',
-  }
-}
-
-async function handlePasswordUpdate() {
-  if (passwordMismatch.value) {
-    alert('Passwords do not match!')
-    return
-  }
-
-  if (!passwordData.value.newPassword) {
-    alert('Please enter a new password')
-    return
-  }
-
-  try {
-    await userStore.updateUserPassword(
-      selectedUserForPassword.value,
-      passwordData.value.newPassword,
-    )
-    alert('Password updated successfully!')
-    closePasswordModal()
-  } catch (err) {
-    console.error('Failed to update password:', err)
-    alert('Failed to update password. Please try again.')
-  }
-}
-
-const activeUserFields = computed(() => {
-  if (isEditing.value) {
-    return userFields.filter((field) => field.model !== 'password')
-  }
-  return userFields
-})
 
 async function deleteUser(row) {
   if (!confirm(`Are you sure you want to delete "${row.name}"?`)) return

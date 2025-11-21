@@ -1,15 +1,15 @@
 <template>
-  <div ref="outerScroll" class="w-[687px] overflow-x-auto border h-[800px] rounded-md relative">
+  <div ref="outerScroll" class="w-[836px] overflow-x-auto border h-[1000px] rounded-md relative">
     <!-- Inner grid -->
-    <div class="min-w-max relative" :style="{ width: `${monthDays.length * 80 + 80}px` }">
+    <div class="min-w-max relative" :style="{ width: `${monthDays.length * 100 + 100}px` }">
       <!-- Current time line -->
       <div
         v-if="isCurrentMonth && currentDayIndex >= 0"
         class="absolute pointer-events-none flex items-center"
         :style="{
           top: `${currentTopRem}rem`,
-          left: `${80 + currentDayIndex * 80}px`,
-          width: '80px',
+          left: `${100 + currentDayIndex * 100}px`,
+          width: '100px',
           zIndex: 8,
         }"
       >
@@ -24,7 +24,7 @@
 
       <!-- Header Row -->
       <div
-        class="grid grid-cols-[80px_repeat(var(--cols),80px)] sticky top-0 z-10 bg-main-bg border-b"
+        class="grid grid-cols-[100px_repeat(var(--cols),100px)] sticky top-0 z-10 bg-main-bg border-b"
         :style="{ '--cols': monthDays.length }"
       >
         <div class="p-2 bg-main-bg sticky left-0 z-0 border-r"></div>
@@ -45,7 +45,7 @@
 
       <!-- Hours + Days -->
       <div
-        class="grid grid-cols-[80px_repeat(var(--cols),80px)]"
+        class="grid grid-cols-[100px_repeat(var(--cols),100px)]"
         :style="{ '--cols': monthDays.length }"
       >
         <!-- Hours column -->
@@ -182,7 +182,7 @@ function centerCurrentDate() {
   if (!outerScroll.value || currentDayIndex.value < 0) return
   const container = outerScroll.value
   const containerWidth = container.clientWidth
-  const dayLeft = 80 + currentDayIndex.value * 80
+  const dayLeft = 100 + currentDayIndex.value * 100
   container.scrollLeft = Math.max(0, Math.round(dayLeft + 40 - containerWidth / 2))
 }
 

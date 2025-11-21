@@ -6,7 +6,6 @@ import {
   IsNumber,
 } from 'class-validator';
 import { Status } from '../../enums/status.enum';
-import { Priority } from '../../enums/priority.enum';
 
 export class CreateEventDto {
   @IsString()
@@ -35,10 +34,6 @@ export class CreateEventDto {
   @IsOptional()
   @IsNumber()
   projectId?: number;
-
-  @IsOptional()
-  @IsNumber()
-  taskId?: number;
 
   @IsOptional()
   @IsNumber()

@@ -47,15 +47,15 @@ export class AuthController {
   }
 
   //first-time user update password
-@Patch('update-password')
-async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
-  await this.authService.updatePassword(
-    req.user.id,
-    body.oldPassword,
-    body.newPassword,
-  );
-  return { message: 'Password updated successfully' };
-}
+  @Patch('update-password')
+  async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
+    await this.authService.updatePassword(
+      req.user.id,
+      body.oldPassword,
+      body.newPassword,
+    );
+    return { message: 'Password updated successfully' };
+  }
 
   // request OTP
   @Public()
@@ -74,13 +74,8 @@ async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
   async resetPassword(
     @Body() body: { email: string; otp: string; newPassword: string },
   ) {
-    const validOtp = await this.authService.verifyOtp(
-      body.email, 
-      body.otp
-    );
-    if (!validOtp) throw new ForbiddenException(
-      'Invalid or expired OTP'
-    );
+    const validOtp = await this.authService.verifyOtp(body.email, body.otp);
+    if (!validOtp) throw new ForbiddenException('Invalid or expired OTP');
 
     await this.authService.updatePasswordByEmail(body.email, body.newPassword);
     return { message: 'Password updated successfully' };
@@ -109,18 +104,18 @@ async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
   @Patch('profile')
   async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     const excluded = [
-        'email',
-        'password',
-        'role',
-        'id',
-        'active',
-        'password_changed',
-        'otp_code',
-        'otp_expiry',
-        'created_at',
-        'deletedAt',
-      ]
-      excluded.forEach((field) => delete updateUserDto[field])
+      'email',
+      'password',
+      'role',
+      'id',
+      'active',
+      'password_changed',
+      'otp_code',
+      'otp_expiry',
+      'created_at',
+      'deletedAt',
+    ];
+    excluded.forEach((field) => delete updateUserDto[field]);
 
     const updatedUser = await this.userService.update(
       req.user.id,

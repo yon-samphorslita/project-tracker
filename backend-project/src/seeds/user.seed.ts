@@ -42,11 +42,12 @@ export const seedUsers = async (dataSource: DataSource) => {
       email: 'member3@gmail.com',
       role: Role.MEMBER,
     },
-
   ];
 
   for (const u of users) {
-    const existing = await userRepository.findOne({ where: { email: u.email } });
+    const existing = await userRepository.findOne({
+      where: { email: u.email },
+    });
     if (existing) continue;
 
     const user = userRepository.create({ ...u });

@@ -4,7 +4,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   ManyToOne,
-  JoinColumn,
 } from 'typeorm';
 import { User } from '../user/user.entity';
 
@@ -13,12 +12,15 @@ export class ActivityLog {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.activities, { eager: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @ManyToOne(() => User, (user) => user.activities, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  // @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
-  userId: number;
+  // @Column()
+  // userId: number;
 
   @Column()
   action: string;
