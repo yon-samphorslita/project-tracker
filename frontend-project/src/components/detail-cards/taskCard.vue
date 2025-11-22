@@ -220,12 +220,12 @@
 
             <div v-if="showSubtaskForm === item.id" @click.stop>
               <Form
-                v-model="showSubtaskForm"
+                v-model:modelValue="showSubtaskForm"
                 formTitle="Create Subtask"
                 :fields="subtaskFields"
                 endpoint="subtasks"
                 :initialData="{ taskId: item.id }"
-                @submitted="handleSubtaskCreated"
+                @submitted=handleSubtaskCreated
               />
             </div>
 
@@ -330,44 +330,25 @@ async function addSubtask(taskId: number) {
   }
 }
 
-// async function handleSubtaskCreated(subtaskData) {
-//   if (!subtaskData.name || typeof subtaskData.name !== 'string') {
-//     return console.error('Invalid subtask name', subtaskData)
-//   }
-//   if (!subtaskData.taskId || typeof subtaskData.taskId !== 'number') {
-//     return console.error('Invalid taskId', subtaskData)
-//   }
-
-//   const payload = {
-//     name: subtaskData.name,
-//     taskId: subtaskData.taskId,
-//   }
-
-//   console.log('Creating subtask with payload:', payload)
-//   await subtaskStore.createSubtask(payload)
-
-//   // Update local task object
-//   const task = taskStore.tasks.find((t) => t.id === payload.taskId)
-//   if (task) task.subtasks = await subtaskStore.fetchByTask(payload.taskId)
-
-//   showSubtaskForm.value = false
-// }
-
 async function handleSubtaskCreated(subtaskData) {
-  const task = taskStore.tasks.find(t => t.id === subtaskData.taskId)
-  if (task) task.subtasks = await subtaskStore.fetchByTask(subtaskData.taskId)
+  if (!subtaskData.name || typeof subtaskData.name !== 'string') {
+    return console.error('Invalid subtask name', subtaskData)
+  }
+  if (!subtaskData.taskId || typeof subtaskData.taskId !== 'number') {
+    return console.error('Invalid taskId', subtaskData)
+  }
+
+  const payload = {
+    name: subtaskData.name,
+    taskId: subtaskData.taskId,
+  }
+
+  // Update local task object
+  const task = taskStore.tasks.find((t) => t.id === payload.taskId)
+  if (task) task.subtasks = await subtaskStore.fetchByTask(payload.taskId)
+
   showSubtaskForm.value = false
 }
-
-
-// async function handleSubtaskCreated(subtaskData) {
-//   // subtaskData will now have { name, taskId }
-//   await subtaskStore.createSubtask(subtaskData)
-//   task.value.subtasks = await subtaskStore.fetchByTask(task.value.id)
-//   showSubtaskForm.value = false
-// }
-
-
 
 async function editSubtask(taskId: number, subtaskId: number, currentName: string) {
   const newName = prompt('Edit subtask name:', currentName)

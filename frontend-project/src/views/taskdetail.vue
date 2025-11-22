@@ -67,7 +67,6 @@
             </div>
           </div>
           <div v-else class="text-gray-600">No subtasks available.</div>
-          <button class="mt-4 text-blue-600 cursor-pointer hover:underline ">See Activity Log</button>     
         </div>
 
         <div class="flex w-2/5 border rounded-xl p-4 mb-0 ml-6">
@@ -258,14 +257,14 @@ const fetchTaskDetails = async () => {
         ? allActivities.activities
         : [];
 
-        // console.log('Activities Array:', )
+      console.log('Activities Array:', activitiesArray )
 
       assigneeActivity.value = activitiesArray.filter(
         (act) =>
-          act.task?.id === task.id
+          act.taskId === task.value.id 
           // (act.action && act.action.includes(task.value.t_name)) 
       );
-      console.log('task id:', task.value.id)
+
       // assigneeActivity.value = allActivities.activities.filter(
       //   (act) =>
       //     act.taskId === task.value.id || 
@@ -468,22 +467,6 @@ async function fetchProjectTeamMembers(teamId) {
   ]
 }
 
-// async function handleTaskCreated(taskData) {
-//   const payload = {
-//     t_name: taskData.title,
-//     t_description: taskData.description,
-//     t_priority: taskData.priority,
-//     t_status: taskData.status || 'Not Started',
-//     start_date: taskData.startDate,
-//     due_date: taskData.dueDate,
-//     projectId: project.value.id,
-//     userId: taskData.user?.id || null,
-//   }
-//   await taskStore.createTask(payload)
-//   await fetchProjectTasks(project.value.id)
-//   showTaskForm.value = false
-// }
-
 async function openEditTaskForm(task) {
   const projectId = task.project?.id
   if (projectId) {
@@ -507,18 +490,6 @@ async function openEditTaskForm(task) {
   showEditTaskForm.value = true
 }
 
-async function handleSubtaskCreated(subtaskData) {
-  const payload = {
-    name: subtaskData.title,    
-    status: subtaskData.status || 'not started', 
-    taskId: task.value.id,       
-  }
-
-  await subtaskStore.createSubtask(payload)
-  task.value.subtasks = await subtaskStore.fetchByTask(task.value.id)
-  showSubtaskForm.value = false
-}
-
 
 async function onTaskUpdated(taskData) {
   if (!taskData?.id) return
@@ -531,75 +502,9 @@ async function onTaskUpdated(taskData) {
     due_date: taskData.dueDate,
     userId: taskData.user?.id || null,
   }
-  await taskStore.updateTask(taskData.id, payload)
+  // await taskStore.updateTask(taskData.id, payload)
   await fetchProjectTasks(project.value.id)
 }
-
-function openAddSubtaskForm() {
-  editSubtaskData.value = {
-    taskId: task.value.id,
-    title: '',
-    description: '',
-    startDate: task.value.start_date,
-    dueDate: task.value.due_date,
-    priority: 'medium',
-    user: null
-  }
-  showSubtaskForm.value = true
-}
-
-async function addSubtask(taskId) {
-  const name = prompt('Enter new subtask name:')
-  if (!name) return
-  const newSubtask = await subtaskStore.createSubtask({ name, taskId })
-  console.log('Created subtask:', newSubtask)
-  const task = taskStore.tasks.find((t) => t.id === taskId)
-  if (task) {
-    const subtasks = await subtaskStore.fetchByTask(taskId)
-    if (!task.subtasks) task.subtasks = [] // initialize if undefined
-    task.subtasks.splice(0, task.subtasks.length, ...subtasks)
-  }
-}
-
-// async function editSubtask(taskId, subtaskId, currentName: string) {
-//   const newName = prompt('Edit subtask name:', currentName)
-//   if (!newName || newName.trim() === '') return
-
-//   await subtaskStore.updateSubtask(subtaskId, { name: newName })
-
-//   const task = taskStore.tasks.find((t) => t.id === taskId)
-//   if (task) {
-//     task.subtasks = await subtaskStore.fetchByTask(taskId)
-//   }
-// }
-
-async function deleteSubtask(subtaskId) {
-  if (!confirm('Are you sure you want to delete this subtask?')) return
-
-  await subtaskStore.deleteSubtask(subtaskId)
-
-  const task = taskStore.tasks.find((t) => t.subtasks?.some((s) => s.id === subtaskId))
-  if (task) {
-    task.subtasks = await subtaskStore.fetchByTask(task.id)
-  }
-}
-
-// async function updateSubtaskStatus(subtask: any, taskId) {
-//   if (!taskId) {
-//     console.warn('updateSubtaskStatus called with undefined taskId', subtask)
-//     return
-//   }
-
-//   const newStatus = subtask.status === 'completed' ? 'not started' : 'completed'
-//   const updated = await subtaskStore.updateSubtask(subtask.id, { status: newStatus })
-//   if (updated) {
-//     const task = taskStore.tasks.find((t) => t.id === taskId)
-//     if (task && task.subtasks) {
-//       const s = task.subtasks.find((st: any) => st.id === subtask.id)
-//       if (s) s.status = updated.status
-//     }
-//   }
-// }
 
 function formatDate(date) {
   if (!date) return ''

@@ -44,10 +44,10 @@
                 <div class="text-xl font-semibold">My Task Status</div>
                 <PieChart :data="memberTaskStatus" :height="280" class="w-[350px]" />
               </div>
-              <div v-if="participatingProjects.length" class="w-1/2 bg-pink-100 flex flex-col px-4 rounded-lg pt-4">
+              <div v-if="projectStore.projects.length" class="w-1/2 bg-pink-100 flex flex-col px-4 rounded-lg pt-4">
                 <p class="text-xl font-semibold">Participating Project</p>
                 <ul class="flex flex-col gap-3 m-2 overflow-y-auto max-h-48 scrollable">
-                  <div v-for="p in participatingProjects" :key="p.id" class="flex items-center gap-3">
+                  <div v-for="p in projectStore.projects" :key="p.id" class="flex items-center gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="text-red-900" viewBox="0 0 16 16"><path fill="currentColor" d="m13.637 2.363l1.676.335c.09.018.164.084.19.173a.25.25 0 0 1-.062.249l-1.373 1.374a.88.88 0 0 1-.619.256H12.31L9.45 7.611A1.5 1.5 0 1 1 6.5 8a1.5 1.5 0 0 1 1.889-1.449l2.861-2.862V2.552c0-.232.092-.455.256-.619L12.88.559a.25.25 0 0 1 .249-.062c.089.026.155.1.173.19Z"/><path fill="currentColor" d="M2 8a6 6 0 1 0 11.769-1.656a.751.751 0 1 1 1.442-.413a7.502 7.502 0 0 1-12.513 7.371A7.501 7.501 0 0 1 10.069.789a.75.75 0 0 1-.413 1.442A6 6 0 0 0 2 8"/><path fill="currentColor" d="M5 8a3.002 3.002 0 0 0 4.699 2.476a3 3 0 0 0 1.28-2.827a.748.748 0 0 1 1.045-.782a.75.75 0 0 1 .445.61A4.5 4.5 0 1 1 8.516 3.53a.75.75 0 1 1-.17 1.49A3 3 0 0 0 5 8"/></svg>
                     {{ p.p_name }}
                   </div>
@@ -217,7 +217,14 @@ const taskStatus = computed(() => {
   return Object.entries(summary).map(([type, value]) => ({ type, value }))
 })
 
-const participatingProjects = projectStore.projects.filter((p) => p.status?.toLowerCase() !== 'completed')
+// const participatingProjects = projectStore.projects.filter((p) => p.status?.toLowerCase() !== 'completed')
+const participatingProjects = computed(() => {
+  const userProjectIds = authStore.user?.projectIds || []
+  return projectStore.projects.filter(
+    (p) => userProjectIds.includes(p.id) && p.status?.toLowerCase() !== 'completed'
+  )
+})
+
 
 const ganttRows = computed(() =>
   projectStore.projects.map((project) => ({
@@ -377,6 +384,7 @@ onMounted(async () => {
   } else {
     await projectStore.fetchProjects()
     await taskStore.fetchTasks()
+    console.log('User', projectStore.projects)
   }
 
   timer = setInterval(() => {

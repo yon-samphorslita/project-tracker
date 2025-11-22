@@ -16,6 +16,7 @@ import { Status } from '../enums/status.enum';
 import { ActivityService } from 'src/activity/activity.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { Role } from 'src/enums/role.enum';
+import { link } from 'fs';
 
 @Injectable()
 export class ProjectService {
@@ -60,16 +61,22 @@ const project = this.projectRepository.create({
       `Created project: "${savedProject.p_name}" (Start: ${dayjs(savedProject.start_date).format('MMM D, YYYY')}, Due: ${dayjs(savedProject.due_date).format('MMM D, YYYY')})`,
     );
 
-    // Send notifications to all team members
-    if (savedProject.team?.members?.length) {
-      const memberIds = savedProject.team.members.map((m) => m.id);
-
-      await this.notificationService.notifyUsers(
-        memberIds,
-        'New Project Assigned',
-        `Project "${savedProject.p_name}" has been assigned to your team.`,
-      );
+    let allUserIds: number[] = [];
+    if (project.team) {
+      allUserIds = [
+        ...project.team.pms.map(u => u.id),
+        ...project.team.mainMembers.map(u => u.id),
+        ...project.team.members.map(u => u.id),
+      ];
+      allUserIds = [...new Set(allUserIds)]; // remove duplicates
     }
+
+    await this.notificationService.notifyUsers(
+      allUserIds,
+      'New Project Assigned',
+      `Project "${savedProject.p_name}" has been assigned to your team.`,
+      `/project/${savedProject.id}`,
+    );
 
     return savedProject;
   }
@@ -177,6 +184,17 @@ const project = this.projectRepository.create({
       }
     }
 
+    let allUserIds: number[] = [];
+    if (project.team) {
+      allUserIds = [
+        ...project.team.pms.map(u => u.id),
+        ...project.team.mainMembers.map(u => u.id),
+        ...project.team.members.map(u => u.id),
+      ];
+      allUserIds = [...new Set(allUserIds)]; // remove duplicates
+    }
+
+
     // Track changes for logging
     const changes = this.getChanges(project, dto);
 
@@ -189,6 +207,14 @@ const project = this.projectRepository.create({
         `Project "${savedProject.p_name}" updated on:\n${changes.join('; \n')}`,
       );
 
+      await this.notificationService.notifyUsers(
+        allUserIds,
+        'Project Infomation Update',
+        `The Project "${savedProject.p_name}" has been updated: ${changes.join('; ')}.`,
+        `/project/${savedProject.id}`,
+      );
+
+      console.log('Project id: ', savedProject.id)
       return savedProject;
     }
 
@@ -235,17 +261,34 @@ const project = this.projectRepository.create({
   async delete(id: number, user: User): Promise<void> {
     const project = await this.projectRepository.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'team', 'team.pms', 'team.mainMembers', 'team.members'],
     });
 
     if (!project)
       throw new NotFoundException(`Project with ID ${id} not found`);
+
+    let allUserIds: number[] = [];
+    if (project.team) {
+      allUserIds = [
+        ...project.team.pms.map(u => u.id),
+        ...project.team.mainMembers.map(u => u.id),
+        ...project.team.members.map(u => u.id),
+      ];
+      allUserIds = [...new Set(allUserIds)]; 
+    }
 
     await this.projectRepository.remove(project);
 
     await this.activityService.logAction(
       user.id,
       `Deleted project: ${project.p_name}`,
+    );
+
+    await this.notificationService.notifyUsers(
+      allUserIds,
+      'Project Deleted',
+      `The Project "${project.p_name}" has been deleted.`,
+      `/project`,
     );
   }
 

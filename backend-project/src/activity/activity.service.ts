@@ -13,8 +13,8 @@ export class ActivityService {
   ) {}
 
   // Log action whenever a user performs an action
-  async logAction(userId: number, action: string) {
-    const log = this.activityRepo.create({ userId, action });
+  async logAction(userId: number, action: string, taskId?: number) {
+    const log = this.activityRepo.create({ userId, action, taskId });
     const savedLog = await this.activityRepo.save(log);
 
     const logWithUser = await this.activityRepo.findOne({
@@ -28,6 +28,7 @@ export class ActivityService {
         id: logWithUser.id,
         userId: logWithUser.userId,
         user: { email: logWithUser.user?.email },
+        taskId: logWithUser.taskId,
         action: logWithUser.action,
         createdAt: logWithUser.createdAt,
       });

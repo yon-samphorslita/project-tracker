@@ -8,7 +8,7 @@
             <Button
               v-if="userRole === 'admin' || userRole === 'project_manager'"
               label="+ New Team"
-              @click="showTeamForm = true"
+              @click="createTeam"
             />
             <div v-else class="w-[120px]"></div>
           </div>
@@ -70,6 +70,7 @@ import Button from '@/components/common-used/button.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTeamStore } from '@/stores/team'
 import { storeToRefs } from 'pinia'
+import router from '@/router'
 
 // Stores
 const teamStore = useTeamStore()
@@ -87,6 +88,10 @@ const sortOptions = [
 
 const userRole = computed(() => authStore.user?.role || 'user')
 
+function createTeam() {
+  router.push({ path: `/teams/create` })
+}
+
 // Computed filtered & sorted Teams
 const filteredSortedTeams = computed(() => {
   let list = [...teams.value]
@@ -99,6 +104,12 @@ const filteredSortedTeams = computed(() => {
       const isSecondary = team.members?.some((m) => m.id === userId)
       return isMain || isSecondary
     })
+  }
+
+  if (userRole.value === 'project_manager' && authStore.user) {
+    const userId = authStore.user.id
+    list = list.filter((team) => team.pms?.some((pm) => pm.id === userId))
+    return list
   }
 
   // Apply search

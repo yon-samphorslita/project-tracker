@@ -62,7 +62,7 @@
         <div
           v-for="pm in team.pms"
           :key="pm.id"
-          class="flex items-center gap-3 bg-blue-50 px-3 py-1 rounded-full border border-blue-100"
+          class="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-full border border-blue-100"
         >
           <img
             :src="pm.img_url || defaultProfile"
@@ -94,7 +94,7 @@
         <div
           v-for="pm in team.pms.slice(0, 2)"
           :key="pm.id"
-          class="flex items-center gap-3 bg-blue-50 px-3 py-1 rounded-full border border-blue-100"
+          class="flex items-center gap- bg-blue-50 px-2 py-1 rounded-full border border-blue-100"
         >
           <img
             :src="pm.img_url || defaultProfile"
@@ -109,7 +109,10 @@
           +{{ team.pms.length - 2 }} 
         </span>
       </div>
+
     </div>
+
+
   </div>
 </template>
 
@@ -145,12 +148,31 @@ function editTeam(id: number) {
   // console.log('Editing team:', id)
 }
 
+// async function deleteTeam(id: number) {
+//   try {
+//     const confirmDelete = window.confirm('Are you sure you want to delete this team?')
+//     if (!confirmDelete) return
+
+//     await axios.delete(`http://localhost:3000/teams/${id}`)
+//     alert('Team deleted successfully!')
+//     await teamStore.fetchTeams()
+//   } catch (err) {
+//     console.error('Error deleting team:', err)
+//     alert('Failed to delete the team.')
+//   }
+// }
+
 async function deleteTeam(id: number) {
   try {
     const confirmDelete = window.confirm('Are you sure you want to delete this team?')
     if (!confirmDelete) return
 
-    await axios.delete(`http://localhost:3000/teams/${id}`)
+    const token = localStorage.getItem('token')
+
+    await axios.delete(`http://localhost:3000/teams/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
     alert('Team deleted successfully!')
     await teamStore.fetchTeams()
   } catch (err) {
@@ -158,6 +180,7 @@ async function deleteTeam(id: number) {
     alert('Failed to delete the team.')
   }
 }
+
 
 function getColorFromId(id: number) {
   const colors = [

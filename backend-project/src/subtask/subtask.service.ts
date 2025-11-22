@@ -41,6 +41,7 @@ export class SubtaskService {
     await this.activityService.logAction(
       userId,
       `Created subtask "${savedSubtask.name}" for task "${task.t_name}".`,
+      taskId
     );
 
     return savedSubtask;
@@ -71,18 +72,35 @@ export class SubtaskService {
     if (!subtask)
       throw new NotFoundException(`Subtask with id ${id} not found`);
 
-    const oldName = subtask.name;
+    // const oldName = subtask.name;
+
+    const changes: string[] = [];
+
+    if (dto.name && dto.name !== subtask.name) {
+      changes.push(`name from "${subtask.name}" to "${dto.name}"`);
+    }
+    if (dto.status && dto.status !== subtask.status) {
+      changes.push(`status from "${subtask.status}" to "${dto.status}"`);
+    }
+
     Object.assign(subtask, dto);
     const updatedSubtask = await this.subtaskRepository.save(subtask);
 
     // Log activity
-    if (userId) {
+    // if (userId) {
+    //   await this.activityService.logAction(
+    //     userId,
+    //     `Updated subtask "${oldName}" to "${updatedSubtask.name}" for task "${subtask.task.t_name}".`,
+    //     subtask.taskId
+    //   );
+    // }
+    if (userId && changes.length > 0) {
       await this.activityService.logAction(
         userId,
-        `Updated subtask "${oldName}" to "${updatedSubtask.name}" for task "${subtask.task.t_name}".`,
+        `Updated subtask (${changes.join(', ')}) for task "${subtask.task.t_name}".`,
+        subtask.task.id,
       );
     }
-
     return updatedSubtask;
   }
 
@@ -101,6 +119,7 @@ export class SubtaskService {
       await this.activityService.logAction(
         userId,
         `Deleted subtask "${subtask.name}" from task "${subtask.task.t_name}".`,
+        subtask.taskId
       );
     }
 

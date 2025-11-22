@@ -5,12 +5,14 @@ import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Notification } from './notification.entity';
 import { User } from 'src/user/user.entity';
+import { NotificationsGateway } from './notification.gateway';
 
 @Injectable()
 export class NotificationService {
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
+    private readonly notificationsGateway: NotificationsGateway,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
@@ -27,13 +29,18 @@ export class NotificationService {
       title: createNotificationDto.title,
       message: createNotificationDto.message,
       read_status: createNotificationDto.read_status ?? false,
+      link: createNotificationDto.link,
       user: { id: createNotificationDto.userId } as User,
     });
-    return this.notificationRepository.save(notification);
+
+    const saved = await this.notificationRepository.save(notification);
+    this.notificationsGateway.sendNotification(String(user.id), saved);
+    return saved;
+    // return this.notificationRepository.save(notification);
   }
 
   // notify multiple users
-  async notifyUsers(userIds: number[], title: string, message: string) {
+  async notifyUsers(userIds: number[], title: string, message: string, link: string) {
     const users = await this.userRepo.findBy({ id: In(userIds) });
     if (!users.length) return;
 
@@ -41,12 +48,16 @@ export class NotificationService {
       this.notificationRepository.create({
         title,
         message,
+        link,
         read_status: false,
         user: { id: u.id } as User,
       }),
     );
-
-    await this.notificationRepository.save(notifications);
+  
+    const saved = await this.notificationRepository.save(notifications);
+    saved.forEach(n => this.notificationsGateway.sendNotification(String(n.user.id), n));
+    return saved;
+    // return this.notificationRepository.save(notifications);
   }
 
   // fetch all notifications

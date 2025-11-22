@@ -7,9 +7,12 @@ import {
   ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 
 @Entity('teams')
+@Unique (['name'])
+
 export class Team {
   @PrimaryGeneratedColumn()
   id: number;

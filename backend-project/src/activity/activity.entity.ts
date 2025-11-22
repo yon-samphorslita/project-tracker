@@ -20,6 +20,9 @@ export class ActivityLog {
   @Column()
   userId: number;
 
+  @Column({ nullable: true })
+  taskId: number;
+
   @Column()
   action: string;
 

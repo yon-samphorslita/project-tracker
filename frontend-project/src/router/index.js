@@ -76,6 +76,11 @@ const routes = [
   { path: '/teams', component: TeamList, meta: { requiresAuth: true, title: 'Teams' } },
   { path: '/teams/:id', component: TeamDetail, meta: { requiresAuth: true, title: 'Teams' } },
   {
+    path: '/teams/create',
+    component: TeamEditPage,
+    meta: { requiresAuth: true, title: 'Teams' },
+  },
+  {
     path: '/teams/:id/edit',
     component: TeamEditPage,
     meta: { requiresAuth: true, title: 'Teams' },
