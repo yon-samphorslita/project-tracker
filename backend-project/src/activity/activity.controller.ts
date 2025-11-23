@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { Role } from '../enums/role.enum';
 import { Roles } from 'src/auth/roles.decorator';

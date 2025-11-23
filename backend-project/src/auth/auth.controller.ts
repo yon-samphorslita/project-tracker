@@ -1,21 +1,22 @@
 import {
-  Body,
   Controller,
   Get,
   Post,
   Patch,
+  Body,
+  Request,
   HttpCode,
   HttpStatus,
-  Request,
-  UnauthorizedException,
   NotFoundException,
+  UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UpdateUserDto } from 'src/user/dto/update-user.dto';
 import { UserService } from 'src/user/user.service';
+import { UpdateUserDto } from 'src/user/dto/update-user.dto';
 import { UpdatePasswordDto } from 'src/user/dto/update-password.dto';
 import { Public } from './public.decorator';
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -23,7 +24,6 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
-  //user login
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -36,7 +36,6 @@ export class AuthController {
     return { user: userWithoutPassword, ...token };
   }
 
-  //user logout
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@Request() req) {
@@ -46,7 +45,6 @@ export class AuthController {
     return { message: 'Logged out successfully' };
   }
 
-  //first-time user update password
   @Patch('update-password')
   async updatePassword(@Request() req, @Body() body: UpdatePasswordDto) {
     await this.authService.updatePassword(
@@ -57,7 +55,6 @@ export class AuthController {
     return { message: 'Password updated successfully' };
   }
 
-  // request OTP
   @Public()
   @Post('request-otp')
   async requestOtp(@Body() body: { email: string }) {
@@ -68,7 +65,6 @@ export class AuthController {
     return { message: 'OTP sent to your email', otp };
   }
 
-  // Reset password (using email + OTP)
   @Public()
   @Post('reset-password')
   async resetPassword(
@@ -81,7 +77,6 @@ export class AuthController {
     return { message: 'Password updated successfully' };
   }
 
-  //verify input otp
   @Public()
   @Post('verify-otp')
   async verifyOtp(@Body() body: { email: string; otp: string }) {
@@ -91,7 +86,6 @@ export class AuthController {
     return { message: 'OTP verified successfully' };
   }
 
-  //get user own profile
   @Get('profile')
   async getProfile(@Request() req) {
     const user = await this.userService.findOne(req.user.id);
@@ -100,7 +94,6 @@ export class AuthController {
     return userWithoutPassword;
   }
 
-  //update user own profile
   @Patch('profile')
   async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     const excluded = [

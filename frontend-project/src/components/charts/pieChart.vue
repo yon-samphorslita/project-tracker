@@ -1,64 +1,53 @@
 <template>
-  <div ref="chartContainer" :style="{ height: `${height}px`, padding: '10px' }"></div>
+  <div class="p-4 rounded-lg border w-full">
+    <div class="text-xl font-bold mb-3">{{ title }}</div>
+    <div ref="chartContainer" :style="{ height: `${height}px`, padding: '10px' }"></div>
+  </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { Pie } from '@antv/g2plot'
-import { onMounted, ref, watch, onUnmounted } from 'vue'
+import { getRandomColors } from '@/utils/colors'
 
-export default {
-  name: 'PieChart',
-  props: {
-    data: { type: Array, required: true },
-    height: { type: Number, default: 450 },
-  },
-  setup(props) {
-    const chartContainer = ref(null)
-    let chart = null
+// Props
+const props = defineProps({
+  data: { type: Array, required: true },
+  height: { type: Number, default: 450 },
+  title: { type: String, default: '' },
+})
 
-    const renderChart = () => {
-      if (!chartContainer.value) return
-      if (chart) chart.destroy()
+const chartContainer = ref(null)
+let chart = null
 
-      const styles = getComputedStyle(document.documentElement)
-      const mainTextColor = styles.getPropertyValue('--main-text').trim()
+const renderChart = () => {
+  if (!chartContainer.value) return
+  if (chart) chart.destroy()
 
-      const getPieColors = () => {
-        const colors = []
-        for (let i = 1; i <= 10; i++) {
-          const value = styles.getPropertyValue(`--random-color-${i}`).trim()
-          if (value) colors.push(value)
-        }
-        // Shuffle colors
-        for (let i = colors.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1))
-          ;[colors[i], colors[j]] = [colors[j], colors[i]]
-        }
-        return colors
-      }
+  const styles = getComputedStyle(document.documentElement)
+  const mainTextColor = styles.getPropertyValue('--main-text').trim()
 
-      chart = new Pie(chartContainer.value, {
-        data: props.data,
-        angleField: 'value',
-        colorField: 'type',
-        radius: 1,
-        innerRadius: 0.4,
-        height: props.height,
-        color: getPieColors(),
-        label: { style: { fill: mainTextColor } },
-        legend: { itemName: { style: { fill: mainTextColor } } },
-        interactions: [{ type: 'element-active' }],
-        statistic: false,
-      })
+  // Use exported shuffled colors
+  const pieColors = getRandomColors()
 
-      chart.render()
-    }
+  chart = new Pie(chartContainer.value, {
+    data: props.data,
+    angleField: 'value',
+    colorField: 'type',
+    radius: 1,
+    innerRadius: 0.4,
+    height: props.height,
+    color: pieColors,
+    label: { style: { fill: mainTextColor } },
+    legend: { itemName: { style: { fill: mainTextColor } } },
+    interactions: [{ type: 'element-active' }],
+    statistic: false,
+  })
 
-    onMounted(renderChart)
-    watch(() => props.data, renderChart, { deep: true })
-    onUnmounted(() => chart?.destroy())
-
-    return { chartContainer }
-  },
+  chart.render()
 }
+
+onMounted(renderChart)
+watch(() => props.data, renderChart, { deep: true })
+onUnmounted(() => chart?.destroy())
 </script>

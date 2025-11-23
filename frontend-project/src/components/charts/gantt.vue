@@ -85,7 +85,7 @@
                 top: `${tasksBefore(task, row.tasks) * (taskRowHeight + taskGap)}px`,
                 left: `${getTaskOffset(task.start) + columnWidth}px`,
                 width: `${getTaskWidth(task.start, task.end)}px`,
-                backgroundColor: getRandomColor(),
+                backgroundColor: randomColors[Math.floor(Math.random() * randomColors.length)],
                 opacity: isPast(task.end) ? 0.5 : 1,
                 zIndex: isPast(task.end) ? 1 : 10,
               }"
@@ -106,6 +106,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { toLocal } from '@/utils/localTime.js'
+import { getRandomColors } from '@/utils/colors.js'
 
 const props = defineProps({
   rows: { type: Array, default: () => [] },
@@ -117,8 +119,11 @@ const columnWidth = 113
 const stickyWidth = 280
 const taskRowHeight = 48
 const taskGap = 4
-const today = new Date()
+const today = toLocal(new Date())
 const outerScroll = ref(null)
+
+/* Precompute shuffled colors once */
+const randomColors = getRandomColors()
 
 /* Week generation (Mon–Sun) */
 const weeks = computed(() => {
@@ -144,14 +149,17 @@ const allDays = computed(() => weeks.value.flatMap((w) => w.days))
 
 /* Date helpers */
 const isWeekend = (d) => [0, 6].includes(d.getDay())
-const isToday = (d) => d.toDateString() === today.toDateString()
-const isPast = (endDate) => (endDate ? new Date(endDate).setHours(23, 59, 59, 999) < today : false)
+const isToday = (d) => toLocal(d).toDateString() === today.toDateString()
+const isPast = (endDate) => {
+  if (!endDate) return false
+  return toLocal(endDate) < toLocal(new Date())
+}
 
 /* Task positioning */
 const getTaskOffset = (startDate) => {
   if (!startDate) return stickyWidth
-  const start = new Date(startDate)
-  const firstDay = new Date(allDays.value[0])
+  const start = toLocal(startDate)
+  const firstDay = toLocal(allDays.value[0])
   firstDay.setHours(0, 0, 0, 0)
   const diffDays = (start - firstDay) / (1000 * 60 * 60 * 24) - 2.5
   return stickyWidth + diffDays * columnWidth
@@ -159,18 +167,15 @@ const getTaskOffset = (startDate) => {
 
 const getTaskWidth = (startDate, endDate) => {
   if (!startDate || !endDate) return 100
-  const diffDays = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
+  const start = toLocal(startDate)
+  const end = toLocal(endDate)
+  const diffDays = (end - start) / (1000 * 60 * 60 * 24)
   return Math.max(diffDays * columnWidth, 100)
 }
 
-const getRandomColor = () => {
-  const styles = getComputedStyle(document.documentElement)
-  const colors = []
-  for (let i = 1; i <= 10; i++) {
-    const v = styles.getPropertyValue(`--random-color-${i}`).trim()
-    if (v) colors.push(v)
-  }
-  return colors[Math.floor(Math.random() * colors.length)]
+/* Assign color per task consistently */
+const getTaskColor = (taskIndex) => {
+  return randomColors[taskIndex % randomColors.length]
 }
 
 /* Row heights */

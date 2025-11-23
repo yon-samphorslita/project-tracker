@@ -1,23 +1,27 @@
 <template>
   <ProjectLayout>
     <div class="container flex flex-col gap-4">
-      <!-- <div class="text-2xl font-semibold">All Projects</div> -->
-
-      <!-- Admin Dashboard -->
-      <div v-if="userRole === 'admin'" class="flex flex-col gap-4">
-        <!-- Overview & PieChart -->
-        <div class="flex w-full justify-between gap-4">
-          <div class="grid grid-cols-2 gap-4 flex-1">
+      <!-- ADMIN DASHBOARD -->
+      <div v-if="userRole === 'admin'" class="flex flex-col gap-8">
+        <!-- Overview & PieCharts -->
+        <div class="flex flex-col w-full justify-between gap-8">
+          <div class="grid grid-cols-4 gap-8">
             <OverviewCard title="Total Projects" :value="totalProjects" />
             <OverviewCard title="Overdue Projects" :value="overdueProjects" />
             <OverviewCard title="Completed Projects" :value="completedProjects" />
+            <OverviewCard title="Teams Involved" :value="teamsInvolved" />
           </div>
-          <PieChart :data="statusData" :height="280" class="w-[600px]" />
+
+          <div class="flex gap-8 justify-between">
+            <PieChart :data="statusData" :height="280" title="Project Status" />
+            <PieChart :data="projectsPerTeam" :height="280" title="Project Count per Team" />
+          </div>
         </div>
 
-        <!-- Header: Create + Search + Filter -->
+        <!-- Header: Create + Search + Sort -->
         <div class="flex justify-between items-center w-full gap-4">
-          <Button label="+ New Project" @click="showForm = true" />
+          <Button label="+ Create New Project" @click="showForm = true" />
+
           <Form
             v-model:modelValue="showForm"
             formTitle="Create Project"
@@ -26,9 +30,10 @@
             @submitted="onProjectCreated"
             :fullScreen="true"
           />
+
           <div class="flex gap-4 items-center">
             <Search v-model:query="searchQuery" />
-            <Filter title="Sort by" :options="sortOptions" @select="applySort" class="min-w-fit" />
+            <Filter title="Sort by" :options="sortOptions" @select="applySort" />
           </div>
         </div>
 
@@ -47,7 +52,6 @@
           </template>
         </Table>
 
-        <!-- Edit Project Form -->
         <EditForm
           v-model="showEditProjectForm"
           title="Edit Project"
@@ -58,27 +62,28 @@
         />
       </div>
 
-      <!-- Non-Admin Project Cards -->
+      <!-- NON-ADMIN PROJECT CARDS -->
       <div v-else class="flex flex-col gap-4">
         <div class="flex justify-between items-center">
-          <div class="flex gap-4 items-center w-full">
+          <div class="flex gap-4 w-full">
             <Search v-model:query="searchQuery" />
-            <Filter title="Sort by" :options="sortOptions" @select="applySort" class="min-w-fit" />
+            <Filter title="Sort by" :options="sortOptions" @select="applySort" />
           </div>
+
           <Button
             v-if="userRole === 'admin' || userRole === 'project_manager'"
-            label="+ New Project"
+            label="+ Create New Project"
             @click="showForm = true"
-            class="w-[156px]"
-          />
-          <Form
-            v-model:modelValue="showForm"
-            formTitle="Create Project"
-            :fields="projectFields"
-            endpoint="projects"
-            @submitted="onProjectCreated"
           />
         </div>
+
+        <Form
+          v-model:modelValue="showForm"
+          formTitle="Create Project"
+          :fields="projectFields"
+          endpoint="projects"
+          @submitted="onProjectCreated"
+        />
 
         <div class="h-[600px] overflow-y-auto flex flex-col gap-4">
           <ProjectCard
@@ -105,7 +110,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Components
+// COMPONENTS
 import ProjectLayout from '@/views/pageLayout.vue'
 import ProjectCard from '@/components/detail-cards/projectCard.vue'
 import Search from '@/components/common-used/search.vue'
@@ -117,37 +122,35 @@ import PieChart from '@/components/charts/pieChart.vue'
 import OverviewCard from '@/components/detail-cards/overviewCard.vue'
 import EditForm from '@/components/forms/editForm.vue'
 
-// Icons
+// ICONS
 import View from '@/assets/icons/view.svg'
 import Edit from '@/assets/icons/edit.svg'
 import Delete from '@/assets/icons/delete.svg'
 
-// Stores
+// STORES
 import { useProjectStore } from '@/stores/project'
 import { useTaskStore } from '@/stores/task'
 import { useTeamStore } from '@/stores/team'
 import { useAuthStore } from '@/stores/auth'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const teamStore = useTeamStore()
-const router = useRouter()
 
-// State
+// STATE
 const showForm = ref(false)
 const showEditProjectForm = ref(false)
 const editProjectData = ref(null)
 const searchQuery = ref('')
 const selectedSort = ref('')
-const isReady = ref(false)
-const userRole = computed(() => authStore.user?.role || 'user')
-const isCompleted = (p) => p.status?.toLowerCase() === 'completed'
 
-// Table Columns & Sort Options
+const userRole = computed(() => authStore.user?.role || 'user')
+
+// TABLE COLUMNS
 const tableColumns = [
   { key: 'name', label: 'Project Name' },
-  // { key: 'description', label: 'Description' },
   { key: 'priority', label: 'Priority' },
   { key: 'status', label: 'Status' },
   { key: 'progress', label: 'Progress' },
@@ -156,22 +159,17 @@ const tableColumns = [
   { key: 'icon', label: 'Team' },
   { key: 'actions', label: 'Actions', slot: 'actions' },
 ]
+
 const sortOptions = [
-  { value: 'priority-High', label: 'Priority (High → Low)' },
-  { value: 'priority-Low', label: 'Priority (Low → High)' },
-  { value: 'due-soonest', label: 'Due (Soonest first)' },
-  { value: 'due-latest', label: 'Due (Latest first)' },
+  { value: 'priorityHigh', label: 'Priority (High → Low)' },
+  { value: 'priorityLow', label: 'Priority (Low → High)' },
+  { value: 'dueSoon', label: 'Due (Soonest)' },
+  { value: 'dueLate', label: 'Due (Latest)' },
 ]
 
-// Form Fields
+// FORM FIELDS
 const projectFields = [
-  {
-    type: 'text',
-    label: 'Project Title',
-    placeholder: 'Enter project title',
-    model: 'title',
-    required: true,
-  },
+  { type: 'text', label: 'Project Title', model: 'title', required: true },
   { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
   { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
   {
@@ -191,35 +189,28 @@ const projectFields = [
     model: 'teamId',
     required: true,
   },
-  {
-    type: 'textarea',
-    label: 'Description',
-    placeholder: 'Enter description',
-    model: 'description',
-  },
+  { type: 'textarea', label: 'Description', model: 'description' },
 ]
 
-// Helpers
-const formatDate = (dateStr) =>
-  !dateStr
-    ? 'TBD'
-    : new Date(dateStr).toLocaleDateString('en-US', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-const priorityValue = (priority) => ({ high: 3, medium: 2, low: 1 })[priority?.toLowerCase()] || 0
+// HELPERS
+const formatDate = (dateStr) => {
+  if (!dateStr) return 'TBD'
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
 
+const priorityValue = (p) => ({ high: 3, medium: 2, low: 1 })[p?.toLowerCase()] || 0
 const getTotalTasks = (project) => project.tasks?.length || 0
-
 const getCompletedTasks = (project) =>
   project.tasks?.filter((t) => t.t_status?.toLowerCase() === 'completed').length || 0
 
-// Computed: Filtered & Sorted Projects
+// FILTER + SORT
 const filteredSortedProjects = computed(() => {
   let list = [...projectStore.projects]
 
-  // Search filter
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
     list = list.filter(
@@ -227,30 +218,25 @@ const filteredSortedProjects = computed(() => {
     )
   }
 
-  // Sorting logic
-  if(!selectedSort.value){
-    list.sort((a, b) => new Date (a.due_date) - new Date(b.due_date))
-    switch (selectedSort.value) {
-    case 'priority-High':
+  switch (selectedSort.value) {
+    case 'priorityHigh':
       list.sort((a, b) => priorityValue(b.priority) - priorityValue(a.priority))
       break
-    case 'priority-Low':
+    case 'priorityLow':
       list.sort((a, b) => priorityValue(a.priority) - priorityValue(b.priority))
       break
-    case 'due-soonest':
+    case 'dueSoon':
       list.sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
       break
-    case 'due-latest':
+    case 'dueLate':
       list.sort((a, b) => new Date(b.due_date) - new Date(a.due_date))
       break
-  }}
+    default:
+      list.sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+  }
 
-  // 3. Always push completed projects to bottom
-  list.sort((a, b) => {
-    if (isCompleted(a) && !isCompleted(b)) return 1
-    if (!isCompleted(a) && isCompleted(b)) return -1
-    return 0
-  })
+  // completed last
+  list.sort((a, b) => (a.status === 'completed') - (b.status === 'completed'))
 
   return list
 })
@@ -270,37 +256,21 @@ const mappedFilteredSortedProjects = computed(() =>
   })),
 )
 
-// Fetch Data
-onMounted(async () => {
-  if (!authStore.user) await authStore.fetchProfile()
-  await teamStore.fetchTeams()
-  await projectStore.fetchProjects()
-  projectStore.projects = projectStore.projects.map(applyOverdueStatus)
+// SORT ACTION
+const applySort = (option) => {
+  selectedSort.value = option
+}
 
-  taskStore.tasks = []
-
-  // Fetch tasks
-  await Promise.all(
-    projectStore.projects.map(async (p) => {
-      const tasks = (await taskStore.fetchTasksByProject(p.id)) || []
-      taskStore.tasks.push(...tasks)
-    }),
-  )
-
-  isReady.value = true
-})
-
-// Sorting
-const applySort = (option) => (selectedSort.value = option)
-
-// Project Actions
-const onProjectCreated = (project) => {
-  projectStore.projects.push(applyOverdueStatus(project))
+// ACTIONS
+const onProjectCreated = async (project) => {
+  const updated = await applyOverdueStatus(project)
+  projectStore.projects.push(updated)
 }
 
 const editProject = (row) => {
   const project = projectStore.projects.find((p) => p.id === row.id)
   if (!project) return
+
   editProjectData.value = {
     id: project.id,
     title: project.p_name,
@@ -311,67 +281,100 @@ const editProject = (row) => {
     status: project.status,
     teamId: project.team?.id || null,
   }
+
   showEditProjectForm.value = true
 }
 
 const deleteProject = async (row) => {
-  const project = projectStore.projects.find((p) => p.id === row.id)
-  if (!project) return
-  if (confirm(`Are you sure you want to delete project "${row.name}"?`)) {
-    await projectStore.deleteProject(project.id)
-  }
+  if (!confirm(`Delete project "${row.name}"?`)) return
+  await projectStore.deleteProject(row.id)
 }
 
-const onEditProjectSubmitted = (updatedProject) => {
-  const fixed = applyOverdueStatus(updatedProject)
-  projectStore.projects = projectStore.projects.map((p) => (p.id === fixed.id ? fixed : p))
+const onEditProjectSubmitted = async (updated) => {
+  const fixed = await applyOverdueStatus(updated)
+  const index = projectStore.projects.findIndex((p) => p.id === fixed.id)
+  if (index !== -1) projectStore.projects[index] = fixed
 }
 
 const viewProject = (row) => router.push(`/project/${row.id}`)
 
-// Overview Computed
+// OVERVIEW DATA
 const totalProjects = computed(() => projectStore.projects.length)
-const overdueProjects = computed(() => {
-  const today = new Date()
-  return projectStore.projects.filter(
-    (p) => new Date(p.due_date) < today && p.status?.toLowerCase() !== 'completed',
-  ).length
-})
-const completedProjects = computed(
-  () => projectStore.projects.filter((p) => p.status?.toLowerCase() === 'completed').length,
+const overdueProjects = computed(
+  () =>
+    projectStore.projects.filter((p) => isPastDue(p.due_date) && p.status !== 'completed').length,
 )
-const statusData = computed(() => {
-  const summary = { 'Not Started': 0, 'In Progress': 0, Completed: 0 }
-  projectStore.projects.forEach((p) => {
-    switch (p.status?.toLowerCase()) {
-      case 'not started':
-        summary['Not Started']++
-        break
-      case 'in progress':
-        summary['In Progress']++
-        break
-      case 'completed':
-        summary['Completed']++
-        break
-      case 'overdue':
-        summary['Overdue']++
-        break
-      default:
-        summary['Not Started']++
-    }
-  })
-  return Object.entries(summary).map(([type, value]) => ({ type, value }))
+const completedProjects = computed(
+  () => projectStore.projects.filter((p) => p.status === 'completed').length,
+)
+
+const teamsInvolved = computed(() => {
+  const teamIds = new Set()
+  projectStore.projects.forEach((p) => p.team?.id && teamIds.add(p.team.id))
+  return teamIds.size
 })
 
-function applyOverdueStatus(project) {
-  const now = new Date()
-  const due = new Date(project.due_date)
+const projectsPerTeam = computed(() => {
+  const count = {}
+  teamStore.teams.forEach((t) => (count[t.name] = 0))
+  projectStore.projects.forEach((p) => p.team?.name && count[p.team.name]++)
+  return Object.entries(count).map(([type, value]) => ({ type, value }))
+})
 
-  if (due < now && project.status?.toLowerCase() !== 'completed') {
-    project.status = 'overdue'
-    project.priority = 'high'
+const statusData = computed(() => {
+  const map = { 'Not Started': 0, 'In Progress': 0, Completed: 0, Overdue: 0 }
+  projectStore.projects.forEach((p) => {
+    const s = p.status?.toLowerCase() || ''
+    if (s === 'not started') map['Not Started']++
+    else if (s === 'in progress') map['In Progress']++
+    else if (s === 'completed') map['Completed']++
+    else if (s === 'overdue') map['Overdue']++
+    else map['Not Started']++
+  })
+  return Object.entries(map).map(([type, value]) => ({ type, value }))
+})
+
+// HELPER
+function isPastDue(dueDate) {
+  if (!dueDate) return false
+  const now = new Date()
+  const due = new Date(dueDate)
+  return due.setHours(0, 0, 0, 0) < now.setHours(0, 0, 0, 0)
+}
+
+// APPLY OVERDUE
+async function applyOverdueStatus(project) {
+  if (project.status === 'completed' || project.status === 'overdue') return project
+
+  if (isPastDue(project.due_date)) {
+    const updated = { ...project, status: 'overdue', priority: 'high' }
+    await projectStore.updateProjectStatus(project.id, 'overdue', 'high')
+
+    const index = projectStore.projects.findIndex((p) => p.id === project.id)
+    if (index !== -1) projectStore.projects[index] = updated
+    return updated
   }
 
   return project
 }
+
+// FETCH DATA ON MOUNT
+onMounted(async () => {
+  if (!authStore.user) await authStore.fetchProfile()
+
+  await teamStore.fetchTeams()
+  await projectStore.fetchProjects()
+
+  // APPLY OVERDUE REACTIVELY
+  for (let i = 0; i < projectStore.projects.length; i++) {
+    await applyOverdueStatus(projectStore.projects[i])
+  }
+
+  // FETCH TASKS
+  taskStore.tasks = []
+  for (const project of projectStore.projects) {
+    const tasks = await taskStore.fetchTasksByProject(project.id)
+    if (tasks) taskStore.tasks.push(...tasks)
+  }
+})
 </script>

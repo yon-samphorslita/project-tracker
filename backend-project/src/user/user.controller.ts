@@ -4,17 +4,17 @@ import {
   Post,
   Body,
   Param,
-  Put,
+  Patch,
   Delete,
   ParseIntPipe,
   Request,
-  Patch,
-  NotFoundException,
 } from '@nestjs/common';
+
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/enums/role.enum';
 
@@ -24,8 +24,8 @@ export class UserController {
 
   @Post()
   @Roles(Role.ADMIN)
-  async create(@Body() createUserDto: CreateUserDto, @Request() req) {
-    return this.userService.createUser(createUserDto, req.user.id);
+  async create(@Body() dto: CreateUserDto, @Request() req) {
+    return this.userService.createUser(dto, req.user.id);
   }
 
   @Get()
@@ -33,11 +33,11 @@ export class UserController {
   async findAll() {
     return this.userService.findAll();
   }
+
   @Get('members')
-  @Roles(Role.ADMIN, Role.PROJECT_MANAGER) // or all authenticated roles
+  @Roles(Role.ADMIN, Role.PROJECT_MANAGER)
   async getCandidates() {
     const users = await this.userService.findAll();
-    // Optionally filter by roles
     return users.map((u) => ({
       id: u.id,
       first_name: u.first_name,
@@ -46,6 +46,7 @@ export class UserController {
       team: u.team,
     }));
   }
+
   @Get(':id')
   @Roles(Role.ADMIN)
   async findOne(@Param('id', ParseIntPipe) id: number) {

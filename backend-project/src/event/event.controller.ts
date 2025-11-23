@@ -25,9 +25,10 @@ export class EventController {
   findAll(@Request() req): Promise<Event[]> {
     return this.eventService.findAll(req.user);
   }
+
   @Roles(Role.ADMIN)
   @Get('summary')
-  async getAdminSummary() {
+  getAdminSummary() {
     return this.eventService.getAdminSummary();
   }
 

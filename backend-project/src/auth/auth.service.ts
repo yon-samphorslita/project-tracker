@@ -3,22 +3,21 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ActivityService } from 'src/activity/activity.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { ActivityService } from 'src/activity/activity.service';
 import { EmailService } from 'src/mail/email.service';
 import { UpdateOtpDto } from 'src/user/dto/update-otp.dto';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AuthService {
   private blacklistedTokens = new Set<string>();
 
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly activityService: ActivityService,
@@ -26,7 +25,6 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.findOneByEmail(email);
-
     if (!user) return null;
 
     if (!user.active) {
@@ -42,14 +40,8 @@ export class AuthService {
   }
 
   async login(user: User) {
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
-    return {
-      accessToken: await this.jwtService.signAsync(payload),
-    };
+    const payload = { sub: user.id, email: user.email, role: user.role };
+    return { accessToken: await this.jwtService.signAsync(payload) };
   }
 
   async logout(token: string) {
@@ -68,10 +60,7 @@ export class AuthService {
     const otp = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    const updateOtpDto: UpdateOtpDto = {
-      otp_code: otp,
-      otp_expiry: expiry,
-    };
+    const updateOtpDto: UpdateOtpDto = { otp_code: otp, otp_expiry: expiry };
     await this.userRepository.update(user.id, updateOtpDto);
 
     await this.emailService.sendOtp(email, otp);
@@ -84,8 +73,7 @@ export class AuthService {
     const user = await this.findOneByEmail(email);
     if (!user || !user.otp_code || !user.otp_expiry) return false;
 
-    const now = new Date();
-    return user.otp_code === otp && now < user.otp_expiry;
+    return user.otp_code === otp && new Date() < user.otp_expiry;
   }
 
   async updatePassword(
@@ -93,9 +81,7 @@ export class AuthService {
     oldPassword: string,
     newPassword: string,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-    });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const passwordValid = await bcrypt.compare(oldPassword, user.password);
@@ -104,14 +90,12 @@ export class AuthService {
 
     user.password = newPassword;
     user.password_changed = true;
-
     const savedUser = await this.userRepository.save(user);
 
     await this.activityService.logAction(
       userId,
       `User "${user.first_name} ${user.last_name}" updated their own password`,
     );
-
     return savedUser;
   }
 
@@ -143,14 +127,12 @@ export class AuthService {
 
     user.password = newPassword;
     user.password_changed = true;
-
     await this.userRepository.save(user);
 
     await this.activityService.logAction(
       user.id,
       `Reset password via email for user "${user.first_name} ${user.last_name}"`,
     );
-
     return user;
   }
 }

@@ -8,10 +8,10 @@ import {
   ManyToOne,
   DeleteDateColumn,
   ManyToMany,
-  JoinTable,
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
+
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
 import { Role } from '../enums/role.enum';
@@ -19,7 +19,9 @@ import { Notification } from '../notification/notification.entity';
 import { Team } from 'src/team/team.entity';
 import { ActivityLog } from 'src/activity/activity.entity';
 import { Event } from 'src/event/event.entity';
+
 import * as bcrypt from 'bcrypt';
+
 @Entity('users')
 @Unique(['email'])
 export class User {
@@ -77,14 +79,12 @@ export class User {
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
-  // Main team (priority team)
   @ManyToOne(() => Team, (team) => team.mainMembers, { nullable: true })
   team: Team;
 
   @ManyToMany(() => Team, (team) => team.pms)
   pmTeams: Team[];
 
-  // Other teams
   @ManyToMany(() => Team, (team) => team.members)
   secondaryTeams: Team[];
 

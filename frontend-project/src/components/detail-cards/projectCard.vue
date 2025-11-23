@@ -24,17 +24,27 @@
           <ProgressBar :completed="getCompletedTasks(project)" :total="getTotalTasks(project)" />
         </DescriptionLabel>
         <DescriptionLabel label="Members">
-          <div class="flex -space-x-2">
-            <template v-if="allMembers.length">
+          <div class="flex -space-x-2 items-center">
+            <template v-if="displayMembers.length">
+              <!-- First 3 member icons -->
               <img
-                v-for="member in allMembers"
+                v-for="member in displayMembers"
                 :key="member.id"
                 :src="member.img_url || '/default-avatar.png'"
                 :alt="`${member.first_name} ${member.last_name}`"
-                class="w-8 h-8 rounded-full border-2 border-white"
+                class="w-8 h-8 rounded-full border-2 border-white object-cover"
                 :title="`${member.first_name} ${member.last_name}`"
               />
+
+              <!-- +N more -->
+              <div
+                v-if="extraCount > 0"
+                class="w-8 h-8 rounded-full border-2 border-white bg-gray-300 text-xs flex items-center justify-center text-gray-700"
+              >
+                +{{ extraCount }}
+              </div>
             </template>
+
             <span v-else class="text-sub-text">None</span>
           </div>
         </DescriptionLabel>
@@ -99,6 +109,16 @@ const allMembers = computed(() => {
   if (!team) return []
   const combined = [...(team.mainMembers || []), ...(team.members || [])]
   return Array.from(new Map(combined.map((m) => [m.id, m])).values()) // remove duplicates
+})
+
+const displayMembers = computed(() => {
+  const members = allMembers.value || []
+  return members.slice(0, 3)
+})
+
+const extraCount = computed(() => {
+  const members = allMembers.value || []
+  return members.length > 3 ? members.length - 3 : 0
 })
 
 const getTotalTasks = (project) => project.tasks?.length || 0

@@ -77,6 +77,25 @@ export const useProjectStore = defineStore(
       }
     }
 
+    async function updateProjectStatus(id, status, priority) {
+      try {
+        const res = await axios.patch(
+          `${API_BASE_URL}/projects/${id}`,
+          { status, priority },
+          { headers: authHeaders() },
+        )
+
+        const index = projects.value.findIndex((p) => p.id === id)
+        if (index !== -1) projects.value[index] = res.data
+        if (current.value?.id === id) current.value = res.data
+
+        return res.data
+      } catch (err) {
+        console.error(`Error updating project status ${id}:`, err)
+        return null
+      }
+    }
+
     return {
       current,
       projects,
@@ -86,6 +105,7 @@ export const useProjectStore = defineStore(
       createProject,
       updateProject,
       deleteProject,
+      updateProjectStatus,
     }
   },
   { persist: true },

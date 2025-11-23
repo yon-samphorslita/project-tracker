@@ -15,7 +15,9 @@
         <div
           v-for="(field, index) in fields"
           :key="field.label"
-          :class="{ 'col-span-2': field.type === 'textarea' || ['title', 'email'].includes(field.model) }"
+          :class="{
+            'col-span-2': field.type === 'textarea' || ['title', 'email'].includes(field.model),
+          }"
         >
           <label :for="field.label" class="block mb-2 text-gray-text font-medium">
             {{ field.label }}
@@ -59,7 +61,9 @@
             </option>
           </select>
 
-          <p v-if="errors[field.model]" class="text-red-500 text-sm mt-1">{{ errors[field.model] }}</p>
+          <p v-if="errors[field.model]" class="text-red-500 text-sm mt-1">
+            {{ errors[field.model] }}
+          </p>
         </div>
       </div>
 
@@ -96,21 +100,28 @@ const authStore = useAuthStore()
 const userStore = useUserStore()
 const teamStore = useTeamStore()
 
-watch(() => props.modelValue, val => (showForm.value = val))
-watch(showForm, val => emit('update:modelValue', val))
+watch(
+  () => props.modelValue,
+  (val) => (showForm.value = val),
+)
+watch(showForm, (val) => emit('update:modelValue', val))
 
 // Initialize formData
-watch(() => props.initialData, data => {
-  if (!data) return
-  props.fields.forEach(field => {
-    if (['startDate', 'dueDate', 'endDate'].includes(field.model)) {
-      const dateValue = data[field.model] ? new Date(data[field.model]) : null
-      formData[field.model] = dateValue ? formatLocalDatetime(dateValue) : ''
-    } else {
-      formData[field.model] = data[field.model] ?? ''
-    }
-  })
-}, { immediate: true })
+watch(
+  () => props.initialData,
+  (data) => {
+    if (!data) return
+    props.fields.forEach((field) => {
+      if (['startDate', 'dueDate', 'endDate'].includes(field.model)) {
+        const dateValue = data[field.model] ? new Date(data[field.model]) : null
+        formData[field.model] = dateValue ? formatLocalDatetime(dateValue) : ''
+      } else {
+        formData[field.model] = data[field.model] ?? ''
+      }
+    })
+  },
+  { immediate: true },
+)
 
 // Helpers
 function formatLocalDatetime(date) {
@@ -146,7 +157,7 @@ function inputClass(model) {
 // Validation
 async function validate() {
   let valid = true
-  Object.keys(errors).forEach(k => delete errors[k])
+  Object.keys(errors).forEach((k) => delete errors[k])
 
   for (const field of props.fields) {
     const val = formData[field.model]
@@ -268,8 +279,8 @@ async function submitForm() {
 
 // Cancel form
 function cancel() {
-  Object.keys(formData).forEach(k => (formData[k] = ''))
-  Object.keys(errors).forEach(k => delete errors[k])
+  Object.keys(formData).forEach((k) => (formData[k] = ''))
+  Object.keys(errors).forEach((k) => delete errors[k])
   showForm.value = false
 }
 </script>

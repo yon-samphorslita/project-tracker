@@ -112,7 +112,7 @@
                 class="list-disc pl-5 text-[var(--gray-text)] space-y-1"
               >
                 <li v-for="act in userData.activities" :key="act.id">
-                  {{ act.action }} - {{ formatDate(act.created_at) }}
+                  {{ act.action }} - {{ formatDate(act.createdAt) }}
                 </li>
               </ul>
               <p v-else class="text-sub-text">No recent activity.</p>

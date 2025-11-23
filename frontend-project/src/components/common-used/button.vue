@@ -18,10 +18,10 @@ import { defineProps, ref, computed } from 'vue'
 
 const props = defineProps({
   label: { type: String, required: true },
-  btnBg: { type: String, default: '' }, 
-  btnText: { type: String, default: '' }, 
-  btnHoverBg: { type: String, default: '' }, 
-  btnClass: { type: String, default: '' }, 
+  btnBg: { type: String, default: '' },
+  btnText: { type: String, default: '' },
+  btnHoverBg: { type: String, default: '' },
+  btnClass: { type: String, default: '' },
   btntextsize: { type: String, default: '16px' },
 })
 

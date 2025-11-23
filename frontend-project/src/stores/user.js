@@ -103,7 +103,7 @@ export const useUserStore = defineStore(
       }
     }
 
-    // Check if an email is unique 
+    // Check if an email is unique
     const isEmailUnique = async (email, currentUserId = null) => {
       try {
         if (users.value.length === 0) {
@@ -113,12 +113,10 @@ export const useUserStore = defineStore(
         const normalized = email.trim().toLowerCase()
 
         return !users.value.some(
-          user =>
-            user.email.toLowerCase() === normalized &&
-            user.id !== currentUserId
+          (user) => user.email.toLowerCase() === normalized && user.id !== currentUserId,
         )
       } catch (err) {
-        console.error("Error checking email uniqueness:", err)
+        console.error('Error checking email uniqueness:', err)
         return false
       }
     }
@@ -132,7 +130,7 @@ export const useUserStore = defineStore(
       resetUserPassword,
       deleteUser,
       fetchUserTeams,
-      isEmailUnique
+      isEmailUnique,
     }
   },
   { persist: true },

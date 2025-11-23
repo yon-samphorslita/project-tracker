@@ -2,19 +2,18 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as bcrypt from 'bcrypt';
+
 import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class UserService {
-
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -28,13 +27,10 @@ export class UserService {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email.trim().toLowerCase() },
     });
-    if (existingUser) {
-      throw new ConflictException('Email already exists');
-    }
 
-    const user = this.userRepository.create({
-      ...createUserDto,
-    });
+    if (existingUser) throw new ConflictException('Email already exists');
+
+    const user = this.userRepository.create({ ...createUserDto });
     await this.userRepository.save(user);
 
     await this.activityService.logAction(
@@ -97,15 +93,31 @@ export class UserService {
     const existingUser = await this.findOne(userId);
     if (!existingUser) throw new NotFoundException('User not found');
 
-    // Remove undefined values
+    // Convert to plain object & remove undefined values
     const fieldsToUpdate = { ...updateUserDto };
     Object.keys(fieldsToUpdate).forEach((key) => {
       if (fieldsToUpdate[key] === undefined) delete fieldsToUpdate[key];
     });
 
+    // Remove forbidden relational fields
+    const forbiddenRelations = [
+      'projects',
+      'tasks',
+      'events',
+      'notifications',
+      'activities',
+      'team',
+      'pmTeams',
+      'secondaryTeams',
+    ];
+
+    forbiddenRelations.forEach((field) => {
+      if (field in fieldsToUpdate) delete fieldsToUpdate[field];
+    });
+
     if (Object.keys(fieldsToUpdate).length === 0) return existingUser;
 
-    // Track changes
+    // Track changed fields
     const changes: string[] = [];
     for (const [key, newValue] of Object.entries(fieldsToUpdate)) {
       const oldValue = (existingUser as any)[key];
@@ -114,9 +126,11 @@ export class UserService {
       }
     }
 
+    // Perform update safely
     await this.userRepository.update(userId, fieldsToUpdate);
     const updatedUser = await this.findOne(userId);
 
+    // Log activity
     if (updatedUser && changes.length > 0) {
       await this.activityService.logAction(
         performedById,
@@ -149,6 +163,7 @@ export class UserService {
   async resetPassword(userId: number, performedById: number): Promise<User> {
     const user = await this.findOne(userId, true);
     if (!user) throw new NotFoundException('User not found');
+
     user.password_changed = false;
 
     const savedUser = await this.userRepository.save(user);

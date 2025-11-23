@@ -4,30 +4,19 @@
       <div class="flex gap-6">
         <!-- left side: project overview, charts, recent projects -->
         <div class="w-2/3 flex flex-col items-start gap-6">
-          <div class="flex flex-col gap-4 mb-2">
+          <div class="flex flex-col gap-4 mb-2 w-full">
             <div class="text-xl font-semibold">Project Overview</div>
-            <div class="flex gap-4 w-full">
-              <OverviewCard title="Total Projects" :value="totalProjects" class="w-[230px]" />
-              <OverviewCard title="Overdue Projects" :value="overdueProjects" class="w-[230px]" />
-              <OverviewCard
-                title="Completed Projects"
-                :value="completedProjects"
-                class="w-[230px]"
-              />
+            <div class="grid grid-cols-3 gap-6 w-full">
+              <OverviewCard title="Total Projects" :value="totalProjects" />
+              <OverviewCard title="Overdue Projects" :value="overdueProjects" />
+              <OverviewCard title="Completed Projects" :value="completedProjects" />
             </div>
           </div>
 
           <!-- project and task status charts -->
           <div class="flex w-full gap-10 my-2">
-            <div>
-              <div class="text-xl font-semibold">Total Project</div>
-              <PieChart :data="projectStatus" :height="280" class="w-[350px]" />
-            </div>
-
-            <div>
-              <div class="text-xl font-semibold">Total Tasks</div>
-              <PieChart :data="taskStatus" :height="280" class="w-[350px]" />
-            </div>
+            <PieChart :data="projectStatus" :height="280" :title="'Total Projects'" />
+            <PieChart :data="taskStatus" :height="280" :title="'Total Tasks'" />
           </div>
 
           <!-- showcase recent project's status -->

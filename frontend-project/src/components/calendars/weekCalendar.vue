@@ -1,8 +1,7 @@
 <template>
-  <div ref="outerScroll" class="w-[836px] overflow-x-auto border h-[1000px] rounded-md relative">
-    <!-- Inner grid -->
+  <div ref="outerScroll" class="w-[827px] overflow-x-auto border h-[800px] rounded-md relative">
     <div class="min-w-max relative" :style="{ width: `${monthDays.length * 100 + 100}px` }">
-      <!-- Current time line -->
+      <!-- time line -->
       <div
         v-if="isCurrentMonth && currentDayIndex >= 0"
         class="absolute pointer-events-none flex items-center"
@@ -42,13 +41,10 @@
           {{ format(day.date, 'EEE dd') }}
         </div>
       </div>
-
-      <!-- Hours + Days -->
       <div
         class="grid grid-cols-[100px_repeat(var(--cols),100px)]"
         :style="{ '--cols': monthDays.length }"
       >
-        <!-- Hours column -->
         <div class="flex flex-col sticky left-0 z-[9] border-r bg-main-bg">
           <div
             v-for="hour in hours"
@@ -58,8 +54,6 @@
             {{ hour }}
           </div>
         </div>
-
-        <!-- Days columns -->
         <div
           v-for="(day, index) in monthDays"
           :key="day.date"
@@ -73,7 +67,7 @@
         >
           <div v-for="hour in hours" :key="hour" class="h-16 border-b"></div>
 
-          <!-- Tasks & Events -->
+          <!-- Tasks and Events -->
           <div
             v-for="item in getItemsForDay(day.date)"
             :key="item.id"
@@ -87,7 +81,9 @@
             ></span>
             <div>
               <div class="font-semibold">{{ item.e_name || item.t_name }}</div>
-              <div class="text-sub-text text-[10px]">{{ formatTimeRange(item) }}</div>
+              <div class="text-sub-text text-[10px]">
+                {{ formatTimeRange(item) }}
+              </div>
             </div>
           </div>
         </div>
@@ -109,11 +105,12 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
-import { format, differenceInMinutes, startOfMonth, endOfMonth, addDays } from 'date-fns'
+import { format, startOfMonth, endOfMonth, addDays } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
 import EventPopup from '@/components/detail-cards/eventPopup.vue'
-
+import { toLocal, formatTimeRange } from '@/utils/localTime.js'
+import { getColor } from '@/utils/colors'
 const props = defineProps({
   monthStartDate: { type: Date, default: () => new Date() },
 })
@@ -154,7 +151,7 @@ onMounted(async () => {
 
 onUnmounted(() => clearInterval(timer))
 
-/* ---------- Computed Helpers ---------- */
+// Computed Helpers
 const isCurrentMonth = computed(() => {
   const today = new Date(currentTime.value)
   return (
@@ -186,71 +183,69 @@ function centerCurrentDate() {
   container.scrollLeft = Math.max(0, Math.round(dayLeft + 40 - containerWidth / 2))
 }
 
-/* ---------- Data & Styling Helpers ---------- */
+// Data & Styling Helpers
 function getItemsForDay(dayDate) {
-  const dayStart = new Date(format(dayDate, 'yyyy-MM-dd') + 'T00:00:00')
-  const dayEnd = new Date(format(dayDate, 'yyyy-MM-dd') + 'T23:59:59')
+  const dayStart = new Date(dayDate.setHours(0, 0, 0, 0))
+  const dayEnd = new Date(dayDate.setHours(23, 59, 59, 999))
 
   const tasks = taskStore.tasks
     .filter((t) => t.start_date && t.due_date)
     .filter((t) => {
-      const start = new Date(t.start_date)
-      const end = new Date(t.due_date)
+      const start = toLocal(t.start_date)
+      const end = toLocal(t.due_date)
       return end > dayStart && start < dayEnd
     })
     .map((t) => ({
       ...t,
       type: 'task',
-      startTime: new Date(Math.max(new Date(t.start_date), dayStart)),
-      endTime: new Date(Math.min(new Date(t.due_date), dayEnd)),
+      start: new Date(Math.max(toLocal(t.start_date), dayStart)),
+      end: new Date(Math.min(toLocal(t.due_date), dayEnd)),
     }))
 
   const events = eventStore.events
     .filter((e) => e.start_date)
     .filter((e) => {
-      const start = new Date(e.start_date)
-      const end = e.end_date ? new Date(e.end_date) : start
+      const start = toLocal(e.start_date)
+      const end = e.end_date ? toLocal(e.end_date) : start
       return end > dayStart && start < dayEnd
     })
     .map((e) => ({
       ...e,
       type: 'event',
-      startTime: new Date(Math.max(new Date(e.start_date), dayStart)),
-      endTime: new Date(Math.min(new Date(e.end_date || e.start_date), dayEnd)),
+      start: new Date(Math.max(toLocal(e.start_date), dayStart)),
+      end: new Date(Math.min(toLocal(e.end_date || e.start_date), dayEnd)),
     }))
 
   return [...tasks, ...events]
 }
 
-function formatTimeRange(item) {
-  if (!item.startTime || !item.endTime) return ''
-  return `${format(item.startTime, 'hh:mm a')} - ${format(item.endTime, 'hh:mm a')}`
-}
-
 function getItemStyle(item) {
-  if (!item.startTime || !item.endTime) return { top: '0rem', height: '4rem' }
-  const top = (item.startTime.getHours() + item.startTime.getMinutes() / 60) * 4
-  const height = (differenceInMinutes(item.endTime, item.startTime) / 60) * 4
-  return { top: `${top}rem`, height: `${height}rem` }
-}
+  if (!item.start || !item.end) return { top: '0rem', height: '1rem' }
 
-function getColor(item) {
-  const priority =
-    item.type === 'event' ? item.project?.priority?.toUpperCase() : item.t_priority?.toUpperCase()
+  const HOUR_HEIGHT_REM = 4
+  const minuteToRem = HOUR_HEIGHT_REM / 60
+  const startMinutes = item.start.getHours() * 60 + item.start.getMinutes()
+  const endMinutes = item.end.getHours() * 60 + item.end.getMinutes()
 
-  switch (priority) {
-    case 'LOW':
-      return '#C6E7FF'
-    case 'MEDIUM':
-      return '#FFD5DB'
-    case 'HIGH':
-      return '#FF8A5B'
-    default:
-      return '#000000'
+  if (item.type === 'event') {
+    const duration = Math.max(endMinutes - startMinutes, 15)
+    return {
+      top: `${startMinutes * minuteToRem}rem`,
+      height: `${duration * minuteToRem}rem`,
+    }
+  } else {
+    const OFFSET_HOURS = 3
+    const offsetMinutes = OFFSET_HOURS * 60
+    const displayStart = Math.max(endMinutes - offsetMinutes, startMinutes)
+    const displayHeight = endMinutes - displayStart
+    return {
+      top: `${displayStart * minuteToRem}rem`,
+      height: `${displayHeight * minuteToRem}rem`,
+    }
   }
 }
 
-/* ---------- Popup Handling ---------- */
+// Popup Handling
 function openEventPopup(item, e) {
   selectedEvent.value = { ...item }
   const rect = e.currentTarget.getBoundingClientRect()

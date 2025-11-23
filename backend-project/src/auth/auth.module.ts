@@ -30,7 +30,7 @@ import { ActivityModule } from 'src/activity/activity.module';
         );
         return {
           secret,
-          signOptions: { expiresIn }, 
+          signOptions: { expiresIn },
         };
       },
       global: true,

@@ -26,7 +26,7 @@
         <div class="flex justify-center">{{ formatDate(item.due_date) }}</div>
 
         <!-- Priority -->
-        <div class="flex justify-center">
+        <!-- <div class="flex justify-center">
           <span
             :class="[
               'px-2 py-1 rounded  w-auto inline-block',
@@ -39,6 +39,9 @@
           >
             {{ item.t_priority }}
           </span>
+        </div> -->
+        <div class="flex justify-center">
+          <Status :priority="item.t_priority" />
         </div>
 
         <!-- Status -->
@@ -208,7 +211,7 @@
 import { useSubtaskStore } from '@/stores/subtask'
 import { useTaskStore } from '@/stores/task'
 import { defineProps, defineEmits, ref, computed, onMounted } from 'vue'
-
+import Status from '../status.vue'
 const taskStore = useTaskStore()
 const subtaskStore = useSubtaskStore()
 

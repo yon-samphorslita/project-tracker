@@ -83,6 +83,8 @@ import EditForm from '@/components/forms/editForm.vue'
 import EditIcon from '@/assets/icons/edit.svg'
 import DeleteIcon from '@/assets/icons/delete.svg'
 import { useTaskStore } from '@/stores/task'
+import { format, parseISO, isValid } from 'date-fns'
+
 const props = defineProps({
   project: Object,
   tasks: Array,
@@ -145,35 +147,45 @@ function applyFilters(filters) {
   Object.assign(activeFilters, filters)
 }
 
-// gantt rows
+function toValidDate(input) {
+  if (!input) return null
+  const d = input instanceof Date ? input : new Date(input)
+  return isNaN(d) ? null : d
+}
+
+// Gantt rows
 const ganttRows = computed(() =>
   filteredTasksWithSubtasks.value.map((task) => ({
     label: task.title,
     tasks:
       task.subtasks?.map((st) => ({
         name: st.name,
-        start: st.start ? new Date(st.start) : new Date(task.start_date),
-        end: st.end ? new Date(st.end) : new Date(task.due_date),
+        start: toValidDate(st.start) || toValidDate(task.start_date) || new Date(),
+        end: toValidDate(st.end) || toValidDate(task.due_date) || new Date(),
         color:
           st.status === 'completed'
             ? '#BBDFCE'
-            : '' || st.status === 'not started'
+            : st.status === 'not started'
               ? '#FFD5DB'
-              : '' || st.status === 'in progress'
+              : st.status === 'in progress'
                 ? '#D9CBFB'
-                : '',
+                : '#D9D9D9',
         icon: task.user?.img_url || null,
       })) || [],
   })),
 )
 
-function formatDate(dateStr) {
-  if (!dateStr) return 'TBD'
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+// Format date safely
+function formatDate(dateInput) {
+  if (!dateInput) return 'TBD'
+
+  // Convert string to Date if needed
+  const dateObj = dateInput instanceof Date ? dateInput : parseISO(dateInput)
+
+  if (!isValid(dateObj)) return 'Invalid Date'
+
+  // Display in "dd MMM, yyyy" format
+  return format(dateObj, 'dd MMM, yyyy') // e.g., 20 Nov, 2025
 }
 async function handleStatusUpdate({ id, status }) {
   await taskStore.updateTask(id, { t_status: status })

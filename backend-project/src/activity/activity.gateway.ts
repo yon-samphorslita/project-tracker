@@ -6,7 +6,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
-import { Role } from 'src/enums/role.enum'
+import { Role } from 'src/enums/role.enum';
+
 interface AdminSocket extends Socket {
   userRole?: string;
 }
@@ -23,13 +24,12 @@ export class ActivityGateway
 
   handleConnection(client: AdminSocket) {
     const { role } = client.handshake.auth || {};
-
     if (role === Role.ADMIN) {
       client.userRole = role;
       this.admins.push(client);
       console.log(`Admin connected: ${client.id}`);
     } else {
-      client.disconnect(true); // non-admins cannot connect
+      client.disconnect(true);
     }
   }
 
@@ -38,10 +38,7 @@ export class ActivityGateway
     console.log(`Admin disconnected: ${client.id}`);
   }
 
-  // Send logs only to admin clients
   sendLog(log: any) {
-    this.admins.forEach((admin) => {
-      admin.emit('activityLog', log);
-    });
+    this.admins.forEach((admin) => admin.emit('activityLog', log));
   }
 }

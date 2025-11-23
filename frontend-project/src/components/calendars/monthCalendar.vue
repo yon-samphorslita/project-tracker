@@ -10,7 +10,7 @@
       <div
         v-for="(day, idx) in days"
         :key="idx"
-        class="h-28 border-r border-b p-1 relative"
+        class="h-[120px] border-r border-b p-1 relative"
         :style="{ backgroundColor: `rgba(var(--blue-bg-rgb), 0.3)` }"
       >
         <!-- Date Number -->
@@ -37,9 +37,8 @@
             :style="{ backgroundColor: getColor(item) }"
           ></span>
 
-          <!-- Time + Title -->
-          <span class="text-[rgba(56,56,56,0.8)]">{{ item.time || item.start_time || '' }}</span>
-          - {{ item.title || item.t_name }}
+          <!-- Title -->
+          {{ item.title || item.t_name || item.e_name }}
         </div>
 
         <!-- +N More indicator -->
@@ -49,6 +48,7 @@
       </div>
     </div>
   </div>
+
   <teleport to="body">
     <EventPopup
       :visible="showEventPopup"
@@ -77,6 +77,8 @@ import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
 import { useAuthStore } from '@/stores/auth'
 import EventPopup from '@/components/detail-cards/eventPopup.vue'
+import { toLocal } from '@/utils/localTime.js'
+import { getColor } from '@/utils/colors'
 
 const showEventPopup = ref(false)
 const selectedEvent = ref(null)
@@ -100,10 +102,10 @@ const props = defineProps({
 onMounted(async () => {
   await Promise.all([eventStore.fetchEvents(authStore.user.role), taskStore.fetchTasks()])
 })
+
 function openEventPopup(item, e) {
   selectedEvent.value = { ...item }
 
-  // Position popup near clicked element
   const rect = e.currentTarget.getBoundingClientRect()
   const popupWidth = 320,
     popupHeight = 400
@@ -129,27 +131,34 @@ const days = computed(() => {
     const formatted = format(date, 'yyyy-MM-dd')
 
     // Tasks for the day
-    const dayTasks = taskStore.tasks.filter((t) =>
-      t.due_date ? format(parseISO(t.due_date), 'yyyy-MM-dd') === formatted : false,
-    )
+    const dayTasks = taskStore.tasks
+      .filter((t) => t.due_date)
+      .map((t) => ({ ...t, start: toLocal(t.start_date), end: toLocal(t.due_date) }))
+      .filter(
+        (t) =>
+          format(t.end, 'yyyy-MM-dd') >= formatted && format(t.start, 'yyyy-MM-dd') <= formatted,
+      )
 
     // Events for the day
-    const dayEvents = eventStore.events.filter((e) => {
-      if (!e.start_date) return false
-      const startDate = parseISO(e.start_date)
-      const endDate = e.end_date ? parseISO(e.end_date) : startDate
-      return (
-        formatted >= format(startDate, 'yyyy-MM-dd') && formatted <= format(endDate, 'yyyy-MM-dd')
+    const dayEvents = eventStore.events
+      .filter((e) => e.start_date)
+      .map((e) => ({
+        ...e,
+        start: toLocal(e.start_date),
+        end: toLocal(e.end_date || e.start_date),
+      }))
+      .filter(
+        (e) =>
+          format(e.end, 'yyyy-MM-dd') >= formatted && format(e.start, 'yyyy-MM-dd') <= formatted,
       )
-    })
 
     // Combine both
     return {
       date,
       isCurrentMonth: isSameMonth(date, new Date(props.year, props.month)),
       items: [
-        ...dayEvents.map((e) => ({ ...e, type: 'event', title: e.e_name, time: e.start_time })),
-        ...dayTasks.map((t) => ({ ...t, type: 'task', title: t.t_title, time: t.start_time })),
+        ...dayEvents.map((e) => ({ ...e, type: 'event', title: e.e_name })),
+        ...dayTasks.map((t) => ({ ...t, type: 'task', title: t.t_title })),
       ],
     }
   })
@@ -158,14 +167,5 @@ const days = computed(() => {
 // Check today
 function isToday(date) {
   return isTodayFn(date)
-}
-
-// Colors for events/tasks
-function getColor(item) {
-  const priority = (item.type === 'event' ? item.project?.priority : item.t_priority)?.toUpperCase()
-  if (priority === 'LOW') return '#C6E7FF'
-  if (priority === 'MEDIUM') return '#FFD5DB'
-  if (priority === 'HIGH') return '#FF8A5B'
-  return '#D9D9D9'
 }
 </script>

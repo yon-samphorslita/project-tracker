@@ -84,11 +84,13 @@ import { format, parseISO, isSameDay } from 'date-fns'
 import { useTaskStore } from '@/stores/task'
 import { useEventStore } from '@/stores/event'
 import EventPopup from '@/components/detail-cards/eventPopup.vue'
-
-const props = defineProps({ day: { type: Date, default: () => new Date() } })
+import { getColor } from '@/utils/colors'
+import { toLocal } from '@/utils/localTime'
 
 const taskStore = useTaskStore()
 const eventStore = useEventStore()
+
+const props = defineProps({ day: { type: Date, default: () => new Date() } })
 
 const selectedEvent = ref(null)
 const showEventPopup = ref(false)
@@ -100,8 +102,6 @@ const hours = Array.from({ length: 24 }).map((_, i) => {
   const ampm = i < 12 ? 'AM' : 'PM'
   return `${hour12} ${ampm}`
 })
-
-const toLocal = (dateStr) => (dateStr ? parseISO(dateStr) : null)
 
 const items = computed(() => {
   const tasks = taskStore.tasks.map((t) => ({
@@ -189,18 +189,10 @@ function getItemStyle(item) {
       height: `${durationMinutes * minuteToRem}rem`,
     }
   } else {
-    const displayStart = Math.max(endMinutes - 60, 0)
+    const displayStart = Math.max(endMinutes - 120, 0)
     const displayHeight = endMinutes - displayStart
     return { top: `${displayStart * minuteToRem}rem`, height: `${displayHeight * minuteToRem}rem` }
   }
-}
-
-function getColor(item) {
-  const priority = (item.type === 'event' ? item.project?.priority : item.t_priority)?.toUpperCase()
-  if (priority === 'LOW') return '#C6E7FF'
-  if (priority === 'MEDIUM') return '#FFD5DB'
-  if (priority === 'HIGH') return '#FF8A5B'
-  return '#D9D9D9'
 }
 
 function openEventPopup(item, e) {

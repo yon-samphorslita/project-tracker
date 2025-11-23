@@ -16,11 +16,7 @@ export class ActivityLog {
     eager: true,
     onDelete: 'CASCADE',
   })
-  // @JoinColumn({ name: 'userId' })
   user: User;
-
-  // @Column()
-  // userId: number;
 
   @Column()
   action: string;
