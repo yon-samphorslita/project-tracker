@@ -22,6 +22,7 @@ import Taskpage from '@/views/taskpage.vue'
 import Dashboard from '@/views/dashboard.vue'
 import GetHelp from '@/views/settings/getHelp.vue'
 import ThemeSettings from '@/views/settings/ThemeSettings.vue'
+import Taskdetail from '@/views/taskdetail.vue'
 const routes = [
   { path: '/', redirect: '/login' },
   { path: '/home', name: 'Home', component: Home, meta: { requiresAuth: true } },
@@ -75,6 +76,11 @@ const routes = [
   { path: '/teams', component: TeamList, meta: { requiresAuth: true, title: 'Teams' } },
   { path: '/teams/:id', component: TeamDetail, meta: { requiresAuth: true, title: 'Teams' } },
   {
+    path: '/teams/create',
+    component: TeamEditPage,
+    meta: { requiresAuth: true, title: 'Teams' },
+  },
+  {
     path: '/teams/:id/edit',
     component: TeamEditPage,
     meta: { requiresAuth: true, title: 'Teams' },
@@ -86,6 +92,12 @@ const routes = [
     meta: { requiresAuth: true, title: 'Notifications' },
   },
   { path: '/task', component: Taskpage, meta: { requiresAuth: true, title: 'Tasks' } },
+  {
+    path: '/task/:id',
+    component: Taskdetail,
+    props: true,
+    meta: { requiresAuth: true, title: 'Tasks' },
+  },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, title: 'Dashboard' } },
 ]
 

@@ -97,26 +97,44 @@ export const useNotificationStore = defineStore('notification', {
     },
 
     async markAsRead(id) {
-      await axios.patch(`http://localhost:3000/notifications/${id}/read`)
+      const axiosInstance = this.getAxiosInstance()
+      await axiosInstance.patch(`http://localhost:3000/notifications/${id}/read`)
       this.notifications = this.notifications.map((n) =>
         n.id === id ? { ...n, read_status: true } : n,
       )
     },
 
+    // async markAsRead(id) {
+    //   // await axios.patch(`http://localhost:3000/notifications/${id}/read`)
+    //   // this.notifications = this.notifications.map((n) =>
+    //   //   n.id === id ? { ...n, read_status: true } : n,
+    //   // )
+    //   // const axiosInstance = store.getAxiosInstance()
+    //   await axiosInstance.patch(`http://localhost:3000/notifications/${id}`, { read_status: true })
+    //   store.notifications = store.notifications.map((notif) =>
+    //     notif.id === id ? { ...notif, read_status: true } : notif,
+    //   )
+    // },
+
     async markAllAsRead() {
       if (!this.userId) return
-      await axios.patch(`http://localhost:3000/notifications/user/${this.userId}/read-all`)
+
+      const axiosInstance = this.getAxiosInstance()
+      await axiosInstance.patch(`http://localhost:3000/notifications/user/${this.userId}/read-all`)
       this.notifications = this.notifications.map((n) => ({ ...n, read_status: true }))
     },
 
     async softDeleteAll() {
       if (!this.userId) return
-      await axios.delete(`http://localhost:3000/notifications/user/${this.userId}/all`)
+
+      const axiosInstance = this.getAxiosInstance()
+      await axiosInstance.delete(`http://localhost:3000/notifications/user/${this.userId}/all`)
       this.notifications = []
     },
 
     async softDeleteOne(id) {
-      await axios.delete(`http://localhost:3000/notifications/${id}`)
+      const axiosInstance = this.getAxiosInstance()
+      await axiosInstance.delete(`http://localhost:3000/notifications/${id}`)
       this.notifications = this.notifications.filter((n) => n.id !== id)
     },
   },

@@ -10,18 +10,20 @@
     >
       <div
         class="flex justify-between items-center w-full cursor-pointer"
-        @click="markAsRead(n.id)"
+        @click="goToNotification(n)"
       >
         <div class="flex items-center gap-2">
           <div v-if="!n.read_status" class="w-2 h-2 bg-blue-500 rounded-full mb-1"></div>
-          <div class="font-semibold">{{ n.title }}</div>
+          <div class="font-semibold whitespace-nowrap">{{ n.title }}</div>
           <div class="font-bold">-</div>
           <div class="text-sm text-sub-text line-clamp-2 p-1">
             {{ n.message }}
           </div>
         </div>
 
-        <div class="flex text-sm text-sub-text">{{ timeAgo(n.created_at) }}</div>
+        <div class="flex text-sm text-sub-text whitespace-nowrap pr-5">
+          {{ timeAgo(n.created_at) }}
+        </div>
       </div>
 
       <!-- Delete button appears only on hover -->
@@ -40,16 +42,26 @@ import { useNotificationStore } from '@/stores/notification'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import Delete from '@/assets/icons/delete.svg'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+
 const store = useNotificationStore()
+const router = useRouter()
 const props = defineProps<{
   notifications: any
 }>()
-// const { notifications } = storeToRefs(store)
-// store.fetchNotifications()
 
-function markAsRead(notificationId: string) {
-  store.markAsRead(notificationId)
-  // router.push(`/`)
+async function goToNotification(n: any) {
+  try {
+    if (!n.read_status) {
+      await store.markAsRead(n.id)
+    }
+
+    // router.push(n.link)
+    if (n.link) router.push(n.link)
+  } catch (err) {
+    console.error('Failed to mark notification as read:', err)
+  }
 }
 
 function softDeleteOne(notificationId: number) {

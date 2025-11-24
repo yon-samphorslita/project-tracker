@@ -234,8 +234,11 @@ function mapPayload() {
         projectId: data.project ?? null,
         userId,
       }
-    case 'subtask':
-      return { name: data.title }
+    case 'subtasks':
+      return {
+        name: data.title,
+        taskId: props.initialData?.taskId,
+      }
     case 'users':
       return {
         first_name: data.first_name?.trim(),

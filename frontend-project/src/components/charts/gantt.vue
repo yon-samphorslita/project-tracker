@@ -86,7 +86,7 @@
                 left: `${getTaskOffset(task.start) + columnWidth}px`,
                 width: `${getTaskWidth(task.start, task.end)}px`,
                 backgroundColor: randomColors[Math.floor(Math.random() * randomColors.length)],
-                opacity: isPast(task.end) ? 0.5 : 1,
+                opacity: isPast(task.end) ? 0 : 1,
                 zIndex: isPast(task.end) ? 1 : 10,
               }"
             >
@@ -202,7 +202,7 @@ const scrollToWeek = (index) => {
   const dayIndex = allDays.value.findIndex((d) => d.toDateString() === firstDay.toDateString())
   if (outerScroll.value) {
     isProgrammaticScroll.value = true
-    outerScroll.value.scrollTo({ left: dayIndex * columnWidth, behavior: 'smooth' })
+    outerScroll.value.scrollTo({ left: dayIndex * columnWidth*1.215, behavior: 'smooth' })
     setTimeout(() => (isProgrammaticScroll.value = false), 600)
   }
 }

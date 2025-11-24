@@ -56,19 +56,15 @@ export class TaskService {
       `Created task: "${savedTask.t_name}" (Project: "${project.p_name}", Due: ${dayjs(savedTask.due_date).format('DD MMM, YYYY')})`,
     );
 
-    await this.projectService.refreshProjectStatus(project.id);
-
-    const notification = await this.notificationService.create({
+    await this.notificationService.create({
       userId: assignee.id,
       title: 'New Task Assigned',
-      message: savedTask.t_name,
+      message: `You have been assigned a new task: "${savedTask.t_name}"`,
       read_status: false,
+      link: `/task`,
     });
 
-    this.notificationsGateway.sendNotification(
-      String(assignee.id),
-      notification,
-    );
+    await this.projectService.refreshProjectStatus(project.id);
 
     return savedTask;
   }
@@ -80,9 +76,9 @@ export class TaskService {
       task.user = await this.validateAssignee(dto.userId, task.project!, actor);
     }
 
-    Object.assign(task, dto);
-
     const changes = this.getChanges(task, dto);
+
+    Object.assign(task, dto);
 
     const savedTask = await this.taskRepository.save(task);
 
@@ -91,6 +87,14 @@ export class TaskService {
         actor.id,
         `Task "${savedTask.t_name}" updated:\n${changes.join('; \n')}`,
       );
+
+      await this.notificationService.create({
+        userId: task?.user?.id,
+        title: 'Task Information Update',
+        message: `Task "${savedTask.t_name}" have been updated: ${changes.join('; ')}`,
+        read_status: false,
+        link: `/task`,
+      });
     }
 
     if (savedTask.project?.id) {
@@ -110,6 +114,14 @@ export class TaskService {
       actor.id,
       `Deleted task: ${task.t_name}`,
     );
+
+    await this.notificationService.create({
+      userId: task?.user?.id,
+      title: 'Task Information Update',
+      message: `Task "${task.t_name}" have been deleted. `,
+      read_status: false,
+      link: ``,
+    });
 
     if (projectId) {
       await this.projectService.refreshProjectStatus(projectId);
@@ -144,6 +156,19 @@ export class TaskService {
     }
 
     return task;
+  }
+
+  async findTasksForPM(pmId: number): Promise<Task[]> {
+    return this.taskRepository.find({
+      where: {
+        project: {
+          team: {
+            pms: { id: pmId },
+          },
+        },
+      },
+      relations: ['project', 'project.team', 'user'],
+    });
   }
 
   async findByProject(projectId: number, userId?: number): Promise<Task[]> {

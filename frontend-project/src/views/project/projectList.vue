@@ -64,7 +64,7 @@
 
       <!-- NON-ADMIN PROJECT CARDS -->
       <div v-else class="flex flex-col gap-4">
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center w-full">
           <div class="flex gap-4 w-full">
             <Search v-model:query="searchQuery" />
             <Filter title="Sort by" :options="sortOptions" @select="applySort" />
@@ -107,7 +107,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 // COMPONENTS
@@ -147,6 +147,18 @@ const searchQuery = ref('')
 const selectedSort = ref('')
 
 const userRole = computed(() => authStore.user?.role || 'user')
+import { computed, watchEffect, reactive } from 'vue'
+
+const teamOptions = computed(() => {
+  if (!authStore.user) return []
+
+  if (userRole.value === 'admin') {
+    return teamStore.teams.map((t) => ({ id: t.id, name: t.name }))
+  }
+
+  // For project manager: only their own teams
+  return authStore.user.pmTeams?.map((t) => ({ id: t.id, name: t.name })) || []
+})
 
 // TABLE COLUMNS
 const tableColumns = [
@@ -168,7 +180,7 @@ const sortOptions = [
 ]
 
 // FORM FIELDS
-const projectFields = [
+const projectFields = reactive([
   { type: 'text', label: 'Project Title', model: 'title', required: true },
   { type: 'datetime-local', label: 'Start Date', model: 'startDate' },
   { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
@@ -185,13 +197,16 @@ const projectFields = [
   {
     type: 'select',
     label: 'Assign Team',
-    options: teamStore.teams.map((t) => ({ id: t.id, name: t.name })),
+    options: [],
     model: 'teamId',
     required: true,
   },
   { type: 'textarea', label: 'Description', model: 'description' },
-]
-
+])
+watchEffect(() => {
+  const teamField = projectFields.find((f) => f.model === 'teamId')
+  if (teamField) teamField.options = teamOptions.value
+})
 // HELPERS
 const formatDate = (dateStr) => {
   if (!dateStr) return 'TBD'

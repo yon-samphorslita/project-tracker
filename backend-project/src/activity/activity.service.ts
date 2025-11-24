@@ -12,8 +12,12 @@ export class ActivityService {
     private readonly gateway: ActivityGateway,
   ) {}
 
-  async logAction(user: number, action: string) {
-    const log = this.activityRepo.create({ user: { id: user }, action });
+  async logAction(user: number, action: string, taskId?: number) {
+    const log = this.activityRepo.create({
+      user: { id: user },
+      action,
+      taskId,
+    });
     const savedLog = await this.activityRepo.save(log);
 
     const logWithUser = await this.activityRepo.findOne({
@@ -26,6 +30,7 @@ export class ActivityService {
         id: logWithUser.id,
         userId: logWithUser.user?.id,
         user: { email: logWithUser.user?.email },
+        taskId: logWithUser.taskId,
         action: logWithUser.action,
         createdAt: logWithUser.createdAt,
       });

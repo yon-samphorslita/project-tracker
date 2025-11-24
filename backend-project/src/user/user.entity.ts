@@ -79,7 +79,11 @@ export class User {
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
-  @ManyToOne(() => Team, (team) => team.mainMembers, { nullable: true })
+  // Main team (priority team)
+  @ManyToOne(() => Team, (team) => team.mainMembers, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   team: Team;
 
   @ManyToMany(() => Team, (team) => team.pms)

@@ -22,4 +22,6 @@ export class CreateNotificationDto {
   @IsBoolean()
   @IsOptional()
   read_status?: boolean;
+
+  link: string;
 }

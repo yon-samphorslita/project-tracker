@@ -57,29 +57,29 @@ export class UserService {
         'activities',
         'notifications',
       ],
-      select: includePassword
-        ? [
-            'id',
-            'email',
-            'role',
-            'first_name',
-            'last_name',
-            'img_url',
-            'active',
-            'password',
-            'password_changed',
-            'otp_code',
-            'otp_expiry',
-          ]
-        : [
-            'id',
-            'email',
-            'role',
-            'first_name',
-            'last_name',
-            'img_url',
-            'active',
-          ],
+      // select: includePassword
+      //   ? [
+      //       'id',
+      //       'email',
+      //       'role',
+      //       'first_name',
+      //       'last_name',
+      //       'img_url',
+      //       'active',
+      //       'password',
+      //       'password_changed',
+      //       'otp_code',
+      //       'otp_expiry',
+      //     ]
+      //   : [
+      //       'id',
+      //       'email',
+      //       'role',
+      //       'first_name',
+      //       'last_name',
+      //       'img_url',
+      //       'active',
+      //     ],
     });
   }
 

@@ -2,14 +2,14 @@
   <div class="flex flex-col gap-4">
     <!-- Header -->
     <div
-      class="grid grid-cols-[3fr_2fr_1fr_1fr_1fr_auto] font-semibold border-b-2 pb-3 bg-main-bg text-lg"
+      class="grid grid-cols-[3fr_2fr_1fr_1fr_1fr_1fr] font-semibold border-b-2 pb-3 bg-main-bg text-lg"
     >
       <div class="pl-4">Task</div>
       <!-- <div class="flex justify-center">Description</div> -->
       <div class="flex justify-center">Project</div>
       <div class="flex justify-center">Due</div>
       <div class="flex justify-center">Priority</div>
-      <!-- <div class="flex justify-center">Status</div> -->
+      <div class="flex justify-center">Status</div>
       <div class="flex justify-center">Action</div>
       <div class="mx-5"></div>
     </div>
@@ -17,7 +17,12 @@
     <!-- Task Rows -->
     <div class="border rounded-lg" v-for="item in props.tasks" :key="item.id">
       <div
-        class="group grid grid-cols-[3fr_2fr_1fr_1fr_1fr_auto] items-center px-4 py-3 border-gray-200 hover:bg-black/15 transition"
+        class="group grid grid-cols-[3fr_2fr_1fr_1fr_1fr_1fr] items-center px-4 py-3 border-gray-200 rounded-lg transition cursor-pointer"
+        :class="
+          String(item.id) === props.highlightedId
+            ? 'bg-blue-100 ring-2 ring-blue-400 scale-[1.01]'
+            : 'hover:bg-gray-100'
+        "
         @click="toggleExpand(item.id)"
       >
         <div class="truncate">{{ item.t_name }}</div>
@@ -45,18 +50,21 @@
         </div>
 
         <!-- Status -->
-        <!-- <div class="flex justify-center">
-          <span
+        <div class="flex justify-center">
+          <!-- <span
             :class="[
               'px-2 py-1 rounded font-medium ',
-              item.status === 'Completed' ? 'bg-green-100 text-green-600' :
-              item.status === 'In Progress' ? 'bg-blue-100 text-blue-600' :
-              'bg-gray-100 text-gray-600'
+              item.status === 'Completed'
+                ? 'bg-green-100 text-green-600'
+                : item.status === 'In Progress'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'bg-gray-100 text-gray-600',
             ]"
           >
-            {{ item.status }}
-          </span>
-        </div> -->
+            {{ item.t_status }}
+          </span> -->
+          <Status :status="item.t_status"/>
+        </div>
 
         <!-- Action Buttons  -->
         <div class="flex justify-around gap-2 bg-red-">
@@ -102,7 +110,7 @@
         </div>
 
         <!-- More icon  -->
-        <div
+        <!-- <div
           class="flex justify-end items-center gap-2 text-gray-400 hover:text-gray-600 cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16">
@@ -119,7 +127,7 @@
               <path d="M12.49 8a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0" />
             </g>
           </svg>
-        </div>
+        </div> -->
         <!-- Task Description -->
         <div v-if="expandedTask.includes(item.id)" class="col-span-6 mt-3 border-t">
           <div v-if="item.t_description" class="my-3 pl-4">
@@ -194,12 +202,48 @@
               </div>
             </div>
 
-            <button
+            <!-- <button
               class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium self-start"
-              @click.stop="addSubtask(item.id)"
+              @click.stop="showSubtaskForm = true"
             >
               + Add Subtask
             </button>
+
+            <div v-if="showSubtaskForm" @click.stop>
+              <Form
+                v-model:modelValue="showSubtaskForm"
+                formTitle="Create Subtask"
+                :fields="subtaskFields"
+                endpoint="subtasks"
+                :initialData="{ taskId: item.id }"
+                @submitted="(data) => handleSubtaskCreated(data, item.id)"
+              />
+            </div> -->
+            <button
+              class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium self-start"
+              @click.stop="showSubtaskForm = item.id"
+            >
+              + Add Subtask
+            </button>
+
+            <div v-if="showSubtaskForm === item.id" @click.stop>
+              <Form
+                v-model:modelValue="showSubtaskForm"
+                formTitle="Create Subtask"
+                :fields="subtaskFields"
+                endpoint="subtasks"
+                :initialData="{ taskId: item.id }"
+                @submitted="handleSubtaskCreated"
+              />
+            </div>
+
+            <!-- <Form
+              v-model:modelValue="showSubtaskForm"
+              formTitle="Create Subtask"
+              :fields="subtaskFields"
+              endpoint="subtasks"
+              :initialData="{ taskId: item.id }"
+              @submitted="(data) => handleSubtaskCreated(data, item.id)"            /> -->
           </div>
         </div>
       </transition>
@@ -209,6 +253,7 @@
 
 <script setup lang="ts">
 import { useSubtaskStore } from '@/stores/subtask'
+import Form from '../forms/form.vue'
 import { useTaskStore } from '@/stores/task'
 import { defineProps, defineEmits, ref, computed, onMounted } from 'vue'
 import Status from '../status.vue'
@@ -216,10 +261,22 @@ const taskStore = useTaskStore()
 const subtaskStore = useSubtaskStore()
 
 const tasks = computed(() => taskStore.tasks)
-const props = defineProps<{ tasks: any[] }>()
+const props = defineProps<{ tasks: any[]; highlightedId: String }>()
 const emit = defineEmits(['edit-task', 'delete-task', 'update-status'])
-const localTasks = ref([...props.tasks]) // make reactive copy
+// const localTasks = ref([...props.tasks]) // make reactive copy
 const expandedTask = ref<number[]>([])
+const showSubtaskForm = ref(false)
+// const showSubtaskForm = ref<number | null>(null)
+
+const subtaskFields = [
+  {
+    label: 'Subtask Name',
+    type: 'text',
+    model: 'title',
+    placeholder: 'Enter Subtask Name',
+    required: true,
+  },
+]
 
 async function toggleExpand(id: number) {
   if (expandedTask.value.includes(id)) {
@@ -229,7 +286,7 @@ async function toggleExpand(id: number) {
   }
 
   // Fetch subtasks for this task
-  const task = localTasks.value.find((t) => t.id === id)
+  const task = taskStore.tasks.find((t) => t.id === id)
   if (task) {
     task.subtasks = await subtaskStore.fetchByTask(id)
   }
@@ -259,7 +316,7 @@ async function startTask(taskId: number) {
   const updated = await taskStore.updateTaskStatus(taskId, 'in progress')
   if (updated) {
     // Update local task object for reactivity
-    const task = localTasks.value.find((t) => t.id === taskId)
+    const task = taskStore.tasks.find((t) => t.id === taskId)
     if (task) task.t_status = 'in progress'
   }
 }
@@ -268,7 +325,7 @@ async function finishTask(taskId: number) {
   // emit('update-status', taskId, 'completed')
   const updated = await taskStore.updateTaskStatus(taskId, 'completed')
   if (updated) {
-    const task = localTasks.value.find((t) => t.id === taskId)
+    const task = taskStore.tasks.find((t) => t.id === taskId)
     if (task) task.t_status = 'completed'
   }
 }
@@ -278,12 +335,32 @@ async function addSubtask(taskId: number) {
   if (!name) return
   const newSubtask = await subtaskStore.createSubtask({ name, taskId })
   console.log('Created subtask:', newSubtask)
-  const task = localTasks.value.find((t) => t.id === taskId)
+  const task = taskStore.tasks.find((t) => t.id === taskId)
   if (task) {
     const subtasks = await subtaskStore.fetchByTask(taskId)
     if (!task.subtasks) task.subtasks = [] // initialize if undefined
     task.subtasks.splice(0, task.subtasks.length, ...subtasks)
   }
+}
+
+async function handleSubtaskCreated(subtaskData) {
+  if (!subtaskData.name || typeof subtaskData.name !== 'string') {
+    return console.error('Invalid subtask name', subtaskData)
+  }
+  if (!subtaskData.taskId || typeof subtaskData.taskId !== 'number') {
+    return console.error('Invalid taskId', subtaskData)
+  }
+
+  const payload = {
+    name: subtaskData.name,
+    taskId: subtaskData.taskId,
+  }
+
+  // Update local task object
+  const task = taskStore.tasks.find((t) => t.id === payload.taskId)
+  if (task) task.subtasks = await subtaskStore.fetchByTask(payload.taskId)
+
+  showSubtaskForm.value = false
 }
 
 async function editSubtask(taskId: number, subtaskId: number, currentName: string) {
@@ -292,7 +369,7 @@ async function editSubtask(taskId: number, subtaskId: number, currentName: strin
 
   await subtaskStore.updateSubtask(subtaskId, { name: newName })
 
-  const task = localTasks.value.find((t) => t.id === taskId)
+  const task = taskStore.tasks.find((t) => t.id === taskId)
   if (task) {
     task.subtasks = await subtaskStore.fetchByTask(taskId)
   }
@@ -303,7 +380,7 @@ async function deleteSubtask(subtaskId: number) {
 
   await subtaskStore.deleteSubtask(subtaskId)
 
-  const task = localTasks.value.find((t) => t.subtasks?.some((s) => s.id === subtaskId))
+  const task = taskStore.tasks.find((t) => t.subtasks?.some((s) => s.id === subtaskId))
   if (task) {
     task.subtasks = await subtaskStore.fetchByTask(task.id)
   }
@@ -318,7 +395,7 @@ async function updateSubtaskStatus(subtask: any, taskId: number) {
   const newStatus = subtask.status === 'completed' ? 'not started' : 'completed'
   const updated = await subtaskStore.updateSubtask(subtask.id, { status: newStatus })
   if (updated) {
-    const task = localTasks.value.find((t) => t.id === taskId)
+    const task = taskStore.tasks.find((t) => t.id === taskId)
     if (task && task.subtasks) {
       const s = task.subtasks.find((st: any) => st.id === subtask.id)
       if (s) s.status = updated.status
@@ -328,9 +405,9 @@ async function updateSubtaskStatus(subtask: any, taskId: number) {
 
 onMounted(async () => {
   await taskStore.fetchTasks()
-  localTasks.value = taskStore.tasks.map((t) => ({ ...t }))
+  // localTasks.value = taskStore.tasks.map((t) => ({ ...t }))
 
-  for (const task of localTasks.value) {
+  for (const task of taskStore.tasks) {
     task.subtasks = await subtaskStore.fetchByTask(task.id)
     console.log('Fetched subtasks for task', task.id, task.subtasks)
   }

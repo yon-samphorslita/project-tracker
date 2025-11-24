@@ -39,6 +39,19 @@ export const useProjectStore = defineStore(
       }
     }
 
+    // async function fetchProjectsByPM(pmId) {
+    //   try {
+    //     const res = await axios.get(`${API_BASE_URL}/projects/pm/${pmId}`, {
+    //       headers: authHeaders(),
+    //     })
+    //     projects.value = Array.from(new Map(res.data.map((p) => [p.id, p])).values())
+    //     return projects.value
+    //   } catch (err) {
+    //     console.error(`Error fetching projects for PM ${pmId}:`, err)
+    //     return []
+    //   }
+    // }
+
     async function createProject(projectDto) {
       try {
         const res = await axios.post(`${API_BASE_URL}/projects`, projectDto, {
@@ -102,6 +115,7 @@ export const useProjectStore = defineStore(
       setCurrent,
       fetchProjects,
       fetchProjectById,
+      // fetchProjectsByPM,
       createProject,
       updateProject,
       deleteProject,

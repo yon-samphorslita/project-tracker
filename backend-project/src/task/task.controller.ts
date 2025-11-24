@@ -34,6 +34,14 @@ export class TaskController {
     return this.taskService.findAll(req.user.id);
   }
 
+  @Get('pm')
+  findTasksForPM(@Request() req): Promise<Task[]> {
+    if (req.user.role !== Role.PROJECT_MANAGER) {
+      throw new ForbiddenException('Only PMs can access this route');
+    }
+    return this.taskService.findTasksForPM(req.user.id);
+  }
+
   // Get one task
   @Get(':id')
   @UseGuards(TaskGuard)

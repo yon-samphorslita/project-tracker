@@ -212,7 +212,6 @@ const eventFields = computed(() => [
     label: 'Project',
     type: 'select',
     options: projectStore.projects,
-    required: true,
   },
   { model: 'location', label: 'Location', type: 'text' },
   { model: 'description', label: 'Description', type: 'textarea' },

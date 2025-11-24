@@ -51,8 +51,9 @@
           'group w-full min-h-20 px-4 py-2 border-gray-200 cursor-pointer transition-colors',
           !n.read_status ? 'bg-gray-bg' : 'bg-main-bg',
         ]"
+        @click="goToNotification(n)"
       >
-        <div class="flex justify-between items-center cursor-pointer" @click="markAsRead(n.id)">
+        <div class="flex justify-between items-center cursor-pointer">
           <div class="flex items-center gap-2">
             <div v-if="!n.read_status" class="w-2 h-2 bg-blue-500 rounded-full mb-1"></div>
             <div class="font-semibold">{{ n.title }}</div>
@@ -89,11 +90,46 @@ import { ref } from 'vue'
 import { routeLocationKey, useRouter } from 'vue-router'
 import Delete from '@/assets/icons/delete.svg'
 import MarkIcon from '@/assets/icons/mark.svg'
+import axios from 'axios'
 const store = useNotificationStore()
 const { notifications } = storeToRefs(store)
 const router = useRouter()
 
 const activeTab = ref('all')
+
+// async function goToNotification(n: any) {
+//   const axiosInstance = store.getAxiosInstance()
+
+//   if (n.link) {
+//     router.push(n.link)
+//   }
+//   // if (!n.read_status) {
+//   //   // await store.markAsRead(n.id)
+//   //   await axios.patch(`http://localhost:3000/notifications/${n.id}`, { read_status: true })
+//   // }
+
+//   if (!n.read_status) {
+//     await axiosInstance.patch(`http://localhost:3000/notifications/${n.id}`, { read_status: true })
+//     store.notifications = store.notifications.map((notif) =>
+//       notif.id === n.id ? { ...notif, read_status: true } : notif,
+//     )
+//   }
+// }
+async function goToNotification(n: any) {
+  try {
+    if (!n.read_status) {
+      await store.markAsRead(n.id)
+    }
+    if (n.link) router.push(n.link)
+    // if (!n.link) {
+    // console.log('Link: ', n.link)
+    // router.push(n.link)
+    // console.log('Link: ', n.link)
+    // }
+  } catch (err) {
+    console.error('Failed to mark notification as read:', err)
+  }
+}
 
 function showAllNotifications() {
   activeTab.value = 'all'
@@ -105,7 +141,7 @@ function showUnreadNotifications() {
   store.fetchUnreadNotifications()
 }
 
-function markAllAsRead() {
+function markAllAsRead(notification: any) {
   store.markAllAsRead()
 }
 

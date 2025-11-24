@@ -38,7 +38,7 @@
           ></span>
 
           <!-- Title -->
-          {{ item.title || item.t_name || item.e_name }}
+          {{ item.t_name || item.e_name }}
         </div>
 
         <!-- +N More indicator -->
