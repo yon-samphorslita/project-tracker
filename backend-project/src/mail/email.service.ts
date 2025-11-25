@@ -17,7 +17,7 @@ export class EmailService {
 
   async sendOtp(email: string, otp: string) {
     await this.transporter.sendMail({
-      from: process.env.MAIL_USER,
+      from: `"Trackzen" <${process.env.MAIL_USER}>`,
       to: email,
       subject: 'Your OTP Code',
       text: `Your OTP code is: ${otp}. It expires in 5 minutes.`,
