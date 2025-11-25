@@ -1,8 +1,8 @@
 <template>
   <div
-    class="calendar-frame max-w-[420px] shadow-[0_2px_12px_rgba(0,0,0,0.1)] border overflow-x-auto p-4 rounded-xl border-solid border-[#e6e6e6]"
+    class="calendar-frame shadow-[0_2px_12px_rgba(0,0,0,0.1)] border overflow-x-auto p-4 rounded-xl border-solid border-[#e6e6e6] bg-main-bg"
   >
-    <div class="vue-calendar max-w-[400px] mx-auto pb-4 rounded-[10px]">
+    <div class="vue-calendar mx-auto pb-4 rounded-[10px]">
       <!-- Header -->
       <header class="vc-header flex items-center justify-between mb-2 px-0 py-3" v-if="showHeader">
         <button

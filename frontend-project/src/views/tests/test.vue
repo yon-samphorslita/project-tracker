@@ -18,9 +18,11 @@
     <div class="border rounded-lg" v-for="item in props.tasks" :key="item.id">
       <div
         class="group grid grid-cols-[3fr_2fr_1fr_1fr_1fr_1fr] items-center px-4 py-3 border-gray-200 rounded-lg transition cursor-pointer"
-        :class="String(item.id) === props.highlightedId
-          ? 'bg-blue-100 ring-2 ring-blue-400 scale-[1.01]'
-          : 'hover:bg-gray-100'"
+        :class="
+          String(item.id) === props.highlightedId
+            ? 'bg-blue-100 ring-2 ring-blue-400 scale-[1.01]'
+            : 'hover:bg-gray-100'
+        "
         @click="toggleExpand(item.id)"
       >
         <div class="truncate">{{ item.t_name }}</div>
@@ -49,9 +51,11 @@
           <span
             :class="[
               'px-2 py-1 rounded font-medium ',
-              item.status === 'Completed' ? 'bg-green-100 text-green-600' :
-              item.status === 'In Progress' ? 'bg-blue-100 text-blue-600' :
-              'bg-gray-100 text-gray-600'
+              item.status === 'Completed'
+                ? 'bg-green-100 text-green-600'
+                : item.status === 'In Progress'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'bg-gray-100 text-gray-600',
             ]"
           >
             {{ item.t_status }}
@@ -216,7 +220,7 @@ const taskStore = useTaskStore()
 const subtaskStore = useSubtaskStore()
 
 const tasks = computed(() => taskStore.tasks)
-const props = defineProps<{ tasks: any[] , highlightedId: String}>()
+const props = defineProps<{ tasks: any[]; highlightedId: String }>()
 const emit = defineEmits(['edit-task', 'delete-task', 'update-status'])
 // const localTasks = ref([...props.tasks]) // make reactive copy
 const expandedTask = ref<number[]>([])

@@ -14,6 +14,11 @@
             class="icon-theme w-7 h-7"
             @click="openEditProjectForm(project)"
           />
+          <Delete
+            v-if="userRole === 'admin' || userRole === 'project_manager'"
+            class="icon-theme w-7 h-7"
+            @click="deleteProject"
+          />
           <EditForm
             v-model="showEditProjectForm"
             title="Edit Project"
@@ -27,7 +32,7 @@
 
         <Button
           v-if="userRole === 'admin' || userRole === 'project_manager'"
-          label="+ New Task"
+          label="+ Create New Task"
           @click="showTaskForm = true"
         />
         <Form
@@ -42,10 +47,11 @@
 
       <!-- Description -->
       <p class="text-gray-600">{{ project.p_description }}</p>
+      <p class="text-[var-(sub-text)]">Due in: {{ dueInDays(project.due_date) }}</p>
 
       <!-- Admin Dashboard -->
       <template v-if="userRole === 'admin'">
-        <div class="grid grid-cols-4 gap-4 mt-4">
+        <div class="grid grid-cols-4 gap-6 mt-4">
           <OverviewCard title="Total Tasks" :value="totalTasks" />
           <OverviewCard title="Completed Tasks" :value="completedTasks" />
           <OverviewCard title="Overdue Tasks" :value="overdueTasks" />
@@ -53,8 +59,13 @@
         </div>
 
         <div class="flex gap-6 mt-6">
-          <PieChart :data="statusData" :height="250" class="flex-1" />
-          <BarChart :projectId="project.id" :teamId="project.team?.id" class="flex-1" />
+          <PieChart :data="statusData" :height="250" class="flex-1" :title="'Tasks Status'" />
+          <BarChart
+            :labels="barChartLabels"
+            :datasets="barChartDatasets"
+            title="Tasks per Member"
+            class="flex-1"
+          />
         </div>
       </template>
 
@@ -84,6 +95,7 @@ import { useRoute, useRouter } from 'vue-router'
 // Components
 import ProjectLayout from '@/views/pageLayout.vue'
 import Edit from '@/assets/icons/edit.svg'
+import Delete from '@/assets/icons/delete.svg'
 import Back from '@/assets/icons/back.svg'
 import Status from '@/components/status.vue'
 import Form from '@/components/forms/form.vue'
@@ -101,6 +113,7 @@ import { useSubtaskStore } from '@/stores/subtask'
 import { useAuthStore } from '@/stores/auth'
 import { useTeamStore } from '@/stores/team'
 
+// Router & Stores
 const route = useRoute()
 const router = useRouter()
 const projectStore = useProjectStore()
@@ -118,13 +131,33 @@ const showEditProjectForm = ref(false)
 const showTaskForm = ref(false)
 const userRole = computed(() => authStore.user?.role || 'user')
 
-const goBack = () => {
-  router.push({ name: 'Projects' })
-}
+// Bar Chart - stacked per member
+const barChartLabels = computed(() => TeamMembers.value.map((member) => member.name))
+const barChartDatasets = computed(() => {
+  const statuses = ['Not Started', 'In Progress', 'Completed']
+  return statuses.map((status) => ({
+    label: status,
+    data: TeamMembers.value.map(
+      (member) =>
+        tasksWithSubtasks.value.filter(
+          (t) => t.user?.id === member.id && t.status?.toLowerCase() === status.toLowerCase(),
+        ).length,
+    ),
+  }))
+})
+
+// Navigation
+const goBack = () => router.push({ name: 'Projects' })
 
 // Form Fields
 const projectFields = computed(() => [
-  { type: 'text', label: 'Project Title', model: 'title', placeholder: 'Enter project title', required: true },
+  {
+    type: 'text',
+    label: 'Project Title',
+    model: 'title',
+    placeholder: 'Enter project title',
+    required: true,
+  },
   {
     type: 'textarea',
     label: 'Description',
@@ -136,7 +169,7 @@ const projectFields = computed(() => [
     label: 'Team',
     options: teamStore.teams.map((t) => ({ id: t.id, name: t.name })),
     model: 'teamId',
-    required: true
+    required: true,
   },
   {
     type: 'select',
@@ -162,7 +195,7 @@ const taskFields = computed(() => [
   },
   { type: 'datetime-local', label: 'Start Date', model: 'startDate', required: true },
   { type: 'datetime-local', label: 'Due Date', model: 'dueDate', required: true },
-    {
+  {
     type: 'select',
     label: 'Priority',
     options: [
@@ -180,7 +213,7 @@ const taskFields = computed(() => [
     valueKey: 'id',
     labelKey: 'name',
   },
-    {
+  {
     type: 'textarea',
     label: 'Description',
     model: 'description',
@@ -188,24 +221,30 @@ const taskFields = computed(() => [
   },
 ])
 
+// Helper
+function formatDate(dateStr) {
+  if (!dateStr) return 'TBD'
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
 // Table Columns
 const tableColumns = computed(() => {
-  const baseColumns = [
+  const cols = [
     { key: 'title', label: 'Task Name' },
-    { key: 'description', label: 'Description' },
     { key: 'priority', label: 'Priority' },
     { key: 'status', label: 'Status' },
     { key: 'start_date', label: 'Start Date' },
     { key: 'due_date', label: 'Due Date' },
     { key: 'icon', label: 'Assignee' },
   ]
-
-  // Only admin or project_manager see actions column
   if (userRole.value === 'admin' || userRole.value === 'project_manager') {
-    baseColumns.push({ key: 'actions', label: 'Actions', slot: 'actions' })
+    cols.push({ key: 'actions', label: 'Actions', slot: 'actions' })
   }
-
-  return baseColumns
+  return cols
 })
 
 // Admin Stats
@@ -222,7 +261,6 @@ const overdueTasks = computed(
 const progressPercent = computed(() =>
   totalTasks.value ? Math.round((completedTasks.value / totalTasks.value) * 100) : 0,
 )
-
 const statusData = computed(() => {
   const summary = { 'Not Started': 0, 'In Progress': 0, Completed: 0 }
   tasksWithSubtasks.value.forEach((t) => {
@@ -234,8 +272,21 @@ const statusData = computed(() => {
   return Object.entries(summary).map(([type, value]) => ({ type, value }))
 })
 
+// Project Status
 const projectStatus = ref(project.value?.status || '')
 watch(project, (newVal) => (projectStatus.value = newVal?.status || ''))
+function dueInDays(dueDateStr) {
+  if (!dueDateStr) return 'TBD'
+  const today = new Date()
+  const dueDate = new Date(dueDateStr)
+  const diffTime = dueDate - today // difference in milliseconds
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) // convert to days
+
+  if (diffDays > 1) return `${diffDays} days`
+  if (diffDays === 1) return '1 day'
+  if (diffDays === 0) return 'Today'
+  return `${Math.abs(diffDays)} day(s) ago`
+}
 
 // Methods
 async function onProjectUpdated() {
@@ -245,15 +296,26 @@ async function onProjectUpdated() {
   showEditProjectForm.value = false
 }
 
+async function deleteProject() {
+  if (!window.confirm(`Delete project "${project.value.p_name}"?`)) return
+  try {
+    await projectStore.deleteProject(project.value.id)
+    router.push({ name: 'Projects' })
+  } catch (err) {
+    console.error(err)
+    alert('Failed to delete project.')
+  }
+}
+
+// Fetch Tasks
 async function fetchProjectTasks(projectId) {
   tasksWithSubtasks.value = []
   await taskStore.fetchTasksByProject(projectId)
-
-  const visibleTasks = taskStore.tasks.filter((t) => {
-    if (userRole.value === 'admin' || userRole.value === 'project_manager') return true
-    return t.user?.id === authStore.user?.id
-  })
-  console.log('Visible Tasks:', visibleTasks)
+  const visibleTasks = taskStore.tasks.filter((t) =>
+    userRole.value === 'admin' || userRole.value === 'project_manager'
+      ? true
+      : t.user?.id === authStore.user?.id,
+  )
   tasksWithSubtasks.value = await Promise.all(
     visibleTasks.map(async (task) => {
       const subtasksData = await subtaskStore.fetchByTask(task.id)
@@ -276,8 +338,7 @@ async function fetchProjectTasks(projectId) {
         due_date: task.due_date,
         icon: task.user?.img_url || null,
         user: task.user || authStore.user,
-        canEdit: canEditTask, // PM/admin task CRUD
-
+        canEdit: canEditTask,
         subtasks: subtasks.map((st) => ({
           name: st.name,
           start: new Date(st.start_date || task.start_date),
@@ -286,26 +347,25 @@ async function fetchProjectTasks(projectId) {
           color: st.status === 'completed' ? '#8BD3B7' : '#FFD966',
           icon: st.user_avatar || null,
           canEdit:
-            userRole.value === 'admin' || // Admin can CRUD anything
-            (userRole.value === 'member' && st.user_id === authStore.user?.id), // Member can CRUD own subtasks
+            userRole.value === 'admin' ||
+            (userRole.value === 'member' && st.user_id === authStore.user?.id),
         })),
       }
     }),
   )
 }
 
+// Fetch Team Members
 async function fetchProjectTeamMembers(teamId) {
   const team = teamStore.teams.find((t) => t.id === Number(teamId))
   if (!team) return
   TeamMembers.value = [
-    ...(team.mainMembers || []).map((mm) => ({
-      id: mm.id,
-      name: `${mm.first_name} ${mm.last_name}`,
-    })),
+    ...(team.mainMembers || []).map((m) => ({ id: m.id, name: `${m.first_name} ${m.last_name}` })),
     ...(team.members || []).map((m) => ({ id: m.id, name: `${m.first_name} ${m.last_name}` })),
   ]
 }
 
+// Set Current Project
 async function setCurrentProject() {
   if (!projectStore.projects.length) await projectStore.fetchProjects()
   const selected = projectStore.projects.find((p) => p.id === Number(route.params.id))
@@ -319,6 +379,7 @@ async function setCurrentProject() {
 watch(() => route.params.id, setCurrentProject)
 onMounted(setCurrentProject)
 
+// Task Create/Update
 async function handleTaskCreated(taskData) {
   const payload = {
     t_name: taskData.title,
@@ -333,22 +394,6 @@ async function handleTaskCreated(taskData) {
   await taskStore.createTask(payload)
   await fetchProjectTasks(project.value.id)
   showTaskForm.value = false
-}
-
-async function openEditProjectForm(proj) {
-  if (!teamStore.teams.length) await teamStore.fetchTeams()
-  if (proj.team?.id) await fetchProjectTeamMembers(proj.team.id)
-  editProjectData.value = {
-    id: proj.id,
-    title: proj.p_name,
-    description: proj.p_description,
-    startDate: proj.start_date,
-    dueDate: proj.due_date,
-    status: proj.status,
-    priority: proj.priority,
-    teamId: proj.team?.id || null,
-  }
-  showEditProjectForm.value = true
 }
 
 async function onTaskCreated(taskData) {
@@ -368,5 +413,22 @@ async function onTaskUpdated(taskData) {
   }
   await taskStore.updateTask(taskData.id, payload)
   await fetchProjectTasks(project.value.id)
+}
+
+// Open Edit Form
+async function openEditProjectForm(proj) {
+  if (!teamStore.teams.length) await teamStore.fetchTeams()
+  if (proj.team?.id) await fetchProjectTeamMembers(proj.team.id)
+  editProjectData.value = {
+    id: proj.id,
+    title: proj.p_name,
+    description: proj.p_description,
+    startDate: proj.start_date,
+    dueDate: proj.due_date,
+    status: proj.status,
+    priority: proj.priority,
+    teamId: proj.team?.id || null,
+  }
+  showEditProjectForm.value = true
 }
 </script>

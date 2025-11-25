@@ -53,7 +53,7 @@ export class TaskService {
 
     await this.activityService.logAction(
       actor.id,
-      `Created task: "${savedTask.t_name}" (Project: "${project.p_name}", Due: ${dayjs(savedTask.due_date).format('MMM D, YYYY')})`,
+      `Created task: "${savedTask.t_name}" (Project: "${project.p_name}", Due: ${dayjs(savedTask.due_date).format('DD MMM, YYYY')})`,
     );
 
     await this.notificationService.create({
@@ -61,11 +61,11 @@ export class TaskService {
       title: 'New Task Assigned',
       message: `You have been assigned a new task: "${savedTask.t_name}"`,
       read_status: false,
-      link: `/task`
+      link: `/task`,
     });
 
     await this.projectService.refreshProjectStatus(project.id);
-    
+
     return savedTask;
   }
 
@@ -93,7 +93,7 @@ export class TaskService {
         title: 'Task Information Update',
         message: `Task "${savedTask.t_name}" have been updated: ${changes.join('; ')}`,
         read_status: false,
-        link: `/task`
+        link: `/task`,
       });
     }
 
@@ -120,7 +120,7 @@ export class TaskService {
       title: 'Task Information Update',
       message: `Task "${task.t_name}" have been deleted. `,
       read_status: false,
-      link: ``
+      link: ``,
     });
 
     if (projectId) {
@@ -226,9 +226,9 @@ export class TaskService {
       !dayjs(dto.start_date).isSame(task.start_date)
     ) {
       changes.push(
-        `Start Date from "${dayjs(task.start_date).format('MMM D, YYYY')}" to "${dayjs(
+        `Start Date from "${dayjs(task.start_date).format('DD MMM, YYYY')}" to "${dayjs(
           dto.start_date,
-        ).format('MMM D, YYYY')}"`,
+        ).format('DD MMM, YYYY')}"`,
       );
     }
     if (
@@ -237,9 +237,9 @@ export class TaskService {
       !dayjs(dto.due_date).isSame(task.due_date)
     ) {
       changes.push(
-        `Due Date from "${dayjs(task.due_date).format('MMM D, YYYY')}" to "${dayjs(
+        `Due Date from "${dayjs(task.due_date).format('DD MMM, YYYY')}" to "${dayjs(
           dto.due_date,
-        ).format('MMM D, YYYY')}"`,
+        ).format('DD MMM, YYYY')}"`,
       );
     }
     if (dto.userId && task.user && dto.userId !== task.user.id) {
@@ -285,9 +285,7 @@ export class TaskService {
   ): Promise<Task> {
     const task = await this.findOne(id, actor.id, actor.role === 'admin');
 
-    // Members can only update t_status
     if (actor.role === 'member') {
-      // Optional: check team membership
       if (
         !task.project?.team?.members.some((m) => m.id === actor.id) &&
         task.user?.id !== actor.id

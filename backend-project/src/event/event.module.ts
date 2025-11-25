@@ -8,6 +8,7 @@ import { User } from 'src/user/user.entity';
 import { ProjectModule } from 'src/project/project.module';
 import { ActivityModule } from 'src/activity/activity.module';
 import { NotificationModule } from 'src/notification/notification.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Event, Project, User]),

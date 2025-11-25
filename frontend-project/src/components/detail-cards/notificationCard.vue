@@ -21,7 +21,9 @@
           </div>
         </div>
 
-        <div class="flex text-sm text-sub-text whitespace-nowrap pr-5">{{ timeAgo(n.created_at) }}</div>
+        <div class="flex text-sm text-sub-text whitespace-nowrap pr-5">
+          {{ timeAgo(n.created_at) }}
+        </div>
       </div>
 
       <!-- Delete button appears only on hover -->
@@ -57,7 +59,6 @@ async function goToNotification(n: any) {
 
     // router.push(n.link)
     if (n.link) router.push(n.link)
-
   } catch (err) {
     console.error('Failed to mark notification as read:', err)
   }

@@ -23,8 +23,7 @@ export class Notification {
   read_status: boolean;
 
   @Column({ nullable: true })
-  link: string; 
-
+  link: string;
 
   @CreateDateColumn()
   created_at: Date;

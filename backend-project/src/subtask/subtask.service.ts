@@ -41,7 +41,7 @@ export class SubtaskService {
     await this.activityService.logAction(
       userId,
       `Created subtask "${savedSubtask.name}" for task "${task.t_name}".`,
-      taskId
+      taskId,
     );
 
     return savedSubtask;
@@ -119,7 +119,7 @@ export class SubtaskService {
       await this.activityService.logAction(
         userId,
         `Deleted subtask "${subtask.name}" from task "${subtask.task.t_name}".`,
-        subtask.taskId
+        subtask.taskId,
       );
     }
 

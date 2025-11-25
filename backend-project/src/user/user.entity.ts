@@ -8,10 +8,10 @@ import {
   ManyToOne,
   DeleteDateColumn,
   ManyToMany,
-  JoinTable,
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
+
 import { Task } from '../task/task.entity';
 import { Project } from '../project/project.entity';
 import { Role } from '../enums/role.enum';
@@ -19,11 +19,13 @@ import { Notification } from '../notification/notification.entity';
 import { Team } from 'src/team/team.entity';
 import { ActivityLog } from 'src/activity/activity.entity';
 import { Event } from 'src/event/event.entity';
+
 import * as bcrypt from 'bcrypt';
+
 @Entity('users')
 @Unique(['email'])
 export class User {
-  private static readonly DEFAULT_PASSWORD = 'PMS@123'
+  private static readonly DEFAULT_PASSWORD = 'PMS@123';
 
   @PrimaryGeneratedColumn()
   id: number;
@@ -78,13 +80,15 @@ export class User {
   notifications: Notification[];
 
   // Main team (priority team)
-  @ManyToOne(() => Team, (team) => team.mainMembers, { nullable: true , onDelete: 'SET NULL'})
+  @ManyToOne(() => Team, (team) => team.mainMembers, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   team: Team;
 
   @ManyToMany(() => Team, (team) => team.pms)
   pmTeams: Team[];
 
-  // Other teams
   @ManyToMany(() => Team, (team) => team.members)
   secondaryTeams: Team[];
 
@@ -96,20 +100,20 @@ export class User {
 
   @BeforeInsert()
   async create() {
-    if(!this.password) {
+    if (!this.password) {
       this.password = User.DEFAULT_PASSWORD;
       this.password_changed = false;
     }
 
-    if(!this.password.startsWith('$2b$')) {
-      this.password = await bcrypt.hash(this.password, 10)
+    if (!this.password.startsWith('$2b$')) {
+      this.password = await bcrypt.hash(this.password, 10);
     }
   }
 
-    @BeforeUpdate()
+  @BeforeUpdate()
   async reset() {
-    if(!this.password.startsWith('$2b$')) {
-      this.password = await bcrypt.hash(this.password, 10)
+    if (!this.password.startsWith('$2b$')) {
+      this.password = await bcrypt.hash(this.password, 10);
     }
   }
 }

@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Team } from './team.entity';
@@ -25,9 +29,11 @@ export class TeamService {
 
   /** CREATE TEAM */
   async create(createTeamDto: CreateTeamDto, userId: number): Promise<Team> {
-    const existing = await this.teamRepository.findOne({ where: { name: createTeamDto.name } });
+    const existing = await this.teamRepository.findOne({
+      where: { name: createTeamDto.name },
+    });
     if (existing) {
-      throw new BadRequestException('Team name must be unique'); 
+      throw new BadRequestException('Team name must be unique');
     }
 
     const team = this.teamRepository.create({
@@ -50,11 +56,10 @@ export class TeamService {
           title: 'Project Manager Role Assigned',
           message: `You have been added as a Project Manager to the team "${team.name}". You can now manage projects and tasks within this team.`,
           read_status: false,
-          link: `/teams/${team.id}`
+          link: `/teams/${team.id}`,
         });
       }
       console.log('notification: ', this.notificationService.findOne(team.id));
-
     }
 
     // --- Add secondary members ---
@@ -64,15 +69,15 @@ export class TeamService {
         .relation(User, 'secondaryTeams')
         .of(createTeamDto.secondaryMembers)
         .add(team.id);
-      
-        // Notify secondary members
+
+      // Notify secondary members
       for (const uid of createTeamDto.secondaryMembers) {
         await this.notificationService.create({
           userId: uid,
           title: 'Secondary Member Role Assigned',
           message: `You were added as a secondary member to team "${team.name}". You can now participate in its projects and tasks.`,
           read_status: false,
-            link: `/teams/${team.id}`
+          link: `/teams/${team.id}`,
         });
       }
     }
@@ -88,7 +93,7 @@ export class TeamService {
           title: 'Main Member Role Assigned',
           message: `You were added as a main member to team "${team.name}". You can now participate in its projects and tasks.`,
           read_status: false,
-          link: `/teams/${team.id}`
+          link: `/teams/${team.id}`,
         });
         console.log('link: ', `/teams/${team.id}`);
         // this.notificationsGateway.sendNotification(String(uid), notification);
@@ -140,7 +145,9 @@ export class TeamService {
     const actions: string[] = [];
 
     if (dto.name && dto.name !== team.name) {
-      const existing = await this.teamRepository.findOne({ where: { name: dto.name }});
+      const existing = await this.teamRepository.findOne({
+        where: { name: dto.name },
+      });
 
       if (existing && existing.id !== id) {
         throw new BadRequestException('Team name must be unique');
@@ -157,7 +164,6 @@ export class TeamService {
     if (dto.name && dto.name !== team.name) {
       actions.push(`Changed name from "${team.name}" to "${dto.name}"`);
 
-
       // Notify all team members about name change
       const allUserIds = [
         ...team.pms.map((u) => u.id),
@@ -169,8 +175,7 @@ export class TeamService {
         allUserIds,
         'Team Information Updated',
         `The team "${team.name}" has changed its name to "${dto.name}".`,
-        `/teams/${team.id}`
-        
+        `/teams/${team.id}`,
       );
 
       await this.teamRepository.update(id, { name: dto.name });
@@ -193,7 +198,7 @@ export class TeamService {
         allUserIds,
         'Team Information Updated',
         `The team "${team.name}" has updated its description.`,
-        `/teams/${team.id}`
+        `/teams/${team.id}`,
       );
 
       await this.teamRepository.update(id, { description: dto.description });
@@ -222,7 +227,7 @@ export class TeamService {
             title: 'Added as Project Manager',
             message: `You were added as a Project Manager to team "${team.name}". You can now manage projects and tasks within this team.`,
             read_status: false,
-            link: `/teams/${team.id}`
+            link: `/teams/${team.id}`,
           });
         }
       }
@@ -247,12 +252,12 @@ export class TeamService {
           .remove(actuallyRemoved);
         const removedNames = await getFullNames(actuallyRemoved);
         actions.push(`Removed PMs: ${removedNames}`);
-        
+
         await this.notificationService.notifyUsers(
           actuallyRemoved,
           'Removed as Project Manager',
           `You have been removed as PM from team "${team.name}".`,
-          `/teams`
+          `/teams`,
         );
       }
     }
@@ -274,10 +279,9 @@ export class TeamService {
             title: 'Added as Main Member',
             message: `You were added as a main member to team "${team.name}". You can now participate in its projects and tasks.`,
             read_status: false,
-            link: `/teams/${team.id}`
+            link: `/teams/${team.id}`,
           });
         }
-
       }
     }
 
@@ -299,7 +303,7 @@ export class TeamService {
             title: 'Removed from Team',
             message: `You were removed as a main member to team "${team.name}".`,
             read_status: false,
-            link: `/teams/${team.id}`
+            link: `/teams/${team.id}`,
           });
         }
       }
@@ -328,10 +332,9 @@ export class TeamService {
             title: 'Added as Secondary Member',
             message: `You were added as a Secondary Member to team "${team.name}".`,
             read_status: false,
-            link: `/teams/${team.id}`
+            link: `/teams/${team.id}`,
           });
         }
-
       }
     }
 
@@ -355,9 +358,8 @@ export class TeamService {
           actuallyRemoved,
           'Team Update',
           `You have been removed as a Secondary Member from team "${team.name}".`,
-          `/teams`
+          `/teams`,
         );
-
       }
     }
 
@@ -386,12 +388,10 @@ export class TeamService {
       allUserIds,
       'Team deleted',
       `The team "${team.name}" has been deleted.`,
-      `/teams`
+      `/teams`,
     );
-    
+
     await this.teamRepository.remove(team);
     await this.activityService.logAction(userId, `Deleted team "${team.name}"`);
-
-
   }
 }

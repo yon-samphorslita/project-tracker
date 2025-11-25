@@ -29,14 +29,11 @@ export class ProjectGuard implements CanActivate {
     const canAccess =
       user.role === Role.ADMIN ||
       (user.role === Role.PROJECT_MANAGER &&
-        project.team?.pms?.some(
-          (pm) => pm.id === user.id)) ||
+        project.team?.pms?.some((pm) => pm.id === user.id)) ||
       (user.role === Role.MEMBER &&
-        (project.team?.members?.some(
-          (m) => m.id === user.id) ||
-          project.team?.mainMembers?.some(
-            (mm) => mm.id === user.id))) || 
-            project.user?.id === user.id; // owner
+        (project.team?.members?.some((m) => m.id === user.id) ||
+          project.team?.mainMembers?.some((mm) => mm.id === user.id))) ||
+      project.user?.id === user.id; // owner
 
     if (!canAccess) {
       throw new ForbiddenException(

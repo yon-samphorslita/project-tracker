@@ -122,15 +122,14 @@ async function goToNotification(n: any) {
     }
     if (n.link) router.push(n.link)
     // if (!n.link) {
-      // console.log('Link: ', n.link)
-      // router.push(n.link)
-      // console.log('Link: ', n.link)
+    // console.log('Link: ', n.link)
+    // router.push(n.link)
+    // console.log('Link: ', n.link)
     // }
   } catch (err) {
     console.error('Failed to mark notification as read:', err)
   }
 }
-
 
 function showAllNotifications() {
   activeTab.value = 'all'

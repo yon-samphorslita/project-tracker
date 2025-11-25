@@ -92,7 +92,12 @@ const routes = [
     meta: { requiresAuth: true, title: 'Notifications' },
   },
   { path: '/task', component: Taskpage, meta: { requiresAuth: true, title: 'Tasks' } },
-  { path: '/task/:id', component: Taskdetail, props:true, meta: { requiresAuth: true, title: 'Tasks' } },
+  {
+    path: '/task/:id',
+    component: Taskdetail,
+    props: true,
+    meta: { requiresAuth: true, title: 'Tasks' },
+  },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, title: 'Dashboard' } },
 ]
 

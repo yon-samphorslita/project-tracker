@@ -45,7 +45,7 @@ export const useUserStore = defineStore(
         users.value.push(res.data)
         return res.data
       } catch (err) {
-        console.error('Error creating user:', err)
+        console.error('Error creating user:', err.response?.data || err)
         return null
       }
     }
@@ -103,6 +103,24 @@ export const useUserStore = defineStore(
       }
     }
 
+    // Check if an email is unique
+    const isEmailUnique = async (email, currentUserId = null) => {
+      try {
+        if (users.value.length === 0) {
+          await fetchUsers()
+        }
+
+        const normalized = email.trim().toLowerCase()
+
+        return !users.value.some(
+          (user) => user.email.toLowerCase() === normalized && user.id !== currentUserId,
+        )
+      } catch (err) {
+        console.error('Error checking email uniqueness:', err)
+        return false
+      }
+    }
+
     return {
       users,
       fetchUsers,
@@ -112,6 +130,7 @@ export const useUserStore = defineStore(
       resetUserPassword,
       deleteUser,
       fetchUserTeams,
+      isEmailUnique,
     }
   },
   { persist: true },

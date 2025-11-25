@@ -28,14 +28,14 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false,
       transform: true,
     }),
   );
 
   //apply global jwt and role guard
   const reflector = app.get(Reflector);
-  const authService = app.get(AuthService)
+  const authService = app.get(AuthService);
   app.useGlobalGuards(new JwtRoleGuard(reflector, authService));
 
   await app.listen(process.env.PORT ?? 3000);

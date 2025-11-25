@@ -14,7 +14,7 @@ async function runSeeder() {
     // Seed in order of dependencies
     await seedUsers(dataSource);
     await seedProjects(dataSource);
-    await seedTeams(dataSource)
+    await seedTeams(dataSource);
 
     console.log('Seeding complete!');
     await dataSource.destroy();

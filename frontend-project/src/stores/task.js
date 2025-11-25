@@ -131,7 +131,7 @@ export const useTaskStore = defineStore(
       updateTask,
       deleteTask,
       updateTaskStatus,
-      fetchTasksForPM
+      fetchTasksForPM,
     }
   },
   { persist: true },

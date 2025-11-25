@@ -18,10 +18,10 @@ import { defineProps, ref, computed } from 'vue'
 
 const props = defineProps({
   label: { type: String, required: true },
-  btnBg: { type: String, default: '' }, // dynamic color
-  btnText: { type: String, default: '' }, // dynamic text color
-  btnHoverBg: { type: String, default: '' }, // dynamic hover
-  btnClass: { type: String, default: '' }, // additional class from parent
+  btnBg: { type: String, default: '' },
+  btnText: { type: String, default: '' },
+  btnHoverBg: { type: String, default: '' },
+  btnClass: { type: String, default: '' },
   btntextsize: { type: String, default: '16px' },
 })
 

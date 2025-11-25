@@ -14,7 +14,10 @@ import { AuthService } from './auth.service';
 
 @Injectable()
 export class JwtRoleGuard extends AuthGuard('jwt') implements CanActivate {
-  constructor(private reflector: Reflector, private authService: AuthService) {
+  constructor(
+    private reflector: Reflector,
+    private authService: AuthService,
+  ) {
     super();
   }
 
@@ -27,16 +30,14 @@ export class JwtRoleGuard extends AuthGuard('jwt') implements CanActivate {
     if (isPublic) return true;
 
     // Verify the JwtStrategy to verify token
-    const canActivate = (
-      await super.canActivate(context)
-    ) as boolean;
+    const canActivate = (await super.canActivate(context)) as boolean;
     if (!canActivate) return false;
 
     const request = context.switchToHttp().getRequest();
-    const token = request.headers['authorization']?.split(' ')[1]
+    const token = request.headers['authorization']?.split(' ')[1];
 
     if (this.authService.isTokenBlacklisted(token)) {
-      throw new UnauthorizedException('Token has been revoked')
+      throw new UnauthorizedException('Token has been revoked');
     }
     // Check roles
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [

@@ -31,7 +31,7 @@
               <Edit class="icon-theme w-6 h-6" />
             </button>
             <button v-if="canDelete" @click="handleDelete" title="Delete">
-              <Delete class="icon-theme" />
+              <Delete class="icon-theme w-6 h-6" />
             </button>
           </div>
         </div>
@@ -88,17 +88,17 @@
 
           <div v-if="canEditOrDelete" class="flex justify-end mt-4 gap-3 border-t pt-3">
             <button
+              @click="cancelEdit"
+              class="px-3 py-1.5 text-sm font-medium btn-red rounded-md transition"
+            >
+              Cancel
+            </button>
+            <button
               @click="handleSave"
               :disabled="saving"
               class="px-3 py-1.5 text-sm font-medium text-white-text btn disabled:bg-gray-400 rounded-md transition"
             >
               {{ saving ? 'Saving...' : 'Save' }}
-            </button>
-            <button
-              @click="cancelEdit"
-              class="px-3 py-1.5 text-sm font-medium btn-red rounded-md transition"
-            >
-              Cancel
             </button>
           </div>
         </div>
@@ -200,10 +200,10 @@ watch(
     if (val) {
       eventData.value = {
         ...val,
-        type: val.t_name ? 'task' :  'event',
+        type: val.t_name ? 'task' : 'event',
         title: val.e_name || val.t_name || 'Untitled Event',
         description: val.e_description || val.t_description || val.description || '',
-        start: val.start_date || val.start || val.start_date,
+        start: val.start_date || val.start,
         end: val.end_date || val.end || val.due_date,
       }
       resetEditableData()

@@ -27,9 +27,7 @@
 
             <!-- Priority, Status, Active -->
             <template v-else-if="col.key === 'priority'">
-              <div class="flex justify-center items-center">
-                <Status :priority="row[col.key]" />
-              </div>
+              <Status :priority="row[col.key]" />
             </template>
             <template v-else-if="col.key === 'status'">
               <Status :status="row[col.key]" />

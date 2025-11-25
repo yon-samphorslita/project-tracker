@@ -1,7 +1,9 @@
 <template>
   <TeamLayout>
     <div class="flex flex-col gap-4">
-      <h1 class="text-2xl font-bold">{{ isEditMode ? "Editing Team Information" : "Create New Team"  }}</h1>
+      <h1 class="text-2xl font-bold">
+        {{ isEditMode ? 'Editing Team Information' : 'Create New Team' }}
+      </h1>
 
       <div v-if="team">
         <!-- Team name  -->
@@ -9,11 +11,11 @@
           Team Name
           <span class="ml-1 text-red-500">*</span>
         </label>
-        
+
         <input
           v-model="team.name"
-            :placeholder="isEditMode ? team.name : 'Enter team name'"
-            class="text-lg font-semibold w-full px-2 py-1 border bg-main-bg rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+          :placeholder="isEditMode ? team.name : 'Enter team name'"
+          class="text-lg font-semibold w-full px-2 py-1 border bg-main-bg rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
         />
         <p v-if="errors.name" class="text-red-500 text-sm">{{ errors.name }}</p>
 
@@ -32,8 +34,7 @@
         <label for="pm" class="block text-sm font-medium text-gray-text mt-4">
           Project Manager
           <span class="ml-1 text-red-500">*</span>
-          </label
-        >
+        </label>
         <Multiselect
           v-model="team.pmIds"
           :options="pmCandidates"
@@ -44,7 +45,6 @@
           :close-on-select="false"
         />
         <p v-if="errors.pms" class="text-red-500 text-sm">{{ errors.pms }}</p>
-
 
         <!-- Main Members Dropdown -->
         <label for="members" class="block text-sm font-medium text-gray-text mt-4">
@@ -128,7 +128,6 @@ const errors = ref({
   main: '',
 })
 
-
 // Fetch candidates for PMs and members
 async function fetchCandidates() {
   try {
@@ -202,54 +201,54 @@ function onSelectMainMember(selected) {
 //   return valid
 // }
 const validateForm = () => {
-  let valid = true;
+  let valid = true
 
   // Reset
-  errors.value.name = "";
-  errors.value.pms = "";
-  errors.value.main = "";
+  errors.value.name = ''
+  errors.value.pms = ''
+  errors.value.main = ''
 
   // Team name required
   if (!team.value.name.trim()) {
-    errors.value.name = "Team name is required";
-    valid = false;
+    errors.value.name = 'Team name is required'
+    valid = false
   }
 
   // UNIQUE NAME CHECK (frontend)
-  const allTeams = teamStore.teams;
+  const allTeams = teamStore.teams
 
   const sameNameTeam = allTeams.find(
-    (t) => t.name.toLowerCase() === team.value.name.trim().toLowerCase()
-  );
+    (t) => t.name.toLowerCase() === team.value.name.trim().toLowerCase(),
+  )
 
   if (!isEditMode.value) {
     // CREATE MODE: any match means duplicate
     if (sameNameTeam) {
-      errors.value.name = "Team name must be unique";
-      valid = false;
+      errors.value.name = 'Team name must be unique'
+      valid = false
     }
   } else {
     // EDIT MODE: match must not be the same team
     if (sameNameTeam && sameNameTeam.id !== team.value.id) {
-      errors.value.name = "Team name must be unique";
-      valid = false;
+      errors.value.name = 'Team name must be unique'
+      valid = false
     }
   }
 
   // PMs
   if (!team.value.pmIds.length) {
-    errors.value.pms = "At least one project manager is required";
-    valid = false;
+    errors.value.pms = 'At least one project manager is required'
+    valid = false
   }
 
   // Main Members
   if (!team.value.memberIds.length) {
-    errors.value.main = "At least one main member is required";
-    valid = false;
+    errors.value.main = 'At least one main member is required'
+    valid = false
   }
 
-  return valid;
-};
+  return valid
+}
 
 async function saveChanges() {
   try {
@@ -257,9 +256,9 @@ async function saveChanges() {
     const currentMembers = team.value.memberIds.map((m) => m.id)
     const currentSecondary = team.value.secondaryMemberIds.map((m) => m.id)
 
-      if (!isEditMode.value) {
+    if (!isEditMode.value) {
       // CREATE MODE
-      if (!validateForm()) return;
+      if (!validateForm()) return
       const payload = {
         name: team.value.name,
         description: team.value.description,
@@ -276,7 +275,7 @@ async function saveChanges() {
     }
 
     // EDIT MODE
-    if (!validateForm()) return;
+    if (!validateForm()) return
     const payload = {
       name: team.value.name,
       description: team.value.description,
@@ -297,8 +296,8 @@ async function saveChanges() {
     console.log('team id to update:', team.value.id)
     await teamStore.updateTeam(team.value.id, payload)
     router.push('/teams')
-    }catch (err) {
-    console.error("Update failed:", err.response?.data || err.message);
+  } catch (err) {
+    console.error('Update failed:', err.response?.data || err.message)
   }
 
   // } catch (err) {
@@ -337,8 +336,9 @@ onMounted(async () => {
     existingPms.value = data.pms?.map((p) => p.id) || []
     existingMembers.value = data.mainMembers?.map((m) => m.id) || []
     existingSecondaryMembers.value =
-      data.members?.filter((m) => !data.mainMembers.some((mm) => mm.id === m.id)).map((m) => m.id) ||
-      []
+      data.members
+        ?.filter((m) => !data.mainMembers.some((mm) => mm.id === m.id))
+        .map((m) => m.id) || []
   } else {
     // CREATE MODE
     isEditMode.value = false

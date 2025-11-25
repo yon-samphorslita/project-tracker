@@ -89,7 +89,7 @@
           +{{ team.pms.length - 2 }} more
         </span>
       </div> -->
-     
+
       <div v-else class="flex gap-2 overflow-x-auto py-1">
         <div
           v-for="pm in team.pms.slice(0, 2)"
@@ -105,14 +105,11 @@
             {{ pm.fullName }}
           </span>
         </div>
-        <span class="text-blue-800 font-medium text-sm items-center flex ">
-          +{{ team.pms.length - 2 }} 
+        <span class="text-blue-800 font-medium text-sm items-center flex">
+          +{{ team.pms.length - 2 }}
         </span>
       </div>
-
     </div>
-
-
   </div>
 </template>
 
@@ -180,7 +177,6 @@ async function deleteTeam(id: number) {
     alert('Failed to delete the team.')
   }
 }
-
 
 function getColorFromId(id: number) {
   const colors = [

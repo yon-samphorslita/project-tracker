@@ -1,10 +1,10 @@
 <template>
   <CalendarLayout>
-    <div class="flex flex-col gap-6 w-full">
+    <div class="flex flex-col gap-8 w-full">
       <!-- Admin Dashboard (cards + charts) -->
       <div v-if="userRole === 'admin'">
         <!-- Top Overview Section -->
-        <div class="grid grid-cols-2 gap-12">
+        <div class="grid grid-cols-2 gap-8">
           <div class="grid grid-cols-2 gap-8">
             <OverviewCard title="Total Projects" :value="projectStore.projects.length" />
             <OverviewCard title="Total Events" :value="eventStore.events.length" />
@@ -13,23 +13,21 @@
           </div>
 
           <!-- Pie Chart -->
-          <div class="bg-white-bg border rounded-lg p-4">
-            <h2 class="text-xl font-semibold mb-2">Event Distribution by Project</h2>
-            <PieChart :data="pieChartData" :height="300" />
-          </div>
+          <PieChart :data="pieChartData" :height="260" :title="'Event Distribution by Project'" />
         </div>
 
         <!-- Charts Section -->
-        <div class="grid grid-cols-2 gap-4 pt-6">
-          <div class="bg-white-bg border rounded-lg p-4">
-            <h2 class="text-xl font-semibold mb-2">Event Count by User</h2>
-            <BarChart :eventData="adminBarChartData" class="h-[90%]" />
-          </div>
-
-          <div class="bg-white-bg border rounded-lg p-4">
-            <h2 class="text-xl font-semibold mb-2">Team Workload Overview</h2>
-            <BarChart class="h-[90%]" />
-          </div>
+        <div class="grid grid-cols-2 gap-8 pt-6">
+          <BarChart
+            :title="'Event Count by User'"
+            :labels="eventBarChart.labels"
+            :datasets="eventBarChart.datasets"
+          />
+          <BarChart
+            :title="'Team Workload Overview'"
+            :labels="teamBarChart.labels"
+            :datasets="teamBarChart.datasets"
+          />
         </div>
       </div>
 
@@ -40,7 +38,7 @@
           <Option v-model="viewType" />
           <Calendar />
 
-          <!-- Add Schedule (all users) -->
+          <!-- Add Schedule -->
           <div class="flex items-center">
             <div>Add Schedule</div>
             <button
@@ -54,7 +52,7 @@
               v-model:modelValue="showForm"
               formTitle="Schedule Event"
               :fields="eventFields"
-              :initialData="editEventData"
+              :initialData="eventData"
               endpoint="events"
               @submitted="handleSubmit"
             />
@@ -97,13 +95,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { format } from 'date-fns'
+
+import { useAuthStore } from '@/stores/auth'
 import { useEventStore } from '@/stores/event'
 import { useProjectStore } from '@/stores/project'
 import { useTeamStore } from '@/stores/team'
-import { useAuthStore } from '@/stores/auth'
 import { useTaskStore } from '@/stores/task'
+import { getRandomColors } from '@/utils/colors'
 
 import Form from '@/components/forms/form.vue'
 import CalendarLayout from '@/views/pageLayout.vue'
@@ -123,31 +123,86 @@ const eventStore = useEventStore()
 const projectStore = useProjectStore()
 const teamStore = useTeamStore()
 const taskStore = useTaskStore()
-// Role restriction
+
+// Role
 const userRole = computed(() => authStore.user?.role || 'user')
 
-// Calendar state
+// Calendar & Form state
 const showForm = ref(false)
-const editEventData = ref(null)
+const eventData = ref(null)
 const viewType = ref('Month')
 const currentDate = ref(new Date())
 const currentMonthYear = computed(() => format(currentDate.value, 'MMMM yyyy'))
 
-// Fetch initial data
-onMounted(async () => {
-  await Promise.all([
-    projectStore.fetchProjects(),
-    eventStore.fetchEvents(),
-    teamStore.fetchTeams(),
-    taskStore.fetchTasks(),
-  ])
+// Chart state
+const teamBarChart = ref({ labels: [], datasets: [] })
+const eventBarChart = ref({ labels: [], datasets: [] })
 
-  if (userRole.value === 'admin') {
-    await eventStore.fetchAdminEventSummary()
+// Fetch Team Workload
+const fetchTeamWorkload = async () => {
+  const colors = getRandomColors()
+  await teamStore.fetchTeams() // make sure teams are loaded
+
+  const labels = []
+  const totalData = []
+  const completedData = []
+
+  teamStore.teams.forEach((team) => {
+    labels.push(team.name || `Team ${team.id}`)
+    const members = [...(team.members || []), ...(team.mainMembers || [])]
+
+    const tasks = taskStore.tasks.filter((t) =>
+      members.some((m) => t.user?.id === m.id || t.assigned_to?.id === m.id),
+    )
+
+    totalData.push(tasks.length)
+    completedData.push(
+      tasks.filter((t) => ['completed'].includes((t.t_status || t.status || '').toLowerCase()))
+        .length,
+    )
+  })
+
+  teamBarChart.value = {
+    labels,
+    datasets: [
+      { label: 'Completed Tasks', data: completedData },
+      { label: 'Total Tasks', data: totalData },
+    ],
+  }
+}
+
+// Fetch Event Chart
+const fetchEventChart = (eventData) => {
+  const { labels = [], data = [] } = eventData || {}
+  eventBarChart.value = {
+    labels,
+    datasets: [{ label: 'Event Count', data }],
+  }
+}
+
+// Computed & Helpers
+const adminBarChartData = computed(() => {
+  if (!eventStore.adminEventSummary.length) return { labels: [], data: [] }
+  return {
+    labels: eventStore.adminEventSummary.map((e) => e.userName),
+    data: eventStore.adminEventSummary.map((e) => e.eventCount),
   }
 })
 
-// Event form
+const pieChartData = computed(() => {
+  const counts = {}
+  eventStore.events.forEach((event) => {
+    const projectName = event.project?.p_name || 'Unassigned'
+    counts[projectName] = (counts[projectName] || 0) + 1
+  })
+  return Object.entries(counts).map(([type, value]) => ({ type, value }))
+})
+
+const upcomingEventsCount = computed(() => {
+  const now = new Date()
+  return eventStore.events.filter((event) => new Date(event.start_date) >= now).length
+})
+
 const eventFields = computed(() => [
   { model: 'title', label: 'Title', type: 'text', required: true },
   { model: 'startDate', label: 'Start Date & Time', type: 'datetime-local', required: true },
@@ -157,59 +212,45 @@ const eventFields = computed(() => [
     label: 'Project',
     type: 'select',
     options: projectStore.projects,
-    required: true,
   },
   { model: 'location', label: 'Location', type: 'text' },
   { model: 'description', label: 'Description', type: 'textarea' },
 ])
 
 function openForm() {
-  editEventData.value = null
+  eventData.value = null
   showForm.value = true
 }
 
-async function handleSubmit(formData) {
-  try {
-    if (editEventData.value?.id) {
-      await eventStore.updateEvent({ id: editEventData.value.id, ...formData })
-    } else {
-      await eventStore.createEvent(formData)
-    }
-    await eventStore.fetchEvents()
-  } catch (err) {
-    console.error('Error saving event:', err)
-  } finally {
-    showForm.value = false
-    editEventData.value = null
-  }
+async function handleSubmit() {
+  await eventStore.fetchEvents()
 }
 
-// Chart data
-const pieChartData = computed(() => {
-  const counts = {}
-  eventStore.events.forEach((event) => {
-    const projectName = event.project?.p_name || 'Unassigned'
-    counts[projectName] = (counts[projectName] || 0) + 1
-  })
-  return Object.entries(counts).map(([type, value]) => ({ type, value }))
-})
-const adminBarChartData = computed(() => {
-  if (!eventStore.adminEventSummary.length) return { labels: [], data: [] }
-
-  const labels = eventStore.adminEventSummary.map((e) => e.userName)
-  const data = eventStore.adminEventSummary.map((e) => e.eventCount)
-
-  return { labels, data }
-})
-
-const upcomingEventsCount = computed(() => {
-  const now = new Date()
-  return eventStore.events.filter((event) => new Date(event.start_date) >= now).length
-})
-
-// Project color helper
-const colors = ['#FFE578', '#FFD5DB', '#D9CBFB']
+// Project colors
+const colors = getRandomColors()
 function getProjectColor(projectId) {
   return colors[projectId % colors.length]
 }
+
+// Watchers
+watch(() => taskStore.tasks, fetchTeamWorkload, { deep: true })
+watch(
+  () => eventStore.adminEventSummary,
+  () => fetchEventChart(adminBarChartData.value),
+)
+
+// Initial fetch
+onMounted(async () => {
+  await Promise.all([
+    projectStore.fetchProjects(),
+    eventStore.fetchEvents(),
+    teamStore.fetchTeams(),
+    taskStore.fetchTasks(),
+  ])
+  if (userRole.value === 'admin') {
+    await eventStore.fetchAdminEventSummary()
+  }
+  fetchTeamWorkload()
+  fetchEventChart(adminBarChartData.value)
+})
 </script>

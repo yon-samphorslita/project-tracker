@@ -24,9 +24,9 @@
 import { ref, computed, watchEffect } from 'vue'
 
 const props = defineProps({
-  status: { type: String, default: null },       // e.g. "Not Started"
-  priority: { type: String, default: null },     // e.g. "Low"
-  active: { type: Boolean, default: null },      // true / false
+  status: { type: String, default: null }, // e.g. "Not Started"
+  priority: { type: String, default: null }, // e.g. "Low"
+  active: { type: Boolean, default: null }, // true / false
   editable: { type: Boolean, default: false },
 })
 
@@ -44,7 +44,7 @@ const mode = computed(() => {
 const options = computed(() => {
   switch (mode.value) {
     case 'status':
-      return ['Not Started', 'In Progress', 'Completed']
+      return ['Not Started', 'In Progress', 'Completed', 'Overdue']
     case 'priority':
       return ['Low', 'Medium', 'High']
     case 'active':
@@ -85,11 +85,9 @@ const displayValue = computed(() => currentValue.value)
 const badgeClass = computed(() => {
   const val = currentValue.value.toLowerCase()
 
-  if (['completed', 'active', 'low'].includes(val))
-    return 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
+  if (['completed', 'active', 'low'].includes(val)) return 'bg-[rgba(7,199,14,0.15)] text-[#07c70e]'
 
-  if (['in progress', 'medium'].includes(val))
-    return 'bg-[rgba(250,192,54,0.15)] text-[#fac036]'
+  if (['in progress', 'medium'].includes(val)) return 'bg-[rgba(250,192,54,0.15)] text-[#fac036]'
 
   if (['not started', 'inactive', 'high'].includes(val))
     return 'bg-[rgba(199,7,7,0.15)] text-[#c70707]'

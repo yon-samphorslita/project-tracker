@@ -7,14 +7,13 @@
         <div class="flex gap-4 w-full">
           <OverviewCard title="Total Tasks" :value="totalTasks" class="w-72" />
           <OverviewCard title="Overdue Tasks" :value="overdueTasks" class="w-72" />
-          <OverviewCard title="Completed Tasks" :value="completedTasks" class="w-72"/>
+          <OverviewCard title="Completed Tasks" :value="completedTasks" class="w-72" />
         </div>
       </div>
 
       <div class="flex flex-col gap-4 bg-main-bg">
-
         <div class="flex justify-between items-center">
-          <!-- Filter Project  -->    
+          <!-- Filter Project  -->
           <div class="relative inline-block text-left">
             <button
               @click="toggleProjectDropdown"
@@ -61,10 +60,14 @@
           </div>
         </div>
       </div>
-        
+
       <!-- Task Display  -->
-      <div v-if="userRole === 'admin' || userRole === 'project_manager'" class="flex flex-col gap-3 border rounded-2xl bg-main-bg h-full">
-        <Table class="w-full border-collapse table-fixed"
+      <div
+        v-if="userRole === 'admin' || userRole === 'project_manager'"
+        class="flex flex-col gap-3 border rounded-2xl bg-main-bg h-full"
+      >
+        <Table
+          class="w-full border-collapse table-fixed"
           :data="mappedFilteredSortedProjects"
           :columns="tableColumns"
           :format-date="formatDate"
@@ -78,8 +81,16 @@
           </template>
         </Table>
       </div>
-      <div v-else-if="userRole === 'member'" class="flex flex-col gap-3 border rounded-2xl p-4 bg-main-bg h-full">
-        <TaskCard :tasks="filteredTasks" :highlighted-id="highlightedId" @edit-task="handleEdit" @delete-task="handleDelete" />
+      <div
+        v-else-if="userRole === 'member'"
+        class="flex flex-col gap-3 border rounded-2xl p-4 bg-main-bg h-full"
+      >
+        <TaskCard
+          :tasks="filteredTasks"
+          :highlighted-id="highlightedId"
+          @edit-task="handleEdit"
+          @delete-task="handleDelete"
+        />
       </div>
     </div>
   </TaskLayout>
@@ -140,33 +151,32 @@ const overdueTasks = computed(() => {
   ).length
 })
 
-const completedTasks = computed(() =>
-  taskStore.tasks.filter((t) => t.t_status?.toLowerCase() === 'completed').length
+const completedTasks = computed(
+  () => taskStore.tasks.filter((t) => t.t_status?.toLowerCase() === 'completed').length,
 )
 
 const pmTeams = computed(() => {
   if (userRole.value !== 'project_manager') return []
-  return teamStore.teams.filter(team => team.pms?.some(pm => pm.id === userId.value))
+  return teamStore.teams.filter((team) => team.pms?.some((pm) => pm.id === userId.value))
 })
 
 const teamProjects = computed(() => {
-  return pmTeams.value.flatMap(team => team.projects || [])
-})  
+  return pmTeams.value.flatMap((team) => team.projects || [])
+})
 
 const projectOptions = computed(() => {
   if (userRole.value === 'admin') {
-    // Admin: show all projects 
+    // Admin: show all projects
     return [
       { value: 'all', label: 'All Projects' },
-      ...projectStore.projects.map(p => ({ value: String(p.id), label: p.p_name })),
+      ...projectStore.projects.map((p) => ({ value: String(p.id), label: p.p_name })),
     ]
-  } 
-  else if (userRole.value === 'project_manager') {
+  } else if (userRole.value === 'project_manager') {
     // PM: show only projects they manage
-    const pmProjectMap = new Map(teamProjects.value.map(p => [p.id, p.p_name]))
+    const pmProjectMap = new Map(teamProjects.value.map((p) => [p.id, p.p_name]))
     return [
       { value: 'all', label: 'All Projects' },
-      ...Array.from(pmProjectMap, ([id, name]) => ({ value: String(id), label: name }))
+      ...Array.from(pmProjectMap, ([id, name]) => ({ value: String(id), label: name })),
     ]
   } else {
     // Member: show only projects they have assigned tasks in
@@ -221,8 +231,8 @@ const selectedProjectLabel = computed(() => {
 const pmProjectIds = computed(() => {
   if (userRole.value !== 'project_manager') return []
   return teamStore.teams
-    .filter(team => team.pms?.some(pm => pm.id === userId.value))
-    .flatMap(team => team.projects?.map(p => p.id) || [])
+    .filter((team) => team.pms?.some((pm) => pm.id === userId.value))
+    .flatMap((team) => team.projects?.map((p) => p.id) || [])
 })
 
 // Filter tasks by selected project
@@ -232,17 +242,15 @@ const filteredTasks = computed(() => {
 
   let pmlist = pmProjectIds.value
   console.log('PM Project IDs:', pmlist)
-  
+
   // Role-based filtering
   if (userRole.value === 'admin') {
     // Admin sees all tasks, no filtering needed
-  }
-  else if (userRole.value === 'project_manager') {
-    list = list.filter(t => pmProjectIds.value.includes(t.project?.id))
+  } else if (userRole.value === 'project_manager') {
+    list = list.filter((t) => pmProjectIds.value.includes(t.project?.id))
   } else if (userRole.value === 'member') {
     list = list.filter((t) => t.user?.id === userId.value)
   }
-
 
   // Filter by selected project
   if (selectedProject.value !== 'all') {
@@ -294,7 +302,7 @@ const formatDate = (dateStr) =>
         year: 'numeric',
       })
 
-// Actions 
+// Actions
 const viewTask = (row) => router.push(`/task/${row.id}`)
 const editTaskInfo = ref(null)
 const showEditTaskForm = ref(false)
@@ -315,7 +323,6 @@ const editTask = (row) => {
   showEditTaskForm.value = true
 }
 
-
 const deleteTask = async (row) => {
   const task = taskStore.tasks.find((t) => t.id === row.id)
   if (!task) return
@@ -333,7 +340,7 @@ const mappedFilteredSortedProjects = computed(() =>
   filteredTasks.value.map((t) => ({
     id: t.id,
     task: t.t_name,
-    project: t.project?.p_name ,
+    project: t.project?.p_name,
     priority: t.t_priority,
     status: t.t_status,
     start_date: t.start_date,
@@ -347,11 +354,10 @@ const mappedFilteredSortedProjects = computed(() =>
 onMounted(async () => {
   await teamStore.fetchTeams()
   await projectStore.fetchProjects()
-  
+
   if (userRole.value === 'admin') {
-    await taskStore.fetchTasks() 
-  }
-  else if (userRole.value === 'project_manager') {
+    await taskStore.fetchTasks()
+  } else if (userRole.value === 'project_manager') {
     await taskStore.fetchTasksForPM()
   } else {
     await taskStore.fetchTasks()
@@ -372,6 +378,6 @@ watch(
       }, 800)
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>

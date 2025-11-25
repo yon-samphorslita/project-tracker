@@ -13,7 +13,7 @@
     >
       <div class="text-lg font-semibold text-gray-text w-full">{{ p.p_name }}</div>
 
-      <div class="w-60 pt-2">
+      <div class="pt-2">
         <div>Progress</div>
         <ProgressBar :completed="p.completedTasks" :total="p.totalTasks" />
       </div>

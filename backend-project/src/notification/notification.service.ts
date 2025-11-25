@@ -40,7 +40,12 @@ export class NotificationService {
   }
 
   // notify multiple users
-  async notifyUsers(userIds: number[], title: string, message: string, link: string) {
+  async notifyUsers(
+    userIds: number[],
+    title: string,
+    message: string,
+    link: string,
+  ) {
     const users = await this.userRepo.findBy({ id: In(userIds) });
     if (!users.length) return;
 
@@ -53,9 +58,11 @@ export class NotificationService {
         user: { id: u.id } as User,
       }),
     );
-  
+
     const saved = await this.notificationRepository.save(notifications);
-    saved.forEach(n => this.notificationsGateway.sendNotification(String(n.user.id), n));
+    saved.forEach((n) =>
+      this.notificationsGateway.sendNotification(String(n.user.id), n),
+    );
     return saved;
     // return this.notificationRepository.save(notifications);
   }

@@ -35,38 +35,39 @@ export class ProjectService {
     user: User,
   ): Promise<Project> {
     let team: Team | null = null;
-if (createProjectDto.teamId) {
-  team = await this.teamRepository.findOne({
-    where: { id: createProjectDto.teamId },
-    relations: ['members', 'pms', 'mainMembers'],
-  });
+    if (createProjectDto.teamId) {
+      team = await this.teamRepository.findOne({
+        where: { id: createProjectDto.teamId },
+        relations: ['members', 'pms', 'mainMembers'],
+      });
 
-  if (!team) {
-    throw new NotFoundException(`Team with ID ${createProjectDto.teamId} not found`);
-  }
-}
+      if (!team) {
+        throw new NotFoundException(
+          `Team with ID ${createProjectDto.teamId} not found`,
+        );
+      }
+    }
 
-const project = this.projectRepository.create({
-  ...createProjectDto,
-  user,
-  created_at: new Date(),
-  team, // safe, because entity allows Team | null
-});
-
+    const project = this.projectRepository.create({
+      ...createProjectDto,
+      user,
+      created_at: new Date(),
+      team, // safe, because entity allows Team | null
+    });
 
     const savedProject = await this.projectRepository.save(project);
 
     await this.activityService.logAction(
       user.id,
-      `Created project: "${savedProject.p_name}" (Start: ${dayjs(savedProject.start_date).format('MMM D, YYYY')}, Due: ${dayjs(savedProject.due_date).format('MMM D, YYYY')})`,
+      `Created project "${savedProject.p_name}" and assigned to "${savedProject.team}" (Due on: ${dayjs(savedProject.due_date).format('DD MMM, YYYY')})`,
     );
 
     let allUserIds: number[] = [];
     if (project.team) {
       allUserIds = [
-        ...project.team.pms.map(u => u.id),
-        ...project.team.mainMembers.map(u => u.id),
-        ...project.team.members.map(u => u.id),
+        ...project.team.pms.map((u) => u.id),
+        ...project.team.mainMembers.map((u) => u.id),
+        ...project.team.members.map((u) => u.id),
       ];
       allUserIds = [...new Set(allUserIds)]; // remove duplicates
     }
@@ -84,16 +85,16 @@ const project = this.projectRepository.create({
   // Find all projects
   async findAll(user: User): Promise<Project[]> {
     const projects = await this.projectRepository.find({
-      relations : [
-      'team',
-      'team.members',
-      'team.mainMembers',
-      'team.pms',
-      'user',
-      'tasks',
-      'tasks.user',
-    ]
-    })
+      relations: [
+        'team',
+        'team.members',
+        'team.mainMembers',
+        'team.pms',
+        'user',
+        'tasks',
+        'tasks.user',
+      ],
+    });
 
     if (user.role === Role.ADMIN) {
       return projects;
@@ -101,15 +102,16 @@ const project = this.projectRepository.create({
 
     if (user.role === Role.PROJECT_MANAGER) {
       return projects.filter((p) =>
-      p.team?.pms?.some((pm) => pm.id === user.id))
+        p.team?.pms?.some((pm) => pm.id === user.id),
+      );
     }
 
     return projects.filter(
       (p) =>
         p.team?.mainMembers?.some((mm) => mm.id === user.id) ||
-      p.team?.members?.some((m) => m.id === user.id) ||
-      p.tasks?.some((t) => t.user?.id === user.id)
-    )
+        p.team?.members?.some((m) => m.id === user.id) ||
+        p.tasks?.some((t) => t.user?.id === user.id),
+    );
   }
 
   // Find a single project by ID
@@ -143,7 +145,6 @@ const project = this.projectRepository.create({
     });
   }
 
-
   // Update a project
   async update(
     id: number,
@@ -172,9 +173,7 @@ const project = this.projectRepository.create({
     // Prevent marking completed if tasks/subtasks are incomplete
     if (dto.status === Status.COMPLETED) {
       const hasIncomplete = project.tasks.some(
-        (task) =>
-          task.t_status !== Status.COMPLETED ||
-          task.subtasks?.some((sub) => sub.status !== Status.COMPLETED),
+        (task) => task.t_status !== Status.COMPLETED,
       );
 
       if (hasIncomplete) {
@@ -187,13 +186,12 @@ const project = this.projectRepository.create({
     let allUserIds: number[] = [];
     if (project.team) {
       allUserIds = [
-        ...project.team.pms.map(u => u.id),
-        ...project.team.mainMembers.map(u => u.id),
-        ...project.team.members.map(u => u.id),
+        ...project.team.pms.map((u) => u.id),
+        ...project.team.mainMembers.map((u) => u.id),
+        ...project.team.members.map((u) => u.id),
       ];
       allUserIds = [...new Set(allUserIds)]; // remove duplicates
     }
-
 
     // Track changes for logging
     const changes = this.getChanges(project, dto);
@@ -214,7 +212,7 @@ const project = this.projectRepository.create({
         `/project/${savedProject.id}`,
       );
 
-      console.log('Project id: ', savedProject.id)
+      console.log('Project id: ', savedProject.id);
       return savedProject;
     }
 
@@ -239,18 +237,12 @@ const project = this.projectRepository.create({
     if (!project.tasks?.length) return Status.NOT_STARTED;
 
     const allCompleted = project.tasks.every(
-      (task) =>
-        task.t_status === Status.COMPLETED &&
-        (task.subtasks?.every((sub) => sub.status === Status.COMPLETED) ??
-          true),
+      (task) => task.t_status === Status.COMPLETED,
     );
     if (allCompleted) return Status.COMPLETED;
 
     const allNotStarted = project.tasks.every(
-      (task) =>
-        task.t_status === Status.NOT_STARTED &&
-        (task.subtasks?.every((sub) => sub.status === Status.NOT_STARTED) ??
-          true),
+      (task) => task.t_status === Status.NOT_STARTED,
     );
     if (allNotStarted) return Status.NOT_STARTED;
 
@@ -261,7 +253,13 @@ const project = this.projectRepository.create({
   async delete(id: number, user: User): Promise<void> {
     const project = await this.projectRepository.findOne({
       where: { id },
-      relations: ['user', 'team', 'team.pms', 'team.mainMembers', 'team.members'],
+      relations: [
+        'user',
+        'team',
+        'team.pms',
+        'team.mainMembers',
+        'team.members',
+      ],
     });
 
     if (!project)
@@ -270,18 +268,18 @@ const project = this.projectRepository.create({
     let allUserIds: number[] = [];
     if (project.team) {
       allUserIds = [
-        ...project.team.pms.map(u => u.id),
-        ...project.team.mainMembers.map(u => u.id),
-        ...project.team.members.map(u => u.id),
+        ...project.team.pms.map((u) => u.id),
+        ...project.team.mainMembers.map((u) => u.id),
+        ...project.team.members.map((u) => u.id),
       ];
-      allUserIds = [...new Set(allUserIds)]; 
+      allUserIds = [...new Set(allUserIds)];
     }
 
     await this.projectRepository.remove(project);
 
     await this.activityService.logAction(
       user.id,
-      `Deleted project: ${project.p_name}`,
+      `Deleted project "${project.p_name}"`,
     );
 
     await this.notificationService.notifyUsers(
@@ -333,7 +331,7 @@ const project = this.projectRepository.create({
 
         if (oldDate !== newDate) {
           changes.push(
-            `${this.formatFieldName(key)} from "${dayjs(oldVal).format('MMMM D, YYYY')}" to "${dayjs(newVal).format('MMMM D, YYYY')}"`,
+            `${this.formatFieldName(key)} from "${dayjs(oldVal).format('DD MMM, YYYY')}" to "${dayjs(newVal).format('DD MMM, YYYY')}"`,
           );
         }
         continue;

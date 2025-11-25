@@ -12,9 +12,12 @@ export class ActivityService {
     private readonly gateway: ActivityGateway,
   ) {}
 
-  // Log action whenever a user performs an action
-  async logAction(userId: number, action: string, taskId?: number) {
-    const log = this.activityRepo.create({ userId, action, taskId });
+  async logAction(user: number, action: string, taskId?: number) {
+    const log = this.activityRepo.create({
+      user: { id: user },
+      action,
+      taskId,
+    });
     const savedLog = await this.activityRepo.save(log);
 
     const logWithUser = await this.activityRepo.findOne({
@@ -23,23 +26,20 @@ export class ActivityService {
     });
 
     if (logWithUser) {
-      // Emit to admin clients
       this.gateway.sendLog({
         id: logWithUser.id,
-        userId: logWithUser.userId,
+        userId: logWithUser.user?.id,
         user: { email: logWithUser.user?.email },
         taskId: logWithUser.taskId,
         action: logWithUser.action,
         createdAt: logWithUser.createdAt,
       });
     }
+
     return logWithUser;
   }
 
-  // Admin-only: get all logs
   async getLogs() {
-    return this.activityRepo.find({
-      order: { createdAt: 'DESC' },
-    });
+    return this.activityRepo.find({ order: { createdAt: 'DESC' } });
   }
 }

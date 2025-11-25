@@ -26,10 +26,17 @@
             class="w-28 h-28 rounded-full object-cover border-2 border-[var(--gray-bg)] shadow-sm"
           />
           <div class="flex-1">
-            <h2 class="text-2xl font-semibold text-[var(--darkgray-bg)] mb-2">
-              {{ userData.first_name }} {{ userData.last_name }}
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[var(--gray-text)]">
+            <div class="flex gap-10">
+              <h2 class="text-2xl font-semibold text-[var(--darkgray-bg)] mb-6">
+                {{ userData.first_name }} {{ userData.last_name }}
+              </h2>
+              <div class="flex gap-2">
+                <!-- Edit/Delete Buttons -->
+                <Edit @click="openEditUserForm" class="icon-theme w-6 h-6" />
+                <Delete @click="deleteUser" class="icon-theme w-6 h-6" />
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[var(--gray-text)]">
               <p><span class="font-medium">Email:</span> {{ userData.email || 'N/A' }}</p>
               <p><span class="font-medium">Role:</span> {{ formatRole(userData.role) }}</p>
               <p>
@@ -112,7 +119,7 @@
                 class="list-disc pl-5 text-[var(--gray-text)] space-y-1"
               >
                 <li v-for="act in userData.activities" :key="act.id">
-                  {{ act.action }} - {{ formatDate(act.created_at) }}
+                  {{ act.action }} - {{ formatDate(act.createdAt) }}
                 </li>
               </ul>
               <p v-else class="text-sub-text">No recent activity.</p>
@@ -134,6 +141,15 @@
         </div>
       </div>
     </div>
+<EditForm
+  v-model="showEditUserForm"
+  title="Edit User"
+  :fields="userFields"
+  :initialData="editUserData"
+  endpoint="users"
+  @submitted="onUserUpdated"
+/>
+
   </UserLayout>
 </template>
 
@@ -145,6 +161,8 @@ import { useAuthStore } from '@/stores/auth'
 import UserLayout from '@/views/pageLayout.vue'
 import Status from '@/components/status.vue'
 import Back from '@/assets/icons/back.svg'
+import Edit from '@/assets/icons/edit.svg'
+import Delete from '@/assets/icons/delete.svg'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
@@ -153,6 +171,52 @@ const userData = ref(null)
 const isReady = ref(false)
 const activeTab = ref('Teams')
 const tabs = ['Teams', 'Projects', 'Tasks', 'Activity', 'Notifications']
+import EditForm from '@/components/forms/editForm.vue'
+
+const showEditUserForm = ref(false)
+const editUserData = ref(null)
+
+// Form fields for EditForm
+const userFields = [
+  { type: 'text', label: 'First Name', model: 'first_name', required: true },
+  { type: 'text', label: 'Last Name', model: 'last_name', required: true },
+  { type: 'email', label: 'Email', model: 'email', required: true },
+  {
+    type: 'select',
+    label: 'Role',
+    model: 'role',
+    options: [
+      { id: 'admin', name: 'Admin' },
+      { id: 'project_manager', name: 'Project Manager' },
+      { id: 'member', name: 'Team Member' }
+    ],
+    required: true
+  },
+]
+
+// Open Edit Modal
+const openEditUserForm = () => {
+  editUserData.value = { ...userData.value }
+  showEditUserForm.value = true
+}
+
+// Refresh after editing
+const onUserUpdated = async () => {
+  const updated = await userStore.fetchUserById(userData.value.id)
+  userData.value = updated
+  showEditUserForm.value = false
+}
+const deleteUser = async () => {
+  if (!confirm(`Delete ${userData.value.first_name}? This cannot be undone.`)) return
+
+  try {
+    await userStore.deleteUser(userData.value.id)
+    router.push({ name: 'Users' })
+  } catch (err) {
+    console.error(err)
+    alert('Failed to delete user.')
+  }
+}
 
 const goBack = () => {
   router.push({ name: 'Users' })

@@ -39,16 +39,18 @@ export const useProjectStore = defineStore(
       }
     }
 
-    async function fetchProjectsByPM(pmId) {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/projects/pm/${pmId}`, { headers: authHeaders() })
-        projects.value = Array.from(new Map(res.data.map((p) => [p.id, p])).values())
-        return projects.value
-      } catch (err) {
-        console.error(`Error fetching projects for PM ${pmId}:`, err)
-        return []
-      }
-    }
+    // async function fetchProjectsByPM(pmId) {
+    //   try {
+    //     const res = await axios.get(`${API_BASE_URL}/projects/pm/${pmId}`, {
+    //       headers: authHeaders(),
+    //     })
+    //     projects.value = Array.from(new Map(res.data.map((p) => [p.id, p])).values())
+    //     return projects.value
+    //   } catch (err) {
+    //     console.error(`Error fetching projects for PM ${pmId}:`, err)
+    //     return []
+    //   }
+    // }
 
     async function createProject(projectDto) {
       try {
@@ -88,16 +90,36 @@ export const useProjectStore = defineStore(
       }
     }
 
+    async function updateProjectStatus(id, status, priority) {
+      try {
+        const res = await axios.patch(
+          `${API_BASE_URL}/projects/${id}`,
+          { status, priority },
+          { headers: authHeaders() },
+        )
+
+        const index = projects.value.findIndex((p) => p.id === id)
+        if (index !== -1) projects.value[index] = res.data
+        if (current.value?.id === id) current.value = res.data
+
+        return res.data
+      } catch (err) {
+        console.error(`Error updating project status ${id}:`, err)
+        return null
+      }
+    }
+
     return {
       current,
       projects,
       setCurrent,
       fetchProjects,
       fetchProjectById,
-      fetchProjectsByPM,
+      // fetchProjectsByPM,
       createProject,
       updateProject,
       deleteProject,
+      updateProjectStatus,
     }
   },
   { persist: true },

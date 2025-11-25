@@ -11,8 +11,7 @@ import {
 } from 'typeorm';
 
 @Entity('teams')
-@Unique (['name'])
-
+@Unique(['name'])
 export class Team {
   @PrimaryGeneratedColumn()
   id: number;

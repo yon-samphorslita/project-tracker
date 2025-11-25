@@ -7,7 +7,7 @@
           class="mr-4 w-8 h-8 text-[var(--graysvg-text)] opacity-80 hover:opacity-100 cursor-pointer"
           @click="goBack"
         />
-        <div class="flex items-start gap-3 w-full justify-between ">
+        <div class="flex items-start gap-3 w-full justify-between">
           <div class="flex items-start gap-3">
             <h1 class="flex text-2xl font-bold">{{ task.t_name }}</h1>
             <Edit
@@ -16,7 +16,6 @@
               @click="openEditTaskForm(task)"
             />
           </div>
-         
 
           <Status :status="taskStatus" class="w-28 h-10 flex items-center justify-center" />
           <!-- <div class="flex flex-col items-center">
@@ -27,7 +26,7 @@
               class="ml-4 w-32 h-12"
             />
           </div> -->
-          
+
           <EditForm
             v-model="showEditTaskForm"
             title="Edit Task"
@@ -44,9 +43,9 @@
       <p class="text-gray-600">{{ task?.t_description }}</p>
 
       <div class="flex">
-        <div class="rounded-lg p-4 mt-0 ml-6 border border-gray-200 w-3/5 " >
+        <div class="rounded-lg p-4 mt-0 ml-6 border border-gray-200 w-3/5">
           <div v-if="task?.subtasks && task.subtasks.length">
-            <p class="font-semibold mb-2">Subtask List: </p>
+            <p class="font-semibold mb-2">Subtask List:</p>
             <div
               v-for="subtask in task.subtasks"
               :key="subtask.id"
@@ -62,7 +61,16 @@
               </span>
 
               <span v-if="subtask.status === 'completed'" class="text-green-600 font-semibold">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7L10 17l-5-5"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M20 7L10 17l-5-5"
+                  />
+                </svg>
               </span>
             </div>
           </div>
@@ -71,20 +79,19 @@
 
         <div class="flex w-2/5 border rounded-xl p-4 mb-0 ml-6">
           <div class="flex flex-col gap-3 w-full">
-            <div class="flex flex-col items-center gap-3 px-3 py-1 mb-4" >
+            <div class="flex flex-col items-center gap-3 px-3 py-1 mb-4">
               <img
-                :src=assignee?.img_url               
+                :src="assignee?.img_url"
                 alt="profile"
                 class="w-16 h-16 rounded-full border object-cover"
               />
               <span class="text-blue-800 font-medium text-sm truncate max-w-[100px]">
-                {{ task?.user?.first_name }} {{ task?.user?.last_name }}  
+                {{ task?.user?.first_name }} {{ task?.user?.last_name }}
               </span>
             </div>
 
-
-            <div class="flex flex-col ">
-              <p>Task Progress: </p>
+            <div class="flex flex-col">
+              <p>Task Progress:</p>
               <ProgressBar :completed="completedSubtasks" :total="task?.subtasks.length" />
             </div>
             <div>Start Date: {{ formatDate(task?.start_date) }}</div>
@@ -101,40 +108,39 @@
             <!-- <div>Total Subtask: {{ task?.subtasks.length }}</div>
             <div>Completed Subtask: {{ completedSubtasks }}</div> -->
           </div>
-            
         </div>
       </div>
 
       <div class="flex flex-col items-start gap-5 border rounded-lg p-4 mt-0 ml-6">
-        <div class="text-xl font-semibold ">Related Information</div>
+        <div class="text-xl font-semibold">Related Information</div>
         <div class="flex flex-col gap-5 justify-between w-full mt-2">
           <div class="flex gap-2 justify-start items-center">
-            <p class="font-semibold ">Project Name: </p> 
+            <p class="font-semibold">Project Name:</p>
             {{ task?.project?.p_name }}
           </div>
-          <div class="flex justify-between w-full ">
+          <div class="flex justify-between w-full">
             <div class="flex gap-2 justify-start items-center">
-              <p class="font-semibold ">Priority: </p> 
+              <p class="font-semibold">Priority:</p>
               <Status :priority="task?.project?.priority" />
             </div>
             <div class="flex gap-2 justify-start items-center">
-              <p class="font-semibold ">Status: </p> 
+              <p class="font-semibold">Status:</p>
               <Status :status="task?.project?.status" />
             </div>
           </div>
         </div>
-        <div class="flex justify-between w-full ">
+        <div class="flex justify-between w-full">
           <div class="flex gap-2 justify-start items-center">
-            <p class="font-semibold ">Start Date: </p> 
-            {{ formatDate(task?.project?.start_date) }}        
+            <p class="font-semibold">Start Date:</p>
+            {{ formatDate(task?.project?.start_date) }}
           </div>
           <div class="flex gap-2 justify-start items-center">
-            <p class="font-semibold ">Due Date: </p> 
-            {{ formatDate(task?.project?.due_date) }}        
+            <p class="font-semibold">Due Date:</p>
+            {{ formatDate(task?.project?.due_date) }}
           </div>
         </div>
         <div class="flex gap-2 justify-start items-start">
-          <p class="font-semibold w-max">Project Manager: </p> 
+          <p class="font-semibold w-max">Project Manager:</p>
           <div class="flex flex-wrap gap-2">
             <div
               v-for="pm in task?.project?.team?.pms"
@@ -153,21 +159,18 @@
           </div>
         </div>
         <div class="flex gap-2 justify-start items-center">
-          <p class="font-semibold">Task Assignee: </p> 
+          <p class="font-semibold">Task Assignee:</p>
           <div class="flex flex-wrap gap-2">
-            <div class="flex items-center gap-3 bg-blue-50 px-3 py-1 rounded-full border border-blue-100" >
-              <img
-                :src="defaultProfile"                
-                alt="profile"
-                class="w-8 h-8 rounded-full object-cover"
-              />
+            <div
+              class="flex items-center gap-3 bg-blue-50 px-3 py-1 rounded-full border border-blue-100"
+            >
+              <img :src="defaultProfile" alt="profile" class="w-8 h-8 rounded-full object-cover" />
               <span class="text-blue-800 font-medium text-sm truncate max-w-[100px]">
-                {{ task?.user?.first_name }} {{ task?.user?.last_name }}  
+                {{ task?.user?.first_name }} {{ task?.user?.last_name }}
               </span>
             </div>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -203,7 +206,6 @@ import { useTeamStore } from '@/stores/team'
 import { sub } from 'date-fns'
 import { useUserStore } from '@/stores/user'
 
-
 const route = useRoute()
 const router = useRouter()
 const taskStore = useTaskStore()
@@ -235,7 +237,7 @@ const taskId = useRoute().params.id
 // })
 
 const fetchTaskDetails = async () => {
-  isReady.value = false 
+  isReady.value = false
 
   try {
     const result = await taskStore.fetchTask(taskId)
@@ -251,24 +253,23 @@ const fetchTaskDetails = async () => {
     // Fetch assignee activity
     if (assignee.value?.id && task.value?.id) {
       const allActivities = await userStore.fetchUserById(assignee.value.id)
-      
+
       console.log('All Activities for Assignee:', allActivities)
       const activitiesArray = Array.isArray(allActivities.activities)
         ? allActivities.activities
-        : [];
+        : []
 
-      console.log('Activities Array:', activitiesArray )
+      console.log('Activities Array:', activitiesArray)
 
       assigneeActivity.value = activitiesArray.filter(
-        (act) =>
-          act.taskId === task.value.id 
-          // (act.action && act.action.includes(task.value.t_name)) 
-      );
+        (act) => act.taskId === task.value.id,
+        // (act.action && act.action.includes(task.value.t_name))
+      )
 
       // assigneeActivity.value = allActivities.activities.filter(
       //   (act) =>
-      //     act.taskId === task.value.id || 
-      //     (act.action && act.action.includes(task.value.t_name)) 
+      //     act.taskId === task.value.id ||
+      //     (act.action && act.action.includes(task.value.t_name))
       // )
       console.log('Filtered Assignee Activity:', assigneeActivity.value)
     }
@@ -280,7 +281,6 @@ const fetchTaskDetails = async () => {
 }
 
 onMounted(fetchTaskDetails)
-
 
 // State
 const task = ref(null)
@@ -343,7 +343,7 @@ const subtaskFields = computed(() => [
     model: 'title',
     placeholder: 'Enter subtask name',
     required: true,
-  }
+  },
 ])
 
 // Table Columns
@@ -371,8 +371,8 @@ watch(task, (newVal) => (taskStatus.value = newVal?.t_status || ''))
 
 // Computed properties for subtask stats
 const totalSubtasks = computed(() => subtasks.value.length)
-const completedSubtasks = computed(() => 
-  task.value?.subtasks?.filter(s => s.status === 'completed').length
+const completedSubtasks = computed(
+  () => task.value?.subtasks?.filter((s) => s.status === 'completed').length,
 )
 
 // Admin Stats
@@ -478,18 +478,17 @@ async function openEditTaskForm(task) {
   }
   editTaskData.value = {
     id: task.id,
-    title: task.t_name,                
-    description: task.t_description,   
-    startDate: task.start_date,         
-    dueDate: task.due_date,             
-    user: task.user?.id ,
-    priority: task.t_priority           
+    title: task.t_name,
+    description: task.t_description,
+    startDate: task.start_date,
+    dueDate: task.due_date,
+    user: task.user?.id,
+    priority: task.t_priority,
   }
 
   console.log('Edit Task Data:', editTaskData.value)
   showEditTaskForm.value = true
 }
-
 
 async function onTaskUpdated(taskData) {
   if (!taskData?.id) return
@@ -514,12 +513,10 @@ function formatDate(date) {
 async function fetchUserActivity(userId) {
   try {
     const activities = await userStore.fetchUserActivities(userId)
-    return activities 
+    return activities
   } catch (err) {
     console.error('Failed to fetch user activity:', err)
     return []
   }
 }
-
-
 </script>

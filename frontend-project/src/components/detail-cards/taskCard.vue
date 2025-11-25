@@ -18,9 +18,11 @@
     <div class="border rounded-lg" v-for="item in props.tasks" :key="item.id">
       <div
         class="group grid grid-cols-[3fr_2fr_1fr_1fr_1fr_1fr] items-center px-4 py-3 border-gray-200 rounded-lg transition cursor-pointer"
-        :class="String(item.id) === props.highlightedId
-          ? 'bg-blue-100 ring-2 ring-blue-400 scale-[1.01]'
-          : 'hover:bg-gray-100'"
+        :class="
+          String(item.id) === props.highlightedId
+            ? 'bg-blue-100 ring-2 ring-blue-400 scale-[1.01]'
+            : 'hover:bg-gray-100'
+        "
         @click="toggleExpand(item.id)"
       >
         <div class="truncate">{{ item.t_name }}</div>
@@ -29,7 +31,7 @@
         <div class="flex justify-center">{{ formatDate(item.due_date) }}</div>
 
         <!-- Priority -->
-        <div class="flex justify-center">
+        <!-- <div class="flex justify-center">
           <span
             :class="[
               'px-2 py-1 rounded  w-auto inline-block',
@@ -42,20 +44,26 @@
           >
             {{ item.t_priority }}
           </span>
+        </div> -->
+        <div class="flex justify-center">
+          <Status :priority="item.t_priority" />
         </div>
 
         <!-- Status -->
         <div class="flex justify-center">
-          <span
+          <!-- <span
             :class="[
               'px-2 py-1 rounded font-medium ',
-              item.status === 'Completed' ? 'bg-green-100 text-green-600' :
-              item.status === 'In Progress' ? 'bg-blue-100 text-blue-600' :
-              'bg-gray-100 text-gray-600'
+              item.status === 'Completed'
+                ? 'bg-green-100 text-green-600'
+                : item.status === 'In Progress'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'bg-gray-100 text-gray-600',
             ]"
           >
             {{ item.t_status }}
-          </span>
+          </span> -->
+          <Status :status="item.t_status"/>
         </div>
 
         <!-- Action Buttons  -->
@@ -177,18 +185,26 @@ import { useSubtaskStore } from '@/stores/subtask'
 import Form from '../forms/form.vue'
 import { useTaskStore } from '@/stores/task'
 import { defineProps, defineEmits, ref, computed, onMounted } from 'vue'
-
+import Status from '../status.vue'
 const taskStore = useTaskStore()
 const subtaskStore = useSubtaskStore()
 
+const tasks = computed(() => taskStore.tasks)
 const props = defineProps<{ tasks: any[] , highlightedId: String}>()
 const emit = defineEmits(['edit-task', 'delete-task', 'update-status'])
 const expandedTask = ref<number[]>([])
 const showSubtaskForm = ref(false)
+// const showSubtaskForm = ref<number | null>(null)
 
 
 const subtaskFields = [
-  { label: 'Subtask Name', type: 'text', model: 'title', placeholder: 'Enter Subtask Name', required: true },
+  {
+    label: 'Subtask Name',
+    type: 'text',
+    model: 'title',
+    placeholder: 'Enter Subtask Name',
+    required: true,
+  },
 ]
 
 async function toggleExpand(id: number) {

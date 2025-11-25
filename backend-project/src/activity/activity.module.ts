@@ -5,13 +5,11 @@ import { ActivityService } from './activity.service';
 import { ActivityController } from './activity.controller';
 import { ActivityGateway } from './activity.gateway';
 import { AuthModule } from 'src/auth/auth.module';
-import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ActivityLog]),
     forwardRef(() => AuthModule),
-    forwardRef(() => UserModule),
   ],
   providers: [ActivityService, ActivityGateway],
   controllers: [ActivityController],

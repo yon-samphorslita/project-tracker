@@ -3,9 +3,7 @@
     <div class="flex flex-col">
       <!-- Header -->
       <div class="flex justify-between mb-3 gap-2">
-        <div class="text-lg font-semibold text-gray-800"  @click="goToTaskPage"
- 
-        >
+        <div class="text-lg font-semibold text-gray-800" @click="goToTaskPage">
           {{ focusTask.t_name }}
         </div>
         <div class="text-sm text-gray-500">
@@ -24,14 +22,9 @@
         <ProgressBar :completed="completedSubtasks" :total="totalSubtasks" />
       </div>
 
-
       <!-- Subtask Checklist -->
       <div v-if="subtasks.length" class="flex flex-col gap-2">
-        <div
-          v-for="sub in subtasks"
-          :key="sub.id"
-          class="flex items-center gap-2 cursor-pointer"
-        >
+        <div v-for="sub in subtasks" :key="sub.id" class="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             class="w-4 h-4 accent-blue-500 cursor-pointer"
@@ -49,9 +42,7 @@
         </div>
       </div>
 
-      <div v-else class="text-sm text-gray-500 italic mt-2">
-        No subtasks yet
-      </div>
+      <div v-else class="text-sm text-gray-500 italic mt-2">No subtasks yet</div>
     </div>
   </div>
 </template>
@@ -80,10 +71,9 @@ onMounted(async () => {
 
 // Computed properties for subtask stats
 const totalSubtasks = computed(() => subtasks.value.length)
-const completedSubtasks = computed(() => 
-  subtasks.value.filter(s => s.status === 'completed').length
+const completedSubtasks = computed(
+  () => subtasks.value.filter((s) => s.status === 'completed').length,
 )
-
 
 // Calculate days remaining
 const daysRemaining = computed(() => {
@@ -121,15 +111,14 @@ function statusColorClass(status: string) {
 // Navigation to task page
 // function goToTaskPage() {
 //   if (props.focusTask?.id) router.push(`/task/${props.focusTask.id}`)
-  
+
 // }
 function goToTaskPage() {
   if (props.focusTask?.id) {
     router.push({
       path: `/task`,
-      query: { highlight: props.focusTask.id }  // <-- add this
+      query: { highlight: props.focusTask.id }, // <-- add this
     })
   }
 }
-
 </script>
