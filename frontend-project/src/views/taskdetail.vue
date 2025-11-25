@@ -89,7 +89,7 @@
             </div>
             <div>Start Date: {{ formatDate(task?.start_date) }}</div>
             <div>Due Date: {{ formatDate(task?.due_date) }}</div>
-            <div>
+            <div v-if="userRole === 'admin'">
               <div>Recent Activity: </div>
               <ul v-if="assigneeActivity.length" class="list-disc pl-5 text-gray-600 space-y-1 max-h-40 overflow-auto">
                   <li v-for="act in assigneeActivity" :key="act.id">

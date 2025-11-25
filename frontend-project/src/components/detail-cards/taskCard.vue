@@ -60,33 +60,6 @@
 
         <!-- Action Buttons  -->
         <div class="flex justify-around gap-2 bg-red-">
-          <!-- <div v-if="item.t_status === 'not started'">
-            <button
-              class="px-3 py-1 border border-blue-500 rounded-lg bg-blue-100 text-blue-700 
-                    hover:bg-blue-500 hover:text-white-text cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
-              @click.stop="startTask(item.id)"
-            >
-              Start
-            </button>
-            
-          </div>
-          <div v-else-if="item.t_status === 'in progress'">
-            <button
-              class="px-3 py-1 border border-green-500 rounded-lg bg-green-100 text-green-700 
-                    hover:bg-green-500 hover:text-white-text cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
-              @click.stop="finishTask(item.id)"
-            >
-              Finish
-            </button>
-
-          </div>
-
-          <div v-else-if="item.t_status === 'completed'">
-            <div class="px-3 py-1 text-sm rounded-full bg-green-50 text-green-600 hover:bg-green-100" >
-              Completed
-            </div>
-
-          </div> -->
 
           <!-- Direct Dropdown (Start / Finish toggle) -->
           <div class="relative inline-block text-left">
@@ -101,26 +74,6 @@
           </div>
         </div>
 
-        <!-- More icon  -->
-        <!-- <div
-          class="flex justify-end items-center gap-2 text-gray-400 hover:text-gray-600 cursor-pointer"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16">
-            <g
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1"
-            >
-              <path d="M4 8h.01v.01H4z" />
-              <path d="M4.5 8a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0M8 8h.01v.01H8z" />
-              <path d="M8.5 8a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0m3.49 0H12v.01h-.01z" />
-              <path d="M12.49 8a.5.5 0 1 1-1 0a.5.5 0 0 1 1 0" />
-            </g>
-          </svg>
-        </div> -->
-        <!-- Task Description -->
         <div v-if="expandedTask.includes(item.id)" class="col-span-6 mt-3 border-t">
           <div v-if="item.t_description" class="my-3 pl-4">
             <h4 class="font-semibold mb-1">Description:</h4>
@@ -194,23 +147,6 @@
               </div>
             </div>
 
-            <!-- <button
-              class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium self-start"
-              @click.stop="showSubtaskForm = true"
-            >
-              + Add Subtask
-            </button>
-
-            <div v-if="showSubtaskForm" @click.stop>
-              <Form
-                v-model:modelValue="showSubtaskForm"
-                formTitle="Create Subtask"
-                :fields="subtaskFields"
-                endpoint="subtasks"
-                :initialData="{ taskId: item.id }"
-                @submitted="(data) => handleSubtaskCreated(data, item.id)"
-              />
-            </div> -->
             <button
               class="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium self-start"
               @click.stop="showSubtaskForm = item.id"
@@ -225,17 +161,10 @@
                 :fields="subtaskFields"
                 endpoint="subtasks"
                 :initialData="{ taskId: item.id }"
-                @submitted=handleSubtaskCreated
-              />
+                @submitted="(data) => handleSubtaskCreated(data)"
+              />              
             </div>
 
-            <!-- <Form
-              v-model:modelValue="showSubtaskForm"
-              formTitle="Create Subtask"
-              :fields="subtaskFields"
-              endpoint="subtasks"
-              :initialData="{ taskId: item.id }"
-              @submitted="(data) => handleSubtaskCreated(data, item.id)"            /> -->
           </div>
         </div>
       </transition>
@@ -252,13 +181,10 @@ import { defineProps, defineEmits, ref, computed, onMounted } from 'vue'
 const taskStore = useTaskStore()
 const subtaskStore = useSubtaskStore()
 
-const tasks = computed(() => taskStore.tasks)
 const props = defineProps<{ tasks: any[] , highlightedId: String}>()
 const emit = defineEmits(['edit-task', 'delete-task', 'update-status'])
-// const localTasks = ref([...props.tasks]) // make reactive copy
 const expandedTask = ref<number[]>([])
 const showSubtaskForm = ref(false)
-// const showSubtaskForm = ref<number | null>(null)
 
 
 const subtaskFields = [
@@ -392,7 +318,6 @@ async function updateSubtaskStatus(subtask: any, taskId: number) {
 
 onMounted(async () => {
   await taskStore.fetchTasks()
-  // localTasks.value = taskStore.tasks.map((t) => ({ ...t }))
 
   for (const task of taskStore.tasks) {
     task.subtasks = await subtaskStore.fetchByTask(task.id)

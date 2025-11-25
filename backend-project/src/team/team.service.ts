@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Team } from './team.entity';
@@ -8,6 +8,7 @@ import { UpdateTeamDto } from './dto/update-team.dto';
 import { NotificationsGateway } from 'src/notification/notification.gateway';
 import { NotificationService } from 'src/notification/notification.service';
 import { ActivityService } from 'src/activity/activity.service';
+import { Role } from 'src/enums/role.enum';
 @Injectable()
 export class TeamService {
   constructor(
@@ -134,7 +135,7 @@ export class TeamService {
   }
 
   /** UPDATE TEAM */
-  async update(id: number, dto: UpdateTeamDto, userId: number): Promise<Team> {
+  async update(id: number, dto: UpdateTeamDto, user: User): Promise<Team> {
     const team = await this.findOne(id);
     const actions: string[] = [];
 
@@ -228,6 +229,12 @@ export class TeamService {
     }
 
     if (dto.removePms?.length) {
+      if (user.role !== Role.ADMIN) {
+        throw new ForbiddenException(
+          'Only administrators are allowed to remove Project Managers from a team.',
+        );
+      }
+
       const currentPmsIds = team.pms.map((u) => u.id);
       const actuallyRemoved = dto.removePms.filter((id) =>
         currentPmsIds.includes(id),
@@ -357,7 +364,7 @@ export class TeamService {
     // --- Log only real changes ---
     if (actions.length) {
       await this.activityService.logAction(
-        userId,
+        user.id,
         `Updated team "${team.name}": ${actions.join('; ')}`,
       );
     }
