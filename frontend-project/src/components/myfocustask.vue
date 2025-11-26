@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full p-4 bg-pink-100 rounded-xl shadow-md hover:shadow-lg transition">
+  <div class="w-full p-4 bg-yellow-100 rounded-xl shadow-md hover:shadow-lg transition">
     <div class="flex flex-col">
       <!-- Header -->
       <div class="flex justify-between mb-3 gap-2">

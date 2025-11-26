@@ -47,7 +47,7 @@ export class TeamController {
     @Body() updateTeamDto: UpdateTeamDto,
     @Req() req,
   ): Promise<Team> {
-    return this.teamService.update(id, updateTeamDto, req.user.id);
+    return this.teamService.update(id, updateTeamDto, req.user);
   }
 
   // Only ADMIN can delete teams

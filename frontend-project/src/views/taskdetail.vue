@@ -96,17 +96,14 @@
             </div>
             <div>Start Date: {{ formatDate(task?.start_date) }}</div>
             <div>Due Date: {{ formatDate(task?.due_date) }}</div>
-            <div>
-              <div>Recent Activity:</div>
-              <ul
-                v-if="assigneeActivity.length"
-                class="list-disc pl-5 text-gray-600 space-y-1 max-h-40 overflow-auto"
-              >
-                <li v-for="act in assigneeActivity" :key="act.id">
-                  {{ act.action }} - {{ formatDate(act.created_at) }}
-                </li>
-              </ul>
-              <p v-else class="text-gray-400">No recent activity.</p>
+            <div v-if="userRole === 'admin'">
+              <div>Recent Activity: </div>
+              <ul v-if="assigneeActivity.length" class="list-disc pl-5 text-gray-600 space-y-1 max-h-40 overflow-auto">
+                  <li v-for="act in assigneeActivity" :key="act.id">
+                    {{ act.action }} - {{ formatDate(act.created_at) }}
+                  </li>
+                </ul>
+                <p v-else class="text-gray-400">No recent activity.</p>
             </div>
             <!-- <div>Total Subtask: {{ task?.subtasks.length }}</div>
             <div>Completed Subtask: {{ completedSubtasks }}</div> -->
